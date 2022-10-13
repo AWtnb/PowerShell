@@ -321,17 +321,24 @@ Set-PSReadLineKeyHandler -Key "ctrl+/" -BriefDescription "toggle-comment" -LongD
 }
 
 Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe-and-adjust-pos" -LongDescription "insert-pipe-and-adjust-pos" -ScriptBlock {
-    [PSConsoleReadLine]::Insert("|")
     $rl = [ReadLiner2]::new()
-    if ($rl.CursorLine.AfterCursor.Trim().Length) {
-        $pos = $rl.CursorPos
-        if ($rl.CursorLine.AfterCursor.StartsWith("|")) {
-            return
-        }
-        $len = $pos - ($rl.CursorLine.BeforeCursor.TrimEnd(" |").Length)
-        [PSConsoleReadLine]::Replace($pos - $len, $len, "||")
-        [PSConsoleReadLine]::SetCursorPosition($pos - $len + 1)
+    if ($rl.CursorLine.AfterCursor.Trim().Length -lt 1) {
+        [PSConsoleReadLine]::Insert(" | ")
+        return
     }
+    $pos = $rl.CursorPos
+    if ($rl.CursorLine.AfterCursor.Trim().StartsWith("|")) {
+        [PSConsoleReadLine]::Insert(" | ")
+        [PSConsoleReadLine]::SetCursorPosition($pos + 3)
+        return
+    }
+    if ($rl.CursorLine.BeforeCursor.Trim().EndsWith("|")) {
+        [PSConsoleReadLine]::Insert("  | ")
+        [PSConsoleReadLine]::SetCursorPosition($pos + 1)
+        return
+    }
+    [PSConsoleReadLine]::Insert(" |  | ")
+    [PSConsoleReadLine]::SetCursorPosition($pos + 3)
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+|" -BriefDescription "find-matching-bracket" -LongDescription "find-matching-bracket" -ScriptBlock {
@@ -561,15 +568,6 @@ Set-PSReadLineKeyHandler -Key "alt+R,b" -BriefDescription "insert-regex-bracket"
     [PSConsoleReadLine]::Insert('[\[［].+?[\]］]')
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,p" -BriefDescription "psobject-name" -LongDescription "psobject-name" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $pos = $rl.CursorPos
-    if ($rl.Commandline[$pos - 1] -ne ".") {
-        [PSConsoleReadLine]::Insert('.')
-    }
-    [PSConsoleReadLine]::Insert('psobject.properties.name')
-}
-
 Set-PSReadLineKeyHandler -Key "ctrl+k,i" -BriefDescription "insert-if-else-block" -LongDescription "insert-if-else-block" -ScriptBlock {
     $rl = [ReadLiner2]::new()
     $pos = $rl.CursorPos
@@ -580,11 +578,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,i" -BriefDescription "insert-if-else-block
     [PSConsoleReadLine]::SetCursorPosition($pos + 7)
 }
 
-Set-PSReadLineKeyHandler -Key "alt+B" -BriefDescription "insert-scriptblock" -LongDescription "insert-scriptblock" -ScriptBlock {
-    [ReadLiner2]::new().RemoveTrailingPipe()
-    [PSConsoleReadLine]::Insert('{$_}')
-    [PSConsoleReadLine]::BackwardChar()
-}
+
 Set-PSReadLineKeyHandler -Key "ctrl+k,f","ctrl+k,w" -BriefDescription "insert-alias" -LongDescription "insert-alias" -ScriptBlock {
     param ($key, $arg)
     $a = switch ($key.KeyChar) {
@@ -595,26 +589,12 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,f","ctrl+k,w" -BriefDescription "insert-al
     [PSConsoleReadLine]::Insert("|{0} " -f $a)
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+\" -BriefDescription "file-completion" -LongDescription "file-completion" -ScriptBlock {
-    [PSConsoleReadLine]::Insert(".\")
-    [PSConsoleReadLine]::MenuComplete()
-}
-
 Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
     $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() -split "`n"|sv CLIPPING'
     [PSConsoleReadLine]::RevertLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
-}
-
-
-Set-PSReadLineKeyHandler -Key "alt+n" -BriefDescription "filterEmpty" -LongDescription "filterEmpty" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    $pos = $rl.CursorPos
-    $s = ($line[$pos - 1] -eq "|")? '?{$_}|' : '|?{$_}'
-    [PSConsoleReadLine]::Insert($s)
 }
 
 Set-PSReadLineKeyHandler -Key "alt+m" -BriefDescription "measure" -LongDescription "measure" -ScriptBlock {
@@ -652,23 +632,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object
     [PSConsoleReadLine]::MenuComplete()
 }
 
-Set-PSReadLineKeyHandler -Key "alt+R,p","alt+R,9","alt+R,8" -BriefDescription "regexp-insideParen" -LongDescription "regexp-insideParen" -ScriptBlock {
-    param($key, $arg)
-    $reg = switch ($key.KeyChar) {
-        <#case#> "8" { "（.+?）"; break }
-        <#case#> "9" { "\(.+?\)"; break }
-        <#case#> "p" { "[\(（].+?[\)）]"; break }
-    }
-    [PSConsoleReadLine]::Insert($reg)
-}
-
-# Set-PSReadLineKeyHandler -Key "alt+R,f" -BriefDescription "replaceWithFunction" -LongDescription "replaceWithFunction" -ScriptBlock {
-#     [PSConsoleReadLine]::Insert('[regex]::Replace("", "", {$args[0].Value})')
-# }
-
-# Set-PSReadLineKeyHandler -Key "alt+R,g" -BriefDescription "replaceWithFunction-grouping" -LongDescription "replaceWithFunction-grouping" -ScriptBlock {
-#     [PSConsoleReadLine]::Insert('[regex]::Replace("", "", {$args[0].groups[1].Value})')
-# }
 
 Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(star)" -LongDescription "insertAsterisk(star)" -ScriptBlock {
     [PSConsoleReadLine]::Insert("*")
