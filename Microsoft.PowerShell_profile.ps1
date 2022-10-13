@@ -696,6 +696,7 @@ function Invoke-Repository {
         "cannot find path..." | Write-Host -ForegroundColor Magenta
     }
 }
+Set-Alias repo Invoke-Repository
 
 ##############################
 # temp dir
