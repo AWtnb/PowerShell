@@ -1,0 +1,48 @@
+"""
+sudachiPy で形態素解析して JSON 形式でファイルに出力する
+
+ビルド時にエラーが起きる場合は Build Tools for Visual Studio 2019 をインストールもしくはアップデートすること。
+    https://github.com/WorksApplications/SudachiPy/issues/145
+    https://sudachi-dev.slack.com/archives/CBCF278AC/p1604632785006000?thread_ts=1604632556.005900&cid=CBCF278AC
+
+encoding: utf8
+"""
+
+import sys
+import re
+from pathlib import Path
+
+from sudachipy import tokenizer
+from sudachipy import dictionary
+
+def main(input_file_path:str, output_file_path:str, ignore_paren:bool=False):
+
+    reg = re.compile(r"\(.+?\)|\[.+?\]|（.+?）|［.+?］")
+
+    tokenizer_obj = dictionary.Dictionary().create()
+    lines = Path(input_file_path).read_text("utf-8").splitlines()
+
+    out = []
+    for line in lines:
+        if not line:
+            out.append({"line": "", "tokens": []})
+        else:
+            target = line
+            if ignore_paren:
+                target = reg.sub("", line)
+            tokens = []
+            for t in tokenizer_obj.tokenize(target, tokenizer.Tokenizer.SplitMode.C):
+                tokens.append({
+                    "surface": t.surface(),
+                    "pos": t.part_of_speech()[0],
+                    "reading": t.reading_form(),
+                    "c_type": t.part_of_speech()[4],
+                    "c_form": t.part_of_speech()[5]
+                })
+            out.append({"line": line, "tokens": tokens})
+
+    Path(output_file_path).write_text(str(out), "utf-8")
+
+if __name__ == "__main__":
+    ignore_paren = sys.argv[3] == "IgnoreParen"
+    main(*sys.argv[1:3], ignore_paren)

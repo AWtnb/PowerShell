@@ -1,0 +1,299 @@
+﻿
+<# ==============================
+
+cmdlets for treating PDF
+
+                encoding: utf8bom
+============================== #>
+
+class PyPdf {
+    [string]$pyPath
+    PyPdf([string]$pyFile) {
+        $this.pyPath = $PSScriptRoot | Join-Path -ChildPath "python\pdf" | Join-Path -ChildPath $pyFile
+    }
+    RunCommand([string[]]$params){
+        $fullParams = (@("-B", $this.pyPath) + $params) | ForEach-Object {
+            if ($_ -match "\s") {
+                return ($_ | Join-String -DoubleQuote)
+            }
+            return $_
+        }
+        Start-Process -Path python.exe -Wait -ArgumentList $fullParams -NoNewWindow
+        # $cmd = ('python -B "{0}"' -f $this.pyPath) + ($params | Join-String -OutputPrefix " " -DoubleQuote -Separator " ")
+        # $cmd | Invoke-Expression
+    }
+}
+
+function Invoke-PdfConcWithPython {
+    param (
+        [string]$outName = "conc"
+    )
+
+    $outPath = $pwd.ProviderPath | Join-Path -ChildPath "$($outName).pdf"
+    if (Test-Path $outPath) {
+        "'{0}.pdf' already exists!" -f $outName | Write-Error
+        return
+    }
+
+    $pdfs = @($input | Where-Object Extension -eq ".pdf")
+    if ($pdfs.Count -le 1) {
+        return
+    }
+
+    $py = [PyPdf]::new("conc.py")
+
+    Use-TempDir {
+        $paths = New-Item -Path ".\paths.txt"
+        $pdfs.Fullname | Out-File -Encoding utf8NoBOM -FilePath $paths
+        $py.RunCommand(@($paths, $outPath))
+    }
+
+}
+Set-Alias pdfConcPy Invoke-PdfConcWithPython
+
+function Invoke-PdfOverlayWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[string]$overlayPdf
+    )
+    begin {}
+    process {
+        $pdfFileObj = Get-Item -LiteralPath $inputObj
+        if ($pdfFileObj.Extension -ne ".pdf") {
+            Write-Error "Non-pdf file!"
+            return
+        }
+        $overlayPath = (Get-Item -LiteralPath $overlayPdf).FullName
+        $py = [PyPdf]::new("overlay.py")
+        $py.RunCommand(@($pdfFileObj.FullName, $overlayPath))
+        # $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\pdf\overlay.py"
+        # 'python -B "{0}" "{1}" "{2}"' -f $pyCodePath, $pdfFileObj.FullName, $overlayPath | Invoke-Expression
+    }
+    end {}
+}
+
+function Invoke-PdfFilenameWatermarkWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[int]$startIdx = 1
+        ,[switch]$countThrough
+    )
+    begin {
+        $pdfs = @()
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -eq ".pdf") {
+            $pdfs += $file
+        }
+    }
+    end {
+        $py = [PyPdf]::new("overlay_filename.py")
+        $mode = ($countThrough)? "through" : "single"
+        Use-TempDir {
+            $in = New-Item -Path ".\in.txt"
+            $pdfs.Fullname | Out-File -FilePath $in.FullName -Encoding utf8NoBOM
+            $py.RunCommand(@($in.FullName, $startIdx, $mode))
+        }
+    }
+}
+
+function Invoke-PdfZipToDiffWithPython {
+    param (
+        [string]$oddFile,
+        [string]$evenFile,
+        [string]$outName = "outdiff"
+    )
+    $odd = Get-Item -LiteralPath $oddFile
+    $even = Get-Item -LiteralPath $evenFile
+    if (($odd.Extension -ne ".pdf") -or ($even.Extension -ne ".pdf")) {
+        "non-pdf file!" | Write-Error
+        return
+    }
+    $outPath = $PWD.ProviderPath | Join-Path -ChildPath "$($outName).pdf"
+    $py = [PyPdf]::new("zip_to_diff.py")
+    $py.RunCommand(@($odd.FullName, $even.FullName, $outPath))
+}
+
+function Invoke-PdfExtractWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[int]$from = 1
+        ,[int]$to = 0
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("extract.py")
+        $py.RunCommand(@($file.Fullname, $from, $to))
+    }
+    end {}
+}
+Set-Alias pdfExtractPy Invoke-PdfExtractWithPython
+
+function Invoke-PdfExtractStepWithPython {
+    <#
+    .EXAMPLE
+        Invoke-PdfExtractStepWithPython -path hoge.pdf -froms 1,4,6
+    #>
+    param (
+        [string]$path
+        ,[int[]]$froms
+    )
+    $file = Get-Item -LiteralPath $path
+    if ($file.Extension -ne ".pdf") {
+        return
+    }
+    for ($i = 0; $i -lt $froms.Count; $i++) {
+        $f = $froms[$i]
+        $t = ($i + 1 -eq $froms.Count)? -1 : $froms[($i + 1)] - 1
+        Invoke-PdfExtractWithPython -inputObj $file.FullName -from $f -to $t
+    }
+}
+
+function Invoke-PdfRotateWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[ValidateSet(90, 180, 270)][int]$clockwise = 180
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("rotate.py")
+        $py.RunCommand(@($file.Fullname, $clockwise))
+    }
+    end {}
+}
+Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
+
+
+function Invoke-PdfUnspreadWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("unspread.py")
+        $py.RunCommand(@($file.FullName))
+    }
+    end {}
+}
+Set-Alias pdfUnspreadPy Invoke-PdfUnspreadWithPython
+
+
+function Invoke-PdfCropCenterWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[ValidateSet("head", "tail", "both")][string]$mode = "both"
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("crop_center.py")
+        $py.RunCommand(@($file.Fullname, $mode))
+    }
+    end {}
+}
+
+
+function Invoke-PdfTrimGalleyMarginWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[float]$tombowPercent = 8.0
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("trim.py")
+        $py.RunCommand(@($file.Fullname, $tombowPercent))
+    }
+    end {}
+}
+
+Set-Alias pdfTrimMarginPy Invoke-PdfTrimGalleyMarginWithPython
+
+function Invoke-PdfSwapWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[string]$newPdf
+        ,[int]$swapStartPage = 1
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -eq ".pdf") {
+            $py = [PyPdf]::new("swap.py")
+            $py.RunCommand(@($file.Fullname, (Get-Item -LiteralPath $newPdf).FullName, $swapStartPage))
+        }
+    }
+    end {}
+}
+
+function Invoke-PdfZipPagesWithPython {
+    param (
+        [string]$oddFile,
+        [string]$evenFile,
+        [string]$outName = "outzip"
+    )
+    $odd = Get-Item -LiteralPath $oddFile
+    $even = Get-Item -LiteralPath $evenFile
+    if (($odd.Extension -ne ".pdf") -or ($even.Extension -ne ".pdf")) {
+        "non-pdf file!" | Write-Error
+        return
+    }
+    $outPath = $PWD.ProviderPath | Join-Path -ChildPath "$($outName).pdf"
+    $py = [PyPdf]::new("zip_pages.py")
+    $py.RunCommand(@($odd.Fullname, $even.Fullname, $outPath))
+}
+
+function Invoke-PdfUnzipPagesWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[switch]$evenPages
+    )
+    begin {
+        $opt = ($evenPages)? "--evenPages" : ""
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("unzip_pages.py")
+        $py.RunCommand(@($file.FullName, $opt))
+    }
+    end {}
+}
+
+function Invoke-PdfSplitPagesWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+    )
+    begin {
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("split.py")
+        $py.RunCommand(@($file.FullName))
+    }
+    end {}
+}

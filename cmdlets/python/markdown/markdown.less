@@ -1,0 +1,525 @@
+// ------------------------------------------------------------
+// original style sheet for markdown-compiled document.
+// ------------------------------------------------------------
+
+
+@import url('https://cdn.jsdelivr.net/npm/yakuhanjp@3.4.1/dist/css/yakuhanjp_s-noto.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+1+Code&display=swap');
+
+
+@color-main-dark: #272727; // Digital Primary Black for Grayscale
+@color-accent-light: #1e90ff;
+@color-accent-dark: #004384;
+@color-link: #0066c0;
+@color-border: #aaa;
+@color-code-dark: #364352;
+@color-code-dark-sub: lighten(#364352, 40%);
+@color-code-light: #f6f6f6;
+@width-container: 40rem;
+@font-main: YakuHanJPs_Noto, 'Noto Sans JP', sans-serif;
+@font-code: 'M PLUS 1 Code', sans-serif;
+
+html {
+    background: #fff;
+    color: @color-main-dark;
+    font-family: @font-main;
+    font-size: 14px;
+}
+
+body {
+    line-height: 1.75;
+    margin: 1rem;
+    p {
+        margin: 1.5rem 0;
+        word-break: break-all;
+    }
+    a {
+        color: @color-link;
+        text-decoration: none;
+        word-break: break-all;
+    }
+    a[filetype]::after {
+        content: attr(filetype);
+        color: @color-border;
+        font-size: .75rem;
+        font-weight: normal;
+        border: 1px solid @color-border;
+        border-radius: 4px;
+        padding: 0 4px;
+        margin: 0 .25rem;
+        cursor: initial;
+    }
+    strong {
+        font-weight: bold;
+    }
+    del, del * {
+        color: #888 !important;
+    }
+}
+
+.container{
+    width: @width-container;
+    margin: 0 auto 50vh auto;
+    position: relative;
+}
+@media print {
+    .container{
+        margin-bottom: 0;
+    }
+}
+
+.main {
+    > p {
+        margin-left: 1em;
+        margin-right: 1em;
+        text-align: justify;
+    }
+    hr {
+        border: none;
+        background: lighten(@color-code-dark-sub, 20%);
+        width: 100%;
+        height: 6px;
+        margin: 80px auto;
+        position: relative;
+    }
+}
+
+
+//////////////////////////////
+// heading
+//////////////////////////////
+
+h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: "palt";
+    line-height: 1.1;
+    text-align: justify;
+}
+h1, h2, h3, h4, h5 {
+    font-weight: bold;
+}
+h1 {
+    margin: 2rem 0 4rem 0;
+    color: @color-code-dark;
+    font-size: 2.5rem;
+}
+h2 {
+    margin: 4rem 0 2rem 0;
+    font-size: 1.6rem;
+    color: @color-accent-dark;
+    border-bottom: 4px solid @color-code-dark-sub;
+    padding-bottom: 4px;
+}
+h3 {
+    font-size: 1.4rem;
+    color: @color-accent-dark;
+    margin: 4rem 0 1rem 0;
+    border-bottom: 1px solid @color-border;
+    padding-bottom: 4px;
+}
+h4 {
+    font-size: 1.25rem;
+    margin: 2rem 0 1rem 0;
+    color: @color-accent-dark;
+}
+h5 {
+    font-size: 1.1rem;
+    margin: 2rem 0 1rem 0;
+    color: @color-code-dark;
+    &::before {
+        content: "\25A0";
+        color: @color-code-dark-sub;
+        letter-spacing: 0;
+    }
+}
+h6 {
+    font-size: 1rem;
+    margin: 2rem 0 1rem;
+    color: @color-code-dark;
+    &::before {
+        content: "\25A1";
+        color: @color-code-dark-sub;
+        font-weight: bold;
+    }
+}
+
+
+//////////////////////////////
+// image
+//////////////////////////////
+
+img {
+    cursor: zoom-in;
+    box-shadow: 1px 1px 5px 1px @color-border;
+    margin: 2rem auto;
+    display: block;
+    max-width: 90%;
+    ~ em, ~ strong { // caption
+        font-size: .9em;
+        font-style: normal;
+        display: block;
+        line-height: 1.25;
+        text-align: center;
+        margin-top: -1em;
+        color: lighten(@color-main-dark, 30%);
+        font-weight: normal;
+    }
+}
+img:active {
+    cursor: zoom-out;
+    display: block;
+    z-index: 100;
+    position: fixed;
+    max-height: 100%;
+    max-width: 100%;
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+    margin: 0 auto;
+    text-align: center;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #333;
+}
+
+img[alt~="right"] {
+    margin-right: 0;
+    margin-left: auto;
+}
+img[alt~="left"] {
+    margin-right: auto;
+    margin-left: 0;
+}
+
+
+//////////////////////////////
+// list
+//////////////////////////////
+
+ol, ul {
+    margin: 1rem;
+    padding-left: 2rem;
+    ol, ul {
+        margin:0;
+    }
+}
+
+h1, h2, h3, h4, h5, h6 {
+    em, strong {
+        text-decoration: underline;
+        text-decoration-style: wavy;
+    }
+     + ul, + ol {
+        margin-top: .5rem;
+    }
+}
+
+li {
+    text-align: justify;
+    word-break: break-all;
+    > div.wrapper-li {
+        > p {
+            margin: 0;
+        }
+    }
+}
+li.empty {
+    list-style: none;
+    &::before {
+        content: "\FE19";
+        color: gray;
+    }
+}
+li.sub::marker {
+    content: "\2192";
+}
+
+ul li::marker {
+    color: @color-code-dark;
+}
+ol li::marker {
+    color: @color-code-dark;
+    font-weight: bold;
+}
+
+.ol-period {
+    // https://stackoverflow.com/questions/67847310/css-counters-difference-in-output-for-marker-and-before-pseudo-elements
+    ol {
+        counter-reset: num;
+        > li {
+            list-style: none;
+            counter-increment: num;
+            &::marker {
+                content: counters(num, ".") ". ";
+            }
+        }
+    }
+}
+
+
+//////////////////////////////
+// quotation
+//////////////////////////////
+
+blockquote {
+    color: @color-code-dark;
+    font-size: .9rem;
+    background: @color-code-light;
+    border-left: solid 1px @color-border;
+    margin: 1rem;
+    padding: .1rem .5rem;
+    p {
+        text-align: justify;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    p + div.src {
+        color: lighten(@color-code-dark, 20%);
+        font-size: .8rem;
+        line-height: 1;
+        text-align: end;
+        margin-top: -1em;
+    }
+    ol li::marker {
+        font-style: inherit;
+        font-weight: inherit;
+        font-size: inherit;
+        font-family: inherit;
+        color: inherit;
+    }
+}
+
+
+//////////////////////////////
+// inline code
+//////////////////////////////
+
+:not(pre) > code {
+    font-family: @font-code;
+    font-size: .9em;
+    padding: 0 4px;
+    margin: 0 .1em;
+    border: 1px solid @color-border;
+    border-radius: 3px;
+    color: @color-code-dark;
+    background: @color-code-light;
+    word-break: break-all;
+}
+
+
+//////////////////////////////
+// codeblock
+//////////////////////////////
+
+pre {
+    margin: 1rem;
+    padding: 1.5em .5em;
+    background: @color-code-light;
+    border: 1px solid @color-border;
+    white-space: pre-wrap;
+    position: relative;
+    line-height: 1.25;
+    code {
+        font-family: @font-code;
+        font-size: .9rem;
+        color: @color-code-dark;
+        word-break: break-all;
+    }
+}
+pre.codeblock-header::before {
+    content: attr(data-label);
+    border-left: 1px solid @color-border;
+    border-bottom: 1px solid @color-border;
+    color: @color-code-dark;
+    display: block;
+    font-size: .75rem;
+    padding: 0 2px;
+    line-height: 1.5;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+// rightward-block
+pre.codeblock-header[data-label="right"] {
+    &::before{
+        display: none;
+    }
+    text-align: right;
+    border: none;
+    background: inherit;
+    color: inherit;
+    padding: 0;
+    margin: 2rem 1rem;
+}
+pre.codeblock-header[data-label="right"] > code {
+    font-size: 1rem;
+    font-family: @font-main;
+}
+
+// endonote-block
+pre.codeblock-header[data-label="endnote"] {
+    &::before{
+        display: none;
+    }
+    text-align: right;
+    border: none;
+    background: inherit;
+    color: inherit;
+    padding: 1em 0 0 1em;
+    margin: 6rem 0 0 auto;
+    border-top: 6px solid lighten(@color-border, 20%);
+    width: fit-content;
+}
+pre.codeblock-header[data-label="endnote"] > code {
+    font-size: .85rem;
+    font-family: @font-main;
+}
+
+
+//////////////////////////////
+// table
+//////////////////////////////
+
+table {
+    font-size: .9rem;
+    font-weight: lighter;
+    margin: 2rem auto;
+    word-break: break-all;
+    max-width: (@width-container - 2rem);
+    min-width: 50%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border-top: solid 2px @color-border;
+    border-bottom: solid 2px @color-border;
+    th, td {
+        padding: .2rem .5rem;
+        line-height: 1.25;
+        min-width: 2rem;
+    }
+    th {
+        text-align: center !important;
+        font-weight: bold;
+        line-height: 1.1;
+        border-bottom: 1px solid @color-border;
+        // white-space: nowrap;
+    }
+    tbody {
+        tr:nth-child(even) {
+            background: lighten(@color-border, 25%);
+        }
+    }
+}
+
+
+//////////////////////////////
+// custom class
+//////////////////////////////
+
+
+.timestamp {
+    margin-right: 1rem;
+    text-align: end;
+    font-size: 10px;
+    font-style: italic;
+    color: #666;
+}
+
+.toc {
+    position: absolute;
+    width: 16rem;
+    left: @width-container;
+    top: -1rem;
+    height: 100%;
+    font-size: .95rem;
+    ul {
+        position: sticky;
+        top: 1rem;
+    }
+    li {
+        text-align: left;
+        padding-left: 0;
+        line-height: 1;
+        margin: 8px auto;
+    }
+    li.toc-h2 { margin-left: 0em; }
+    li.toc-h3 { margin-left: 1em; }
+    li.toc-h4 { margin-left: 2em; }
+    li.toc-h5 { margin-left: 3em; }
+    li.toc-h6 { margin-left: 4em; }
+}
+@media print {
+    .toc {
+        display: none;
+    }
+}
+
+
+.page-separator {
+    color: #eb4034;
+    text-align: center;
+    page-break-after: always;
+    &::before {
+        content: "- - - - - - - - - - \2702 - - - - - - - - - -";
+    }
+}
+@media print {
+    .page-separator {
+        visibility: hidden;
+    }
+}
+
+.multicol {
+    columns: 2;
+    margin: 2rem 0;
+    padding: .5rem;
+    column-gap: 2em;
+    border: 1px solid lighten(@color-border, 20%);
+    border-radius: 4px;
+    font-size: .95rem;
+    ul, ol {
+        margin: 0;
+        ul, ol {
+            padding-left: 1em;
+        }
+    }
+    p {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+}
+
+.spacing-2 {
+    letter-spacing: .25em;
+}
+.spacing-3 {
+    letter-spacing: .2em;
+}
+.spacing-4 {
+    letter-spacing: .1em;
+}
+
+.countup, .count-up {
+    counter-reset: chap;
+    .chapter {
+        &::before {
+            content: "\7B2C" counter(chap) "\7AE0";
+            counter-increment: chap;
+            margin-right: .5em;
+        }
+    }
+}
+
+
+.tag {
+    font-size: .9em;
+    padding: 0 .1em;
+    color: tomato;
+    &::before {
+        content: "#";
+    }
+}
