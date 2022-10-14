@@ -158,12 +158,10 @@ class ReadLiner2 {
     }
 
     [void] RemoveTrailingPipe () {
-        $line = $this.Commandline
         $pos = $this.CursorPos
         if ($pos -gt 0) {
-            $len = $line.Length - $line.TrimEnd(" |").Length
+            $len = $this.CursorLine.BeforeCursor.Length - $this.CursorLine.BeforeCursor.TrimEnd(" |").Length
             [PSConsoleReadLine]::Delete($pos - $len, $len)
-            $this.CursorPos = $this.CursorPos - $len
         }
     }
 
@@ -210,33 +208,6 @@ class ReadLiner2 {
 
 }
 
-
-class PsAst {
-    $CommandAst = @()
-
-    PsAst() {
-        $ast = $null
-        $tokens = $null
-        $errors = $null
-        $cursor = $null
-        [PSConsoleReadLine]::GetBufferState([ref]$ast, [ref]$tokens, [ref]$errors, [ref]$cursor)
-        $this.CommandAst = $ast.FindAll( {
-            param ($params)
-            return $params[0] -is [System.Management.Automation.Language.CommandAst]
-        }, $true) | ForEach-Object {
-            return [PSCustomObject]@{
-                "Node" = $_;
-                "CursorOn" = $($_.Extent.StartOffset -le $cursor) -and ($_.Extent.EndOffset -ge $cursor);
-            }
-        }
-    }
-
-}
-
-Set-PSReadLineKeyHandler -Key "alt+q" -BriefDescription "test" -LongDescription "test" -ScriptBlock {
-    $a = [PsAst]::new()
-    $a.CommandAst | Write-Host
-}
 
 Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription "exit" -ScriptBlock {
     [PSConsoleReadLine]::Insert("<#SKIPHISTORY#>exit")
@@ -318,27 +289,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+Oem4" -BriefDescription "outdent" -LongDescr
 Set-PSReadLineKeyHandler -Key "ctrl+/" -BriefDescription "toggle-comment" -LongDescription "toggle-comment" -ScriptBlock {
     $rl = [ReadLiner2]::new()
     $rl.ToggleLineComment()
-}
-
-Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe-and-adjust-pos" -LongDescription "insert-pipe-and-adjust-pos" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    if ($rl.CursorLine.AfterCursor.Trim().Length -lt 1) {
-        [PSConsoleReadLine]::Insert(" | ")
-        return
-    }
-    $pos = $rl.CursorPos
-    if ($rl.CursorLine.AfterCursor.Trim().StartsWith("|")) {
-        [PSConsoleReadLine]::Insert(" | ")
-        [PSConsoleReadLine]::SetCursorPosition($pos + 3)
-        return
-    }
-    if ($rl.CursorLine.BeforeCursor.Trim().EndsWith("|")) {
-        [PSConsoleReadLine]::Insert("  | ")
-        [PSConsoleReadLine]::SetCursorPosition($pos + 1)
-        return
-    }
-    [PSConsoleReadLine]::Insert(" |  | ")
-    [PSConsoleReadLine]::SetCursorPosition($pos + 3)
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+|" -BriefDescription "find-matching-bracket" -LongDescription "find-matching-bracket" -ScriptBlock {
@@ -628,7 +578,7 @@ Set-PSReadLineKeyHandler -Key "alt+i" -BriefDescription "insert-invoke" -LongDes
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object" -LongDescription "insert-Select-Object" -ScriptBlock {
     [ReadLiner2]::new().RemoveTrailingPipe()
-    [PSConsoleReadLine]::Insert('|select -')
+    [PSConsoleReadLine]::Insert(' | select -')
     [PSConsoleReadLine]::MenuComplete()
 }
 
@@ -694,7 +644,7 @@ Set-PSReadlineKeyHandler -Key "alt+h" -BriefDescription "CommandHelp" -LongDescr
         if ($commandName -ne $null) {
             $command = $ExecutionContext.InvokeCommand.GetCommand($commandName, 'All')
             if ($command -is [System.Management.Automation.AliasInfo]) {
-            $commandName = $command.ResolvedCommandName
+                $commandName = $command.ResolvedCommandName
             }
 
             if ($commandName -ne $null) {
@@ -704,13 +654,9 @@ Set-PSReadlineKeyHandler -Key "alt+h" -BriefDescription "CommandHelp" -LongDescr
     }
 }
 
-Set-PSReadlineKeyHandler -Key "alt+L" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
-    param($key, $arg)
 
-    $ast = $null
-    $tokens = $null
-    $errors = $null
-    $cursor = $null
+Set-PSReadlineKeyHandler -Key "alt+L" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
+    $ast = $tokens = $errors = $cursor = $null
     [PSConsoleReadLine]::GetBufferState([ref]$ast, [ref]$tokens, [ref]$errors, [ref]$cursor)
 
     $lastPipe = $tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $cursor} | Select-Object -Last 1
@@ -719,6 +665,65 @@ Set-PSReadlineKeyHandler -Key "alt+L" -BriefDescription "toPreviousPipe" -LongDe
     }
 
 }
+
+Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescription "insert-pipe" -ScriptBlock {
+    [PSConsoleReadLine]::Insert("|")
+}
+
+Set-PSReadLineKeyHandler -Key "ctrl+k,l" -BriefDescription "insert-pipe-to-head" -LongDescription "insert-pipe-to-head" -ScriptBlock {
+    $ast = $tokens = $errors = $cursor = $null
+    [PSConsoleReadLine]::GetBufferState([ref]$ast, [ref]$tokens, [ref]$errors, [ref]$cursor)
+
+
+    $cmdAsts = $ast.FindAll({
+        return $args[0] -is [System.Management.Automation.Language.CommandAst]
+    }, $true)
+    $activeCmd = $cmdAsts | Where-Object {
+        return ($_.Extent.StartOffset -le $cursor) -and ($cursor -le $_.Extent.EndOffset)
+    } | Select-Object -Last 1
+
+    if ($activeCmd) {
+        [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.StartOffset)
+        [PSConsoleReadLine]::Insert("|")
+        [PSConsoleReadLine]::BackwardChar()
+        return
+    }
+
+    $lastCmd = $cmdAsts | Where-Object { $_.Extent.EndOffset -lt $cursor } | Select-Object -Last 1
+    if ($lastCmd) {
+        [PSConsoleReadLine]::SetCursorPosition($lastCmd.Extent.StartOffset)
+    }
+    [PSConsoleReadLine]::Insert("|")
+    [PSConsoleReadLine]::BackwardChar()
+
+}
+
+Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -BriefDescription "insert-pipe-to-tail" -LongDescription "insert-pipe-to-tail" -ScriptBlock {
+    $ast = $tokens = $errors = $cursor = $null
+    [PSConsoleReadLine]::GetBufferState([ref]$ast, [ref]$tokens, [ref]$errors, [ref]$cursor)
+
+
+    $cmdAsts = $ast.FindAll({
+        return $args[0] -is [System.Management.Automation.Language.CommandAst]
+    }, $true)
+    $activeCmd = $cmdAsts | Where-Object {
+        return ($_.Extent.StartOffset -le $cursor) -and ($cursor -le $_.Extent.EndOffset)
+    } | Select-Object -Last 1
+
+    if ($activeCmd) {
+        [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.EndOffset)
+        [PSConsoleReadLine]::Insert("|")
+        return
+    }
+
+    $nextCmd = $cmdAsts | Where-Object { $_.Extent.StartOffset -gt $cursor } | Select-Object -First 1
+    if ($nextCmd) {
+        [PSConsoleReadLine]::SetCursorPosition($nextCmd.Extent.EndOffset)
+    }
+    [PSConsoleReadLine]::Insert("|")
+
+}
+
 
 ##############################
 # others
