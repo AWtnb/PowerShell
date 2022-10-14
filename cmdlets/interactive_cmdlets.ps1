@@ -106,6 +106,13 @@ class PSAvailable {
         }
         $this.sources.Add(
             [PSCustomObject]@{
+               "name" = "mdLess";
+               "path" = ($this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets\python\markdown\markdown.less");
+               "lineNum" = 1;
+           }
+        ) >$null
+        $this.sources.Add(
+            [PSCustomObject]@{
                "name" = "PS1:PROFILE";
                "path" = $this.profPath;
                "lineNum" = 1;

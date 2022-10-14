@@ -6,33 +6,6 @@ cmdlets for treating markdown
                 encoding: utf8bom
 ============================== #>
 
-function mdLess {
-    param (
-        [switch]$edit
-        ,[switch]$gist
-    )
-    $lessPath = $PSScriptRoot | Join-Path -ChildPath "python\markdown\markdown.less"
-    if ($edit) {
-        "code $lessPath" | Invoke-Expression
-        return
-    }
-    $lessContent = Get-Item -LiteralPath $lessPath | Get-Content
-    if ($gist) {
-        Start-Process "https://gist.github.com/AWtnb/46d2b7a4cc53fb1a1883ff3fb1777477/edit"
-        $lessContent | Set-Clipboard
-        Write-Host "copied source of 'markdown.less'!" -ForegroundColor Green
-        return
-    }
-    return $lessContent
-}
-
-Set-PSReadLineKeyHandler -Key "alt+M" -BriefDescription "markdown-less" -LongDescription "markdown-less" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> mdLess -")
-    [Microsoft.PowerShell.PSConsoleReadLine]::MenuComplete()
-}
-
-
 
 function Invoke-MarkdownRenderPython {
     param (

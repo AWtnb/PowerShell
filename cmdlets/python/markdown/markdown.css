@@ -218,7 +218,7 @@ h4 strong,
 h5 strong,
 h6 strong {
   text-decoration: underline;
-  text-decoration-style: wavy;
+  text-decoration-style: double;
 }
 h1 + ul,
 h2 + ul,

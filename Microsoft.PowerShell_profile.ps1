@@ -569,6 +569,7 @@ function Invoke-7Z {
 Set-PSReadLineKeyHandler -Key "alt+'" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
     [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-7Z -path ")
+    [Microsoft.PowerShell.PSConsoleReadLine]::MenuComplete()
 }
 
 ##############################
