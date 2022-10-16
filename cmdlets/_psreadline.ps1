@@ -136,14 +136,20 @@ class ASTer {
         $this.cursor = $c
     }
 
-    [System.Object[]] Listup([string]$name) {
+    [System.Management.Automation.Language.Ast[]] Listup([string]$name) {
         return $this.ast.FindAll({
             return $args[0].GetType().Name.EndsWith($name)
         }, $true)
     }
 
-    [System.Object] GetActiveAst([string]$name) {
+    [System.Management.Automation.Language.Ast] GetActiveAst([string]$name) {
         return $this.Listup($name) | Where-Object {
+            return ($_.Extent.StartOffset -le $this.cursor) -and ($this.cursor -le $_.Extent.EndOffset)
+        } | Select-Object -Last 1
+    }
+
+    [System.Management.Automation.Language.Token] GetActiveToken() {
+        return $this.tokens | Where-Object {
             return ($_.Extent.StartOffset -le $this.cursor) -and ($this.cursor -le $_.Extent.EndOffset)
         } | Select-Object -Last 1
     }
@@ -168,10 +174,8 @@ class ASTer {
 
 
 Set-PSReadlineKeyHandler -Key "alt+L" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
-    $ast = $tokens = $errors = $cursor = $null
-    [PSConsoleReadLine]::GetBufferState([ref]$ast, [ref]$tokens, [ref]$errors, [ref]$cursor)
-
-    $lastPipe = $tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $cursor} | Select-Object -Last 1
+    $a = [ASTer]::new()
+    $lastPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $cursor} | Select-Object -Last 1
     if ($lastPipe) {
         [PSConsoleReadLine]::SetCursorPosition($lastPipe.Extent.EndOffset - 1)
     }
@@ -295,45 +299,40 @@ class ReadLiner2 {
         }
     }
 
-    [int] FindMatchingBracket () {
-        $pairs = @{
-            "{" = "}"; "[" = "]"; "(" = ")";
-            "}" = "{"; "]" = "["; ")" = "(";
-        }
-        $line = $this.CommandLine
-        $pos = $this.CursorPos
-        $curChar = $line[$pos] -as [string]
-        if ($curChar -notin $pairs.Keys) {
+    static [int] FindMatchingPairPos () {
+        $a = [ASTer]::new()
+        $activeToken = $a.GetActiveToken()
+        if (-not $activeToken) {
             return -1
         }
-        $bracket = $curChar
-        if ($bracket -in @("{", "[", "(")) {
-            $max = $line.Length - $pos
-            $step = 1
+        if ($activeToken.Kind.ToString().Substring(1) -notin @("Bracket", "Curly", "Paren")) {
+            return -1
+        }
+        $cur = $activeToken.Kind.ToString()
+        $name = $cur.Substring(1)
+        $skip = 0
+        $goal = -1
+        $focus = $a.tokens | Where-Object {$_.Kind.ToString().EndsWith($name)}
+        if ($cur.StartsWith("L")) {
+            $targets = $focus | Where-Object {$_.Extent.StartOffset -ge $activeToken.Extent.EndOffset}
         }
         else {
-            $max = $pos
-            $step = -1
+            $targets = $focus | Where-Object {$_.Extent.EndOffset -le $activeToken.Extent.StartOffset} | Sort-Object -Descending {$_.Extent.StartOffset}
         }
-        $target = $pairs[$bracket]
-        $found = -1
-        $skip = 0
-        for ($i = $step; $i -lt $max; $i += $step) {
-            $c = $line[$pos+$i] -as [string]
-            if ($c -eq $bracket) {
+
+        foreach ($token in $targets) {
+            if ($token.Kind.ToString() -eq $cur) {
                 $skip += 1
                 continue
             }
-            if ($c -eq $target) {
-                if ($skip -gt 0) {
-                    $skip -= 1
-                    continue
-                }
-                $found = $pos + $i
-                break
+            if ($skip -gt 0) {
+                $skip += -1
+                continue
             }
+            $goal = $token.Extent.StartOffset
+            break
         }
-        return $found
+        return $goal
     }
 
 }
@@ -433,15 +432,13 @@ Set-PSReadLineKeyHandler -Key "ctrl+/" -BriefDescription "toggle-comment" -LongD
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+|" -BriefDescription "find-matching-bracket" -LongDescription "find-matching-bracket" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $pos = $rl.FindMatchingBracket()
+    $pos = [ReadLiner2]::FindMatchingPairPos()
     if ($pos -ge 0) {
         [PSConsoleReadLine]::SetCursorPosition($pos)
     }
 }
 Set-PSReadLineKeyHandler -Key "alt+P" -BriefDescription "remove-matchingBraces" -LongDescription "remove-matchingBraces" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $pos = $rl.FindMatchingBracket()
+    $pos = [ReadLiner2]::FindMatchingPairPos()
     if ($pos -ge 0) {
         $start = [math]::Min($pos, $rl.CursorPos)
         $end = [math]::Max($pos, $rl.CursorPos)
