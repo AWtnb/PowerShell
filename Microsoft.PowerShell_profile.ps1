@@ -4,11 +4,6 @@ pwsh profile
 
                 encoding: utf8bom
 ============================== #>
-@("rdr") | ForEach-Object {
-    if (Get-Alias $_ -ErrorAction SilentlyContinue) {
-        Remove-Alias -Name $_ -Force
-    }
-}
 
 @(
     "Scoop-Completion"
