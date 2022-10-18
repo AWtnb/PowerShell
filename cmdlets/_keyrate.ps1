@@ -87,4 +87,4 @@ function Set-Keyrate {
     [PersonalKeyRateSettings.KeyRate]::Main($params)
 }
 
-Set-Keyrate -delay 180 -rate 12
+Set-Keyrate -delay 160 -rate 16

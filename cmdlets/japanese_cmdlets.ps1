@@ -353,7 +353,6 @@ class SudachiPy {
             $lines | Out-File -Encoding utf8NoBOM -FilePath $in.FullName
             $opt = ($ignoreParen)? "IgnoreParen" : "IncludeParen"
             Start-Process -Path python.exe -wait -ArgumentList @("-B", $sudachiPath, $in.FullName, $out.FullName, $opt) -NoNewWindow
-            # 'python -B "{0}" "{1}" "{2}" {3}' -f $sudachiPath, $in.FullName, $out.FullName, $opt | Invoke-Expression
             $this.parsed = Get-Content -Path $out.FullName -Encoding utf8NoBOM | ConvertFrom-Json
         }
     }
@@ -429,7 +428,7 @@ function Get-ReadingWithSudachi {
 }
 
 
-function ConvertTo-BookIndexReading {
+function Convert-LinesToBookIndexReading {
     param (
         [switch]$asTsv
     )
@@ -441,80 +440,6 @@ function ConvertTo-BookIndexReading {
     }
     return $result
 }
-
-# function New-YomiObject {
-#     param (
-#         [switch]$ignoreParen
-#     )
-
-#     $lines = New-Object System.Collections.ArrayList
-#     $input.ForEach({$lines.Add($_) > $null})
-
-#     $sudachi = [SudachiPy]::new($lines, $ignoreParen)
-#     return $sudachi.GetReading() | ForEach-Object {
-#         return [PSCustomObject]@{
-#             "Line" = $_.Line;
-#             "Reading" = $_.Reading;
-#             "Normalized" = $_.Normalized;
-#             "Roman" = $_.Roman;
-#         }
-#     }
-
-# }
-
-
-function ConvertTo-HtmlEntity {
-    param (
-        [parameter(ValueFromPipeline = $true)]$inputLine
-    )
-    begin {}
-    process {
-        $array = New-Object System.Collections.ArrayList
-        ($inputLine -as [string]).GetEnumerator() | ForEach-Object {
-            $array.Add(('&#x{0}' -f (char2codepoint $_))) > $null
-        }
-        ($array -join ";") + ";" | Write-Output
-        $array.Clear()
-    }
-    end {}
-}
-
-
-function Find-PseudoVoicingMark {
-    return $(Get-ChildItem | Where-Object {$_.Name -match "\u309a|\u309b|\u309c|\u3099"})
-}
-
-function Convert-FixPseudoVoicingMark {
-    <#
-        .EXAMPLE
-        ls | rename-item -newname {$_.name | Convert-UniteVoicingMark}
-    #>
-    $input | ForEach-Object {
-        $ret = $_
-        # 濁点処理
-        $pseudoVoicing = [regex]::Matches($ret, ".(?=(\u3099|\u309b))").Value | Sort-Object | Get-Unique
-        foreach ($k in $pseudoVoicing) {
-            $ret = $ret -replace ("{0}(\u3099|\u309b)" -f $k), [FormatJP]::ToVoicing($k)
-        }
-
-        # 半濁点処理
-        $pseudoHalfVoicing = [regex]::Matches($ret, ".(?=(\u309a|\u309c))").Value | Sort-Object | Get-Unique
-        foreach ($k in $pseudoHalfVoicing) {
-            $ret = $ret -replace ("{0}(\u309a|\u309c)" -f $k), [FormatJP]::ToHalfVoicing($k)
-        }
-        Write-Output $ret
-    }
-}
-
-function Rename-FixPseudoVoicingMark {
-    Find-PseudoVoicingMark | ForEach-Object {
-        $newName = $_.Name | Convert-FixPseudoVoicingMark
-        $_ | Rename-Item -NewName $newName
-        "Fixed pseudo voicing-mark in '{0}'" -f $_.Name | Write-Host -ForegroundColor Cyan
-    }
-}
-
-
 
 function uni {
     & ("C:\Users\{0}\Dropbox\portable_apps\cli\uni\uni.exe" -f $env:USERNAME) $args

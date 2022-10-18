@@ -173,13 +173,12 @@ class ASTer {
 }
 
 
-Set-PSReadlineKeyHandler -Key "alt+L" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
+Set-PSReadlineKeyHandler -Key "ctrl+alt+l" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
     $a = [ASTer]::new()
-    $lastPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $cursor} | Select-Object -Last 1
+    $lastPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $a.cursor} | Select-Object -Last 1
     if ($lastPipe) {
         [PSConsoleReadLine]::SetCursorPosition($lastPipe.Extent.EndOffset - 1)
     }
-
 }
 
 Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescription "insert-pipe" -ScriptBlock {
