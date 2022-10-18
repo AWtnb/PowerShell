@@ -241,6 +241,60 @@ Set-PSReadLineKeyHandler -Key "ctrl+F8" -ScriptBlock {
     [PSConsoleReadLine]::Insert("[GoogleImeDb]::GetExportedData() | ? Word -match ")
 }
 
+##############################
+# Pseudo-voicing mark fixer
+##############################
+
+class PseudoVoicing {
+    [string]$origin
+    [string]$formatted
+    PseudoVoicing([string]$s) {
+        $this.origin = $s
+        $this.formatted = $this.origin
+    }
+    [void] FixVoicing() {
+        $this.formatted = [regex]::new(".[\u309b\u3099]").Replace($this.formatted, {
+            param($m)
+            $c = $m.Value.Substring(0,1)
+            if ($c -eq "`u{3046}") {
+                return "`u{3094}"
+            }
+            if ($c -eq "`u{30a6}") {
+                return "`u{30f4}"
+            }
+            return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 1))
+        })
+    }
+    [void] FixHalfVoicing() {
+        $this.formatted = [regex]::new(".[\u309a\u309c]").Replace($this.formatted, {
+            param($m)
+            $c = $m.Value.Substring(0,1)
+            return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 2))
+        })
+    }
+}
+
+class MacOSFile {
+    [System.IO.FileInfo[]]$files
+    MacOSFile() {
+        $this.files = @(Get-ChildItem -Path $PWD.Path | Where-Object {$_.BaseName -match "\u309a|\u309b|\u309c|\u3099"})
+    }
+    [void]Rename(){
+        $this.files | ForEach-Object {
+            "Pseudo voicing-mark on '{0}'!" -f $_.Name | Write-Host -ForegroundColor Magenta
+            $ask = Read-Host "Fix? (y/n)"
+            if ($ask -ne "y") {
+                return
+            }
+            $n = [PseudoVoicing]::new($_.Name)
+            $n.FixHalfVoicing()
+            $n.FixVoicing()
+            $_ | Rename-Item -NewName $n.formatted
+            "==> Fixed!" | Write-Host
+        }
+    }
+}
+
 
 
 #################################################################
@@ -341,9 +395,8 @@ function prompt {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
     }
 
-    Get-ChildItem | Where-Object {$_.Name -match "\u309a|\u309b|\u309c|\u3099"} | ForEach-Object {
-        "Pseudo voicing-mark on '{0}'!" -f $_.Name | Write-Host -ForegroundColor Red
-    }
+    $mf = [MacOSFile]::new()
+    $mf.Rename()
 
     Test-GoogleIme
 
@@ -425,10 +478,6 @@ function sieve ([switch]$net) {
 function thunderbirdDir {
     return $($env:APPDATA|Join-Path -ChildPath "thunderbird")
 }
-
-# function Format-RemoveNoisyWhiteSpace {
-#     return $($input -replace "(?<![0-9a-zA-Z\.,])[ 　]|[ 　](?![0-9a-zA-Z\.,])")
-# }
 
 function padZero ([int]$pad) {
     $input | ForEach-Object {"{0:d$($pad)}" -f [int]$_ | Write-Output}
