@@ -406,8 +406,11 @@ function Invoke-AcceptFormatRevisionOnActiveWordDocument {
         "ReviewShowFormatting" = $true;
     }.GetEnumerator() | ForEach-Object {
         if ($wd.CommandBars.GetPressedMso($_.Key) -ne $_.Value) {
-            $wd.CommandBars.ExecuteMso($_.Key)
-            "Status changed: '{0}' ==> {1}" -f $_.Key, $_.Value | Write-Host -ForegroundColor DarkBlue
+            try {
+                $wd.CommandBars.ExecuteMso($_.Key)
+                "Status changed: '{0}' ==> {1}" -f $_.Key, $_.Value | Write-Host -ForegroundColor DarkBlue
+            }
+            catch {}
         }
     }
     Write-Host "now only FORMAT revisions are displayed." -ForegroundColor Cyan

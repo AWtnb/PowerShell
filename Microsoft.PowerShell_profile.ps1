@@ -709,12 +709,13 @@ class PwshRepo {
     }
 
     [System.Object[]]GetUnusedItems() {
-        $actives = $this.activeDir | Get-ChildItem -Recurse | ForEach-Object {
+        $activeFiles = $this.activeDir | Get-ChildItem -Recurse
+        $rels = $activeFiles | ForEach-Object {
             return [System.IO.Path]::GetRelativePath($this.activeDir, $_.Fullname)
         }
-        return $this.repoDir | Get-ChildItem -Recurse | Where-Object { $_.Name -ne "README.md" } | Where-Object {
+        return $this.repoDir | Get-ChildItem -Recurse | Where-Object { $_.Name -notin @(".gitignore", "README.md") } | Where-Object {
             $rel = [System.IO.Path]::GetRelativePath($this.repoDir, $_.Fullname)
-            return $rel -notin $actives
+            return $rel -notin $rels
         }
     }
 
