@@ -238,8 +238,8 @@ li {
   text-align: justify;
   word-break: break-all;
 }
-li > div.wrapper-li > p {
-  margin: 0;
+li > p {
+  display: contents;
 }
 li.empty {
   list-style: none;
