@@ -134,7 +134,7 @@ class CustomRenderer(HTMLRenderer):
             inner_html = inner_html[5:]
         else:
             attr = ""
-        return '<li{}><div class="wrapper-li">{}</div></li>'.format(attr, inner_html)
+        return '<li{}>{}</li>'.format(attr, inner_html)
 
     def render_table_cell(self, token, in_header=False):
         template = '<{tag}{attr}>{inner}</{tag}>\n'
