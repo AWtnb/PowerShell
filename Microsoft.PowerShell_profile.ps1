@@ -475,10 +475,6 @@ function sieve ([switch]$net) {
     $input | Where-Object {return ($net)? ($_ -replace "\s") : $_} | Write-Output
 }
 
-function thunderbirdDir {
-    return $($env:APPDATA|Join-Path -ChildPath "thunderbird")
-}
-
 function padZero ([int]$pad) {
     $input | ForEach-Object {"{0:d$($pad)}" -f [int]$_ | Write-Output}
 }
