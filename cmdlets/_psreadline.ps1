@@ -77,7 +77,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDe
     [PSConsoleReadLine]::AcceptLine()
 }
 
-
 # format string
 Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "ctrl+k,4", "ctrl+k,5", "ctrl+k,6", "ctrl+k,7", "ctrl+k,8", "ctrl+k,9" -ScriptBlock {
     param($key, $arg)
@@ -217,6 +216,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -BriefDescription "insert-pipe-to-t
     [PSConsoleReadLine]::Insert("|")
 }
 
+
+
 class PSCursorLine {
     [string]$Text
     [string]$BeforeCursor
@@ -242,30 +243,26 @@ class PSCursorLine {
 
 }
 
-class ReadLiner2 {
+class PSBufferState {
     [string]$Commandline
     [int]$CursorPos
     [PSCursorLine]$CursorLine
     [int]$SelectionStart
     [int]$SelectionLength
-    [bool]$HasRange
 
-    ReadLiner2() {
-        $line = $null
-        $pos = $null
+    PSBufferState() {
+        $line = $pos = $null
         [PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$pos)
         $this.Commandline = $line
         $this.CursorPos = $pos
         $this.CursorLine = [PSCursorLine]::new($line, $pos)
-        $start = $null
-        $length = $null
+        $start = $length = $null
         [PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$length)
         $this.SelectionStart = $start
         $this.SelectionLength = $length
-        $this.HasRange = $this.SelectionLength -gt 0
     }
 
-    [void] ToggleLineComment () {
+    [void] ToggleLineComment() {
         $pos = $this.CursorPos
         $top = $this.CursorLine.StartPos
         $indent = $this.CursorLine.Indent
@@ -281,7 +278,7 @@ class ReadLiner2 {
         }
     }
 
-    [void] IndentLine () {
+    [void] IndentLine() {
         $pos = $this.CursorPos
         $top = $this.CursorLine.StartPos
         [PSConsoleReadLine]::SetCursorPosition($top)
@@ -289,7 +286,7 @@ class ReadLiner2 {
         [PSConsoleReadLine]::SetCursorPosition($pos+2)
     }
 
-    [void] OutdentLine () {
+    [void] OutdentLine() {
         $indent = $this.CursorLine.Indent
         if ($indent -ge 2) {
             $top = $this.CursorLine.StartPos
@@ -298,7 +295,13 @@ class ReadLiner2 {
         }
     }
 
-    static [int] FindMatchingPairPos () {
+    static [bool] IsSelecting() {
+        $start = $length = $null
+        [PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$length)
+        return $length -gt 0
+    }
+
+    static [int] FindMatchingPairPos() {
         $a = [ASTer]::new()
         $activeToken = $a.GetActiveToken()
         if (-not $activeToken) {
@@ -337,15 +340,13 @@ class ReadLiner2 {
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    if ($rl.HasRange) {
+    if ([PSBufferState]::IsSelecting()) {
         [PSConsoleReadLine]::BackwardDeleteChar()
     }
     [PSConsoleReadLine]::BackwardKillWord()
 }
 Set-PSReadLineKeyHandler -Key "ctrl+delete" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    if ($rl.HasRange) {
+    if ([PSBufferState]::IsSelecting()) {
         [PSConsoleReadLine]::DeleteChar()
     }
     [PSConsoleReadLine]::KillWord()
@@ -353,32 +354,32 @@ Set-PSReadLineKeyHandler -Key "ctrl+delete" -ScriptBlock {
 
 
 Set-PSReadLineKeyHandler -Key "alt+[" -BriefDescription "insert-multiline-brace" -LongDescription "insert-multiline-brace" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $pos = $rl.CursorPos
-    $indent = $rl.CursorLine.Indent
+    $bs = [PSBufferState]::new()
+    $pos = $bs.CursorPos
+    $indent = $bs.CursorLine.Indent
     $filler = " " * $indent
     [PSConsoleReadLine]::Insert("{" + "`n  $filler`n$filler" + "}")
     [PSConsoleReadLine]::SetCursorPosition($pos + 2 + $indent + 2)
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+j" -Description "smart-InsertLineBelow" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $indent = $rl.CursorLine.Indent
+    $bs = [PSBufferState]::new()
+    $indent = $bs.CursorLine.Indent
     [PSConsoleReadLine]::InsertLineBelow()
     [PSConsoleReadLine]::Insert(" " * $indent)
 }
 Set-PSReadLineKeyHandler -Key "ctrl+J" -Description "smart-InsertLineAbove" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $indent = $rl.CursorLine.Indent
+    $bs = [PSBufferState]::new()
+    $indent = $bs.CursorLine.Indent
     [PSConsoleReadLine]::InsertLineAbove()
     [PSConsoleReadLine]::Insert(" " * $indent)
 }
 
 Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-indent" -LongDescription "addline-and-indent" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    $pos = $rl.CursorPos
-    $indent = $rl.CursorLine.Indent
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    $pos = $bs.CursorPos
+    $indent = $bs.CursorLine.Indent
     $filler = " " * $indent
     if ($line[$pos] -eq "}") {
         if ($line[$pos - 1] -eq "{") {
@@ -398,16 +399,16 @@ Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-inden
 
 # ctrl+shift+]
 Set-PSReadLineKeyHandler -Key "ctrl+shift+Oem6" -BriefDescription "dupl-down" -LongDescription "duplicate-currentline-down" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $curLine = $rl.CursorLine.Text
-    $curLineStart = $rl.CursorLine.StartPos
+    $bs = [PSBufferState]::new()
+    $curLine = $bs.CursorLine.Text
+    $curLineStart = $bs.CursorLine.StartPos
     [PSConsoleReadLine]::Replace($curLineStart, $curLine.Length, $curLine+"`n"+$curLine)
 }
 # ctrl+shift+[
 Set-PSReadLineKeyHandler -Key "ctrl+shift+Oem4" -BriefDescription "dupl-up" -LongDescription "duplicate-currentline-up" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $curLine = $rl.CursorLine.Text
-    $curLineStart = $rl.CursorLine.StartPos
+    $bs = [PSBufferState]::new()
+    $curLine = $bs.CursorLine.Text
+    $curLineStart = $bs.CursorLine.StartPos
     [PSConsoleReadLine]::Replace($curLineStart, $curLine.Length, $curLine+"`n"+$curLine)
     [PSConsoleReadLine]::SetCursorPosition($curLineStart)
 
@@ -416,42 +417,42 @@ Set-PSReadLineKeyHandler -Key "ctrl+shift+Oem4" -BriefDescription "dupl-up" -Lon
 
 # ctrl+]
 Set-PSReadLineKeyHandler -Key "ctrl+Oem6" -BriefDescription "indent" -LongDescription "indent" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $rl.IndentLine()
+    $bs = [PSBufferState]::new()
+    $bs.IndentLine()
 }
 # ctrl+[
 Set-PSReadLineKeyHandler -Key "ctrl+Oem4" -BriefDescription "outdent" -LongDescription "outdent" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $rl.OutdentLine()
+    $bs = [PSBufferState]::new()
+    $bs.OutdentLine()
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+/" -BriefDescription "toggle-comment" -LongDescription "toggle-comment" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $rl.ToggleLineComment()
+    $bs = [PSBufferState]::new()
+    $bs.ToggleLineComment()
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+|" -BriefDescription "find-matching-bracket" -LongDescription "find-matching-bracket" -ScriptBlock {
-    $pos = [ReadLiner2]::FindMatchingPairPos()
+    $pos = [PSBufferState]::FindMatchingPairPos()
     if ($pos -ge 0) {
         [PSConsoleReadLine]::SetCursorPosition($pos)
     }
 }
 Set-PSReadLineKeyHandler -Key "alt+P" -BriefDescription "remove-matchingBraces" -LongDescription "remove-matchingBraces" -ScriptBlock {
-    $pos = [ReadLiner2]::FindMatchingPairPos()
+    $pos = [PSBufferState]::FindMatchingPairPos()
     if ($pos -ge 0) {
-        $start = [math]::Min($pos, $rl.CursorPos)
-        $end = [math]::Max($pos, $rl.CursorPos)
+        $start = [math]::Min($pos, $bs.CursorPos)
+        $end = [math]::Max($pos, $bs.CursorPos)
         $len = $end - $start + 1
-        $repl = $rl.CommandLine.Substring($start+1, $len-2)
+        $repl = $bs.CommandLine.Substring($start+1, $len-2)
         [PSConsoleReadLine]::Replace($start, $len, $repl)
     }
 }
 
 Set-PSReadLineKeyHandler -Key "home" -BriefDescription "smart-home" -LongDescription "smart-home" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $pos = $rl.CursorPos
-    $indent = $rl.CursorLine.Indent
-    $top = $rl.CursorLine.StartPos
+    $bs = [PSBufferState]::new()
+    $pos = $bs.CursorPos
+    $indent = $bs.CursorLine.Indent
+    $top = $bs.CursorLine.StartPos
     if ($pos -gt $top + $indent) {
         [PSConsoleReadLine]::SetCursorPosition($top + $indent)
     }
@@ -464,7 +465,7 @@ Set-PSReadLineKeyHandler -Key "home" -BriefDescription "smart-home" -LongDescrip
 Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDescription "smart-paste" -ScriptBlock {
     $cb = @(Get-Clipboard)
     $s = ($cb.Count -gt 1)? ($cb | ForEach-Object {($_ -as [string]).TrimEnd()} | Join-String -Separator "`n" -OutputPrefix "@'`n" -OutputSuffix "`n'@") : $cb
-    if ([ReadLiner2]::new().HasRange) {
+    if ([PSBufferState]::IsSelecting()) {
         [PSConsoleReadLine]::DeleteChar()
     }
     [PSConsoleReadLine]::Insert($s)
@@ -477,7 +478,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
 Set-PSReadLineKeyHandler -Key "alt+a" -BriefDescription "yankLastArgAsVariable" -LongDescription "yankLastArgAsVariable" -ScriptBlock {
     [PSConsoleReadLine]::Insert("$")
     [PSConsoleReadLine]::YankLastArg()
-    $line = [ReadLiner2]::new().CommandLine
+    $line = [PSBufferState]::new().CommandLine
     if ($line -match '\$\$') {
         $newLine = $line -replace '\$\$', "$"
         [PSConsoleReadLine]::Replace(0, $line.Length, $newLine)
@@ -497,13 +498,13 @@ Set-PSReadLineKeyHandler -Key "(","{","[" -BriefDescription "InsertPairedBraces"
         <#case#> "[" { [char]"]"; break }
     }
 
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    $pos = $rl.CursorPos
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    $pos = $bs.CursorPos
 
-    if ($rl.HasRange) {
-        [PSConsoleReadLine]::Replace($rl.SelectionStart, $rl.selectionLength, $openChar + $line.SubString($rl.selectionStart, $rl.selectionLength) + $closeChar)
-        [PSConsoleReadLine]::SetCursorPosition($rl.selectionStart + $rl.selectionLength + 2)
+    if ($bs.SelectionLength -gt 0) {
+        [PSConsoleReadLine]::Replace($bs.SelectionStart, $bs.selectionLength, $openChar + $line.SubString($bs.selectionStart, $bs.selectionLength) + $closeChar)
+        [PSConsoleReadLine]::SetCursorPosition($bs.selectionStart + $bs.selectionLength + 2)
         return
     }
 
@@ -520,9 +521,9 @@ Set-PSReadLineKeyHandler -Key "(","{","[" -BriefDescription "InsertPairedBraces"
 Set-PSReadLineKeyHandler -Key ")","]","}" -BriefDescription "SmartCloseBraces" -LongDescription "Insert closing brace or skip" -ScriptBlock {
     param($key, $arg)
 
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    $pos = $rl.CursorPos
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    $pos = $bs.CursorPos
 
     if ($line[$pos] -eq $key.KeyChar) {
         [PSConsoleReadLine]::SetCursorPosition($pos + 1)
@@ -534,27 +535,27 @@ Set-PSReadLineKeyHandler -Key ")","]","}" -BriefDescription "SmartCloseBraces" -
 
 Set-PSReadLineKeyHandler -Key "alt+w","alt+(" -BriefDescription "WrapLineByParenthesis" -LongDescription "Wrap the entire line or selection and move the cursor after the closing punctuation" -ScriptBlock {
     $prefix, $suffix = @('(', ')')
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    if ($rl.HasRange) {
-        [PSConsoleReadLine]::Replace($rl.selectionStart, $rl.selectionLength, $prefix + $line.SubString($rl.selectionStart, $rl.selectionLength) + $suffix)
-        [PSConsoleReadLine]::SetCursorPosition($rl.selectionStart + $rl.selectionLength + 2)
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    if ($bs.SelectionLength -gt 0) {
+        [PSConsoleReadLine]::Replace($bs.selectionStart, $bs.selectionLength, $prefix + $line.SubString($bs.selectionStart, $bs.selectionLength) + $suffix)
+        [PSConsoleReadLine]::SetCursorPosition($bs.selectionStart + $bs.selectionLength + 2)
         return
     }
-    $curLine = $rl.CursorLine.Text
-    $curLineStart = $rl.CursorLine.StartPos
+    $curLine = $bs.CursorLine.Text
+    $curLineStart = $bs.CursorLine.StartPos
     [PSConsoleReadLine]::Replace($curLineStart, $curLine.Length, $prefix + $curLine + $suffix)
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,t" -BriefDescription "cast-as-type" -LongDescription "cast-as-type" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    if (-not $rl.HasRange) {
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    if (-not $bs.SelectionLength -gt 0) {
         return
     }
-    $repl = "({0} -as [])" -f $line.SubString($rl.selectionStart, $rl.selectionLength)
-    [PSConsoleReadLine]::Replace($rl.selectionStart, $rl.selectionLength, $repl)
-    [PSConsoleReadLine]::SetCursorPosition($rl.selectionStart + $rl.selectionLength + 7)
+    $repl = "({0} -as [])" -f $line.SubString($bs.selectionStart, $bs.selectionLength)
+    [PSConsoleReadLine]::Replace($bs.selectionStart, $bs.selectionLength, $repl)
+    [PSConsoleReadLine]::SetCursorPosition($bs.selectionStart + $bs.selectionLength + 7)
 }
 
 ##############################
@@ -566,9 +567,9 @@ Set-PSReadLineKeyHandler -Key "tab" -BriefDescription "smartNextCompletion" -Lon
 
     [PSConsoleReadLine]::TabCompleteNext()
 
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    $pos = $rl.CursorPos
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    $pos = $bs.CursorPos
     if ($line[($pos - 1)] -eq "(") {
         if ($line[$pos] -ne ")") {
             [PSConsoleReadLine]::Insert(")")
@@ -581,9 +582,9 @@ Remove-PSReadlineKeyHandler "shift+tab"
 Set-PSReadLineKeyHandler -Key "shift+tab" -BriefDescription "smartPreviousCompletion" -LongDescription "insert closing parenthesis in backward completion of method" -ScriptBlock {
 
     [PSConsoleReadLine]::TabCompletePrevious()
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    $pos = $rl.CursorPos
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    $pos = $bs.CursorPos
 
     if ($line[($pos - 1)] -eq "(") {
         if ($line[$pos] -ne ")") {
@@ -601,13 +602,13 @@ Set-PSReadLineKeyHandler -Key "`"","'" -BriefDescription "smartQuotation" -LongD
     param($key, $arg)
     $mark = $key.KeyChar
 
-    $rl = [ReadLiner2]::new()
-    $line = $rl.CommandLine
-    $pos = $rl.CursorPos
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    $pos = $bs.CursorPos
 
-    if ($rl.HasRange) {
-        [PSConsoleReadLine]::Replace($rl.selectionStart, $rl.selectionLength, $mark + $line.SubString($rl.selectionStart, $rl.selectionLength) + $mark)
-        [PSConsoleReadLine]::SetCursorPosition($rl.selectionStart + $rl.selectionLength + 2)
+    if ($bs.SelectionLength -gt 0) {
+        [PSConsoleReadLine]::Replace($bs.selectionStart, $bs.selectionLength, $mark + $line.SubString($bs.selectionStart, $bs.selectionLength) + $mark)
+        [PSConsoleReadLine]::SetCursorPosition($bs.selectionStart + $bs.selectionLength + 2)
         return
     }
 
@@ -639,9 +640,9 @@ Set-PSReadLineKeyHandler -Key "alt+R,b" -BriefDescription "insert-regex-bracket"
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,i" -BriefDescription "insert-if-else-block" -LongDescription "insert-if-else-block" -ScriptBlock {
-    $rl = [ReadLiner2]::new()
-    $pos = $rl.CursorPos
-    $indent = $rl.CursorLine.Indent
+    $bs = [PSBufferState]::new()
+    $pos = $bs.CursorPos
+    $indent = $bs.CursorLine.Indent
     $filler = " " * $indent
     $lines = @('if ($_ ) {', ($filler + '  $_'), ($filler + "}"), ($filler + "else {"), ($filler + '  $_'), ($filler + "}"))
     [PSConsoleReadLine]::Insert($lines -join "`n")
