@@ -111,7 +111,6 @@ Set-PSReadLineKeyHandler -Key "alt+d" -BriefDescription "openDraft" -LongDescrip
 # cursor jump
 Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」（）『』『』［］、，。：；／　"
 @{
-    "ctrl+n" = "ForwardWord";
     "ctrl+RightArrow" = "ForwardWord";
     "ctrl+LeftArrow" = "BackwardWord";
     "ctrl+shift+RightArrow" = "SelectForwardWord";
@@ -216,6 +215,17 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -BriefDescription "insert-pipe-to-t
     [PSConsoleReadLine]::Insert("|")
 }
 
+
+Set-PSReadLineKeyHandler -Key "ctrl+n" -BriefDescription "smart-forwardWord" -LongDescription "smart-forwardWord" -ScriptBlock {
+    [PSConsoleReadLine]::ForwardWord()
+    $a = [ASTer]::new()
+    $aToken = $a.GetActiveToken()
+    if ($aToken.Kind -eq "StringExpandable") {
+        if ($aToken.Text.EndsWith('"')) { return }
+        if ($aToken.Text.EndsWith("'")) { return }
+        [PSConsoleReadLine]::Insert($aToken.Text.Substring(0,1))
+    }
+}
 
 
 class PSCursorLine {
