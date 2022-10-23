@@ -220,9 +220,11 @@ Set-PSReadLineKeyHandler -Key "ctrl+n" -BriefDescription "smart-forwardWord" -Lo
     [PSConsoleReadLine]::ForwardWord()
     $a = [ASTer]::new()
     $aToken = $a.GetActiveToken()
-    if ($aToken.Kind -eq "StringExpandable") {
-        if ($aToken.Text.EndsWith('"')) { return }
-        if ($aToken.Text.EndsWith("'")) { return }
+    if (
+        ($aToken.Kind -eq "StringExpandable" -and -not $aToken.Text.EndsWith('"')) `
+        -or `
+        ($aToken.Kind -eq "StringLiteral" -and -not $aToken.Text.EndsWith("'")) `
+    ) {
         [PSConsoleReadLine]::Insert($aToken.Text.Substring(0,1))
     }
 }
