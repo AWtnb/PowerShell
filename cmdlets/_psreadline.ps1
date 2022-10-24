@@ -19,9 +19,6 @@ Set-PSReadlineOption -HistoryNoDuplicates `
         param ($command)
         switch -regex ($command) {
             "SKIPHISTORY" {return $false}
-            # "^[a-z]$" {return $false}
-            # "^[a-z] " {return $false}
-            # "exit" {return $false}
             "^dsk$" {return $false}
             " -execute" {return $false}
             " -force" {return $false}
@@ -575,35 +572,27 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,t" -BriefDescription "cast-as-type" -LongD
 ##############################
 
 Remove-PSReadlineKeyHandler "tab"
-Set-PSReadLineKeyHandler -Key "tab" -BriefDescription "smartNextCompletion" -LongDescription "insert closing parenthesis in forward completion of method" -ScriptBlock {
-
-    [PSConsoleReadLine]::TabCompleteNext()
-
-    $bs = [PSBufferState]::new()
-    $line = $bs.CommandLine
-    $pos = $bs.CursorPos
-    if ($line[($pos - 1)] -eq "(") {
-        if ($line[$pos] -ne ")") {
-            [PSConsoleReadLine]::Insert(")")
-            [PSConsoleReadLine]::BackwardChar()
-        }
-    }
-}
-
 Remove-PSReadlineKeyHandler "shift+tab"
-Set-PSReadLineKeyHandler -Key "shift+tab" -BriefDescription "smartPreviousCompletion" -LongDescription "insert closing parenthesis in backward completion of method" -ScriptBlock {
-
-    [PSConsoleReadLine]::TabCompletePrevious()
-    $bs = [PSBufferState]::new()
-    $line = $bs.CommandLine
-    $pos = $bs.CursorPos
-
-    if ($line[($pos - 1)] -eq "(") {
-        if ($line[$pos] -ne ")") {
-            [PSConsoleReadLine]::Insert(")")
-            [PSConsoleReadLine]::BackwardChar()
-        }
+Set-PSReadLineKeyHandler -Key "tab" -BriefDescription "smartCompletion" -LongDescription "insert closing parenthesis in forward completion of method" -ScriptBlock {
+    param($key, $arg)
+    if ($key.Modifiers -eq "Shift") {
+        [PSConsoleReadLine]::TabCompletePrevious()
     }
+    else {
+        [PSConsoleReadLine]::TabCompleteNext()
+    }
+    $a = [ASTer]::new()
+    if ($a.GetPreviousToken().Kind -ne "LParen") {
+        if ($a.GetActiveToken().Kind -eq "RParen") {
+            [PSConsoleReadLine]::DeleteChar()
+        }
+        return
+    }
+    if ($a.GetActiveToken().Kind -eq "RParen") {
+        return
+    }
+    [PSConsoleReadLine]::Insert(")")
+    [PSConsoleReadLine]::BackwardChar()
 }
 
 ##############################
@@ -644,22 +633,15 @@ Set-PSReadLineKeyHandler -Key "`"","'" -BriefDescription "smartQuotation" -LongD
 # snippets
 ##############################
 
-Set-PSReadLineKeyHandler -Key "alt+R,p" -BriefDescription "insert-regex-paren" -LongDescription "insert-regex-paren" -ScriptBlock {
-    [PSConsoleReadLine]::Insert('[\(（].+?[\)）]')
-}
-Set-PSReadLineKeyHandler -Key "alt+R,b" -BriefDescription "insert-regex-bracket" -LongDescription "insert-regex-bracket" -ScriptBlock {
-    [PSConsoleReadLine]::Insert('[\[［].+?[\]］]')
-}
-
-Set-PSReadLineKeyHandler -Key "ctrl+k,i" -BriefDescription "insert-if-else-block" -LongDescription "insert-if-else-block" -ScriptBlock {
-    $bs = [PSBufferState]::new()
-    $pos = $bs.CursorPos
-    $indent = $bs.CursorLine.Indent
-    $filler = " " * $indent
-    $lines = @('if ($_ ) {', ($filler + '  $_'), ($filler + "}"), ($filler + "else {"), ($filler + '  $_'), ($filler + "}"))
-    [PSConsoleReadLine]::Insert($lines -join "`n")
-    [PSConsoleReadLine]::SetCursorPosition($pos + 7)
-}
+# Set-PSReadLineKeyHandler -Key "ctrl+k,i" -BriefDescription "insert-if-else-block" -LongDescription "insert-if-else-block" -ScriptBlock {
+#     $bs = [PSBufferState]::new()
+#     $pos = $bs.CursorPos
+#     $indent = $bs.CursorLine.Indent
+#     $filler = " " * $indent
+#     $lines = @('if ($_ ) {', ($filler + '  $_'), ($filler + "}"), ($filler + "else {"), ($filler + '  $_'), ($filler + "}"))
+#     [PSConsoleReadLine]::Insert($lines -join "`n")
+#     [PSConsoleReadLine]::SetCursorPosition($pos + 7)
+# }
 
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,f","ctrl+k,w" -BriefDescription "insert-alias" -LongDescription "insert-alias" -ScriptBlock {
