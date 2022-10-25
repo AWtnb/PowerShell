@@ -965,3 +965,15 @@ function Format-ActiveExcelChart {
 }
 
 
+function Remove-PaddingFromActiveWordSelectionTableCells {
+    $wd = Get-ActiveWordApp
+    if (-not $wd) {
+        return
+    }
+    $wd.Selection.Cells | ForEach-Object {
+        $_.TopPadding = 0
+        $_.BottomPadding = 0
+        $_.LeftPadding = 0
+        $_.RightPadding = 0
+    }
+}

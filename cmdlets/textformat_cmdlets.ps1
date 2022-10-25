@@ -97,7 +97,7 @@ function Format-MatchLine {
 Set-Alias fmtMch Format-MatchLine
 
 
-function ConvertTo-IncrementalIndex {
+function ConvertTo-IncrementalSequence {
     param (
         [int]$start = 1
     )
@@ -106,6 +106,7 @@ function ConvertTo-IncrementalIndex {
         $start += 1
     }
 }
+Set-Alias toSeq ConvertTo-IncrementalSequence
 
 function Format-InsertIndex {
     param (
@@ -243,23 +244,6 @@ function Format-StripPostalCodeFromAddress {
             "Postalcode" = "";
             "Adddress" = $_;
             "TSV" = $_;
-        }
-    }
-}
-
-function Format-IncrementNUM {
-    param (
-        [int]$start = 1
-        ,[int]$step = 1
-    )
-    $i = $start
-    $input | ForEach-Object {
-        if ($_ -match "{{NUM}}") {
-            $_ -replace "{{NUM}}", $i | Write-Output
-            $i += $step
-        }
-        else {
-            $_ | Write-Output
         }
     }
 }
