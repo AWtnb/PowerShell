@@ -647,8 +647,8 @@ Set-PSReadLineKeyHandler -Key "`"","'" -BriefDescription "smartQuotation" -LongD
 Set-PSReadLineKeyHandler -Key "ctrl+k,f","ctrl+k,w" -BriefDescription "insert-alias" -LongDescription "insert-alias" -ScriptBlock {
     param ($key, $arg)
     $alias = switch ($key.KeyChar) {
-        "f" { "%"; break }
-        "w" { "?"; break }
+        "f" { "% "; break }
+        "w" { "? "; break }
     }
     $a = [ASTer]::new()
     $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
