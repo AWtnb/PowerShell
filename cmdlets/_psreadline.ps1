@@ -177,7 +177,11 @@ Set-PSReadlineKeyHandler -Key "ctrl+alt+l" -BriefDescription "toPreviousPipe" -L
 }
 
 Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescription "insert-pipe" -ScriptBlock {
+    $a = [ASTer]::new()
     [PSConsoleReadLine]::Insert("|")
+    if ($a.GetPreviousToken().Kind -eq "Pipe") {
+        [PSConsoleReadLine]::BackwardChar()
+    }
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,l" -BriefDescription "insert-pipe-to-head" -LongDescription "insert-pipe-to-head" -ScriptBlock {

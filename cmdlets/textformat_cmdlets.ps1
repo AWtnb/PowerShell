@@ -110,22 +110,28 @@ Set-Alias toSeq ConvertTo-IncrementalSequence
 
 function Format-InsertIndex {
     param (
-        [int]$position = 1
+        [int]$position = 0
         ,[int]$start = 1
         ,[int]$pad = 1
     )
-    $len = [math]::Abs($position) - 1
-    if ($position -eq 0) {
-        return
-    }
-
-    $reg = ($position -gt 0)? [regex]"(^.{$len})(.)": [regex]"(.)(.{$len}$)"
-
+    $idx = $start - 1
     $input | ForEach-Object {
-        $index = ($start -as [string]).PadLeft($pad, "0")
-        $reg.Replace($_, ('${1}' + $index + '${2}')) | Write-Output
-        $start += 1
+        $idx += 1
+        $maxLen = $_.Length
+        if ([Math]::Abs($position) -gt $maxLen) {
+            return $_
+        }
+        if ($position -ge 0) {
+            $prefix = $_.Substring(0, $position)
+            $suffix = $_.Substring($position, ($maxLen - $position))
+        }
+        else {
+            $prefix = $_.Substring(0, $maxLen + $position)
+            $suffix = $_.Substring(($maxLen + $position), [Math]::Abs($position))
+        }
+        return $prefix + ($idx -as [string]).PadLeft($pad, "0") + $suffix
     }
+
 }
 
 function Format-ReplaceNth {

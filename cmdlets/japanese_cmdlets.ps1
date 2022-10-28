@@ -432,7 +432,7 @@ function Convert-LinesToBookIndexReading {
     param (
         [switch]$asTsv
     )
-    $result = $input | Get-ReadingWithSudachi -forBookIndex | Select-Object -Property "Line", "Reading", "Tokenize"
+    $result = $input | Get-ReadingWithSudachi -forBookIndex | Select-Object -Property "Reading", "Tokenize"
     if ($asTsv) {
         return $result | ForEach-Object {
             return $_.PSObject.Properties.Value | Join-String -Separator "`t"
