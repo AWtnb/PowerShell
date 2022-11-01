@@ -10,6 +10,55 @@ function aw {
     "あかさたなはまやらわ".GetEnumerator() | Write-Output
 }
 
+function Convert-DictTsvToImeSrc {
+    <#
+    TSV =>読み|カナ|スペル（全体）|スペル（短縮）|スペル（最短）|生没年|表記ゆれ|キーワード|関連項目
+    #>
+    $lines = New-Object System.Collections.ArrayList
+    $input | ConvertFrom-Csv -Delimiter "`t" -Header "reading", "kana", "spell_full", "spell_short","spell_min", "bio", "valiation", "keyword", "ref" | ForEach-Object {
+
+        $r = $_.reading
+        if ($_.valiation.length) {
+            $content = $_.valiation
+        }
+        else {
+            $detail = @($_.keyword, $_.ref) | Where-Object {$_.length} | Join-String -Separator ";"
+            $content = "[{0}]{1}" -f $_.bio, $detail
+        }
+
+        @(
+            @(
+                $_.kana, ""
+            ),
+            @(
+                $_.spell_full, "フル表記"
+            ),
+            @(
+                $_.spell_min, "ファミリーネーム表記"
+            ),
+            @(
+                $_.spell_short, "イニシャル表記"
+            ),
+            @(
+                ("{0}（{1}）" -f $_.kana, $_.spell_full),
+                $content
+            )
+        ) | ForEach-Object {
+            $word = $_[0]
+            $comment = $_[1]
+            $line = @($r, $word, "人名", $comment) | Join-String -Separator "`t"
+            $lines.Add($line) > $null
+        }
+    }
+    $lines | ForEach-Object {
+        $byteLen = [System.Text.Encoding]::GetEncoding("Shift_Jis").GetByteCount($_)
+        if ($byteLen -ge 250) {
+            "more than 250bytes! : {0}" -f ($_ -split "`t" | Select-Object -First 3 | Join-String -Separator " ") | Write-Host
+        }
+    }
+    $lines | Sort-Object -Unique | Out-File -FilePath "dict_human.txt" -Encoding utf8NoBOM -Force
+}
+
 ####################
 # Class: FormatJP
 ####################
