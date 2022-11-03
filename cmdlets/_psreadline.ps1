@@ -149,6 +149,17 @@ class ASTer {
         } | Select-Object -Last 1
     }
 
+    [int] GetActiveTokenIndex() {
+        $idx = -1
+        foreach ($token in $this.tokens) {
+            $idx += 1
+            if (($token.Extent.StartOffset -le $this.cursor) -and ($this.cursor -le $token.Extent.EndOffset)) {
+                break;
+            }
+        }
+        return $idx
+    }
+
     [System.Management.Automation.Language.Ast] GetPreviousAst([string]$name) {
         return $this.Listup($name) | Where-Object { $_.Extent.EndOffset -lt $this.cursor } | Select-Object -Last 1
     }
@@ -586,17 +597,18 @@ Set-PSReadLineKeyHandler -Key "tab" -BriefDescription "smartCompletion" -LongDes
         [PSConsoleReadLine]::TabCompleteNext()
     }
     $a = [ASTer]::new()
-    if ($a.GetPreviousToken().Kind -ne "LParen") {
-        if ($a.GetActiveToken().Kind -eq "RParen") {
-            [PSConsoleReadLine]::DeleteChar()
-        }
+    if ($a.GetActiveToken().Kind -eq "LParen") {
+        [PSConsoleReadLine]::Insert(")")
+        [PSConsoleReadLine]::BackwardChar()
         return
     }
-    if ($a.GetActiveToken().Kind -eq "RParen") {
+    $idx = $a.GetActiveTokenIndex()
+    if ($idx -lt 1) {
         return
     }
-    [PSConsoleReadLine]::Insert(")")
-    [PSConsoleReadLine]::BackwardChar()
+    if ($a.GetActiveToken().Kind -eq "RParen" -and ($a.tokens[$idx - 1].Kind -eq "ColonColon")) {
+        [PSConsoleReadLine]::DeleteChar()
+    }
 }
 
 ##############################
