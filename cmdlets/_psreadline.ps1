@@ -143,11 +143,14 @@ class ASTer {
         } | Select-Object -Last 1
     }
 
-    [System.Management.Automation.Language.Token] GetActiveToken() {
-        return $this.tokens | Where-Object {
-            return ($_.Extent.StartOffset -le $this.cursor) -and ($this.cursor -le $_.Extent.EndOffset)
-        } | Select-Object -Last 1
+    [System.Management.Automation.Language.Ast] GetPreviousAst([string]$name) {
+        return $this.Listup($name) | Where-Object { $_.Extent.EndOffset -lt $this.cursor } | Select-Object -Last 1
     }
+
+    [System.Management.Automation.Language.Ast] GetNextAst([string]$name) {
+        return $this.Listup($name) | Where-Object { $_.Extent.StartOffset -gt $this.cursor } | Select-Object -First 1
+    }
+
 
     [int] GetActiveTokenIndex() {
         $idx = -1
@@ -160,20 +163,35 @@ class ASTer {
         return $idx
     }
 
-    [System.Management.Automation.Language.Ast] GetPreviousAst([string]$name) {
-        return $this.Listup($name) | Where-Object { $_.Extent.EndOffset -lt $this.cursor } | Select-Object -Last 1
-    }
-
-    [System.Management.Automation.Language.Ast] GetNextAst([string]$name) {
-        return $this.Listup($name) | Where-Object { $_.Extent.StartOffset -gt $this.cursor } | Select-Object -First 1
-    }
+    [System.Management.Automation.Language.Token] GetActiveToken() {
+        $i = $this.GetActiveTokenIndex()
+        return $this.tokens[$i]
+        }
 
     [System.Management.Automation.Language.Token] GetPreviousToken() {
-        return $this.tokens | Where-Object {$_.Extent.EndOffset -le $this.cursor} | Select-Object -Last 1
+        $i = $this.GetActiveTokenIndex()
+        $pos = $i - 1
+        return $this.tokens[$pos]
+    }
+    [System.Management.Automation.Language.Token] GetNextToken() {
+        $i = $this.GetActiveTokenIndex()
+        $pos = $i + 1
+        return $this.tokens[$pos]
     }
 
-    [System.Management.Automation.Language.Token] GetNextToken() {
-        return $this.tokens | Where-Object {$_.Extent.StartOffset -ge $this.cursor} | Select-Object -First 1
+    [bool] IsStartOfToken() {
+        return $this.cursor -eq $this.GetActiveToken().Extent.StartOffset
+    }
+
+    [bool] IsEndOfToken() {
+        return $this.cursor -eq $this.GetActiveToken().Extent.EndOffset
+    }
+
+    [bool] IsAfterPipe() {
+        if ($this.IsEndOfToken()) {
+            return $this.GetActiveToken().Kind -eq "Pipe"
+        }
+        return $this.GetPreviousToken().Kind -eq "Pipe"
     }
 
 }
@@ -190,7 +208,7 @@ Set-PSReadlineKeyHandler -Key "ctrl+alt+l" -BriefDescription "toPreviousPipe" -L
 Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescription "insert-pipe" -ScriptBlock {
     $a = [ASTer]::new()
     [PSConsoleReadLine]::Insert("|")
-    if ($a.GetPreviousToken().Kind -eq "Pipe") {
+    if ($a.IsAfterPipe()) {
         [PSConsoleReadLine]::BackwardChar()
     }
 }
@@ -597,17 +615,10 @@ Set-PSReadLineKeyHandler -Key "tab" -BriefDescription "smartCompletion" -LongDes
         [PSConsoleReadLine]::TabCompleteNext()
     }
     $a = [ASTer]::new()
-    if ($a.GetActiveToken().Kind -eq "LParen") {
+    if ($a.GetActiveToken().Kind -eq "LParen" -and $a.GetNextToken().Kind -ne "RParen") {
         [PSConsoleReadLine]::Insert(")")
         [PSConsoleReadLine]::BackwardChar()
         return
-    }
-    $idx = $a.GetActiveTokenIndex()
-    if ($idx -lt 1) {
-        return
-    }
-    if ($a.GetActiveToken().Kind -eq "RParen" -and ($a.tokens[$idx - 1].Kind -eq "ColonColon")) {
-        [PSConsoleReadLine]::DeleteChar()
     }
 }
 
@@ -667,43 +678,43 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,f","ctrl+k,w" -BriefDescription "insert-al
         "w" { "? "; break }
     }
     $a = [ASTer]::new()
-    $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
+    $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + $alias)
 }
 
 Set-PSReadLineKeyHandler -Key "alt+m" -BriefDescription "measure" -LongDescription "measure" -ScriptBlock {
     $a = [ASTer]::new()
-    $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
+    $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "measure")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+c" -BriefDescription "copyToClipboard" -LongDescription "copyToClipboard" -ScriptBlock {
     $a = [ASTer]::new()
-    $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
+    $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "c")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+v" -BriefDescription "asVariable" -LongDescription "asVariable" -ScriptBlock {
     $a = [ASTer]::new()
-    $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
-    [PSConsoleReadLine]::Insert($prefix + "v ")
+    $prefix = ($a.IsAfterPipe())? "" : "|"
+    [PSConsoleReadLine]::Insert($prefix + "v")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+t","alt+V" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
     $a = [ASTer]::new()
-    $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
+    $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "tee -Variable ")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+b" -BriefDescription "bat-plain" -LongDescription "bat-plain" -ScriptBlock {
     $a = [ASTer]::new()
-    $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
+    $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "oss|bat -p")
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object" -LongDescription "insert-Select-Object" -ScriptBlock {
     $a = [ASTer]::new()
-    $prefix = ($a.GetPreviousToken().Kind -eq "Pipe")? "" : "|"
+    $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "select -")
     [PSConsoleReadLine]::MenuComplete()
 }
