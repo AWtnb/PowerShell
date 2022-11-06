@@ -660,18 +660,7 @@ Set-PSReadLineKeyHandler -Key "`"","'" -BriefDescription "smartQuotation" -LongD
 # snippets
 ##############################
 
-# Set-PSReadLineKeyHandler -Key "ctrl+k,i" -BriefDescription "insert-if-else-block" -LongDescription "insert-if-else-block" -ScriptBlock {
-#     $bs = [PSBufferState]::new()
-#     $pos = $bs.CursorPos
-#     $indent = $bs.CursorLine.Indent
-#     $filler = " " * $indent
-#     $lines = @('if ($_ ) {', ($filler + '  $_'), ($filler + "}"), ($filler + "else {"), ($filler + '  $_'), ($filler + "}"))
-#     [PSConsoleReadLine]::Insert($lines -join "`n")
-#     [PSConsoleReadLine]::SetCursorPosition($pos + 7)
-# }
-
-
-Set-PSReadLineKeyHandler -Key "ctrl+k,f","ctrl+k,w" -BriefDescription "insert-alias" -LongDescription "insert-alias" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,f", "ctrl+k,w", "ctrl+k,alt+f","ctrl+k,alt+w", "ctrl+k,alt+F","ctrl+k,alt+W" -BriefDescription "insert-alias" -LongDescription "insert-alias" -ScriptBlock {
     param ($key, $arg)
     $alias = switch ($key.KeyChar) {
         "f" { "% "; break }
@@ -679,7 +668,19 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,f","ctrl+k,w" -BriefDescription "insert-al
     }
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
-    [PSConsoleReadLine]::Insert($prefix + $alias)
+    $suffix = ""
+    if ($key.Modifiers -match "Alt") {
+        if ($key.Modifiers -match "Shift") {
+            $suffix = '{$_}'
+        }
+        else {
+            $suffix = '{}'
+        }
+    }
+    [PSConsoleReadLine]::Insert($prefix + $alias + $suffix)
+    if ($suffix.Length) {
+        [PSConsoleReadLine]::BackwardChar()
+    }
 }
 
 Set-PSReadLineKeyHandler -Key "alt+m" -BriefDescription "measure" -LongDescription "measure" -ScriptBlock {
@@ -697,7 +698,7 @@ Set-PSReadLineKeyHandler -Key "alt+c" -BriefDescription "copyToClipboard" -LongD
 Set-PSReadLineKeyHandler -Key "alt+v" -BriefDescription "asVariable" -LongDescription "asVariable" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
-    [PSConsoleReadLine]::Insert($prefix + "v")
+    [PSConsoleReadLine]::Insert($prefix + "v ")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+t","alt+V" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
