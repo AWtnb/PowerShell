@@ -10,51 +10,104 @@ function aw {
     "あかさたなはまやらわ".GetEnumerator() | Write-Output
 }
 
-function Convert-DictTsvToImeSrc {
-    <#
-    TSV =>読み|カナ|スペル（全体）|スペル（短縮）|スペル（最短）|生没年|表記ゆれ|キーワード|関連項目
-    #>
-    $lines = New-Object System.Collections.ArrayList
-    $input | ConvertFrom-Csv -Delimiter "`t" -Header "reading", "kana", "spell_full", "spell_short","spell_min", "bio", "valiation", "keyword", "ref" | ForEach-Object {
+class DictRecord {
+    [string]$reading
+    [string]$word
+    [string]$comment
+    DictRecord([string]$reading, [string]$word, [string]$comment) {
+        $this.reading = $reading
+        $this.word = $word
+        $this.comment = $comment
+    }
+    [string]GetLine([string]$pos) {
+        return "{0}`t{1}`t{2}`t{3}" -f $this.reading, $this.word, $pos, $this.comment
+    }
+}
 
-        $r = $_.reading
-        if ($_.valiation.length) {
-            $content = $_.valiation
+class HumanTsv {
+    [string]$reading
+    [string]$kana
+    [string]$familyName
+    [string]$restNameFull
+    [string]$restNameCapitalized
+    [string]$bio
+    [string]$valiation
+    [string]$keyword
+    [string]$ref
+    HumanTsv([string]$s) {
+        $tsv = $s | ConvertFrom-Csv -Delimiter "`t" -Header "reading", "kana", "familyName", "restNameFull", "restNameCapitalized", "bio", "valiation", "keyword", "ref"
+        $this.reading = $tsv.reading
+        $this.kana = $tsv.kana
+        $this.familyName = $tsv.familyName
+        $this.restNameFull = $tsv.restNameFull
+        $this.restNameCapitalized = $tsv.restNameCapitalized
+        $this.bio = $tsv.bio
+        $this.valiation = $tsv.valiation
+        $this.keyword = $tsv.keyword
+        $this.ref = $tsv.ref
+    }
+    [string]GetMain() {
+        return [DictRecord]::new($this.reading, $this.kana, "").GetLine("人名")
+    }
+    [string]GetJpName() {
+        # W. ジェームズ
+        $word = $this.restNameCapitalized + " " + $this.kana
+        return [DictRecord]::new($this.reading, $word, "日本語表記").GetLine("人名")
+    }
+    [string]GetJpNameReverse() {
+        # ジェームズ， W.
+        $word = $this.kana + "，" + $this.restNameCapitalized
+        return [DictRecord]::new($this.reading, $word, "日本語出典表記").GetLine("人名")
+    }
+    [string]GetFullName() {
+        # William James
+        $word = $this.restNameFull + " " + $this.familyName
+        return [DictRecord]::new($this.reading, $word, "欧文表記").GetLine("人名")
+    }
+    [string]GetFullNameReverse() {
+        # James, William.
+        $word = $this.familyName + ", " + $this.restNameFull
+        return [DictRecord]::new($this.reading, $word, "欧文出典表記").GetLine("人名")
+    }
+    [string]GetName() {
+        # W. James
+        $word = $this.restNameCapitalized + " " + $this.familyName
+        return [DictRecord]::new($this.reading, $word, "欧文短縮表記").GetLine("人名")
+    }
+    [string]GetNameReverse() {
+        # James, W.
+        $word = $this.familyName + ", " + $this.restNameCapitalized
+        return [DictRecord]::new($this.reading, $word, "欧文出典短縮表記").GetLine("人名")
+    }
+    [string]GetDictContent() {
+        # ジェームズ（James, William）
+        $word = "{0}（{1}, {2}）" -f $this.kana, $this.familyName, $this.restNameFull
+        if ($this.valiation.Length) {
+            $comment = $this.valiation
         }
         else {
-            $detail = @($_.keyword, $_.ref) | Where-Object {$_.length} | Join-String -Separator ";"
-            $content = "[{0}]{1}" -f $_.bio, $detail
+            $detail = @($this.keyword, $this.ref) | Where-Object {$_.length} | Join-String -Separator ";"
+            $comment = "[{0}]{1}" -f $this.bio, $detail
+            if ([System.Text.Encoding]::GetEncoding("Shift_Jis").GetByteCount($comment) -ge 250) {
+                "more than 250bytes! : {0}" -f $word | Write-Host
+            }
         }
-
-        @(
-            @(
-                $_.kana, ""
-            ),
-            @(
-                $_.spell_full, "フル表記"
-            ),
-            @(
-                $_.spell_min, "ファミリーネーム表記"
-            ),
-            @(
-                $_.spell_short, "イニシャル表記"
-            ),
-            @(
-                ("{0}（{1}）" -f $_.kana, $_.spell_full),
-                $content
-            )
-        ) | ForEach-Object {
-            $word = $_[0]
-            $comment = $_[1]
-            $line = @($r, $word, "人名", $comment) | Join-String -Separator "`t"
-            $lines.Add($line) > $null
-        }
+        return [DictRecord]::new($this.reading, $word, $comment).GetLine("人名")
     }
-    $lines | ForEach-Object {
-        $byteLen = [System.Text.Encoding]::GetEncoding("Shift_Jis").GetByteCount($_)
-        if ($byteLen -ge 250) {
-            "more than 250bytes! : {0}" -f ($_ -split "`t" | Select-Object -First 3 | Join-String -Separator " ") | Write-Host
-        }
+}
+
+function Convert-DictHumanTsvToImeSrc {
+    $lines = New-Object System.Collections.ArrayList
+    $input | ForEach-Object {
+        $rec = [HumanTsv]::new($_)
+        $lines.Add( $rec.GetMain() ) > $null
+        $lines.Add( $rec.GetJpName() ) > $null
+        $lines.Add( $rec.GetJpNameReverse() ) > $null
+        $lines.Add( $rec.GetFullName() ) > $null
+        $lines.Add( $rec.GetFullNameReverse() ) > $null
+        $lines.Add( $rec.GetName() ) > $null
+        $lines.Add( $rec.GetNameReverse() ) > $null
+        $lines.Add( $rec.GetDictContent() ) > $null
     }
     $lines | Sort-Object -Unique | Out-File -FilePath "dict_human.txt" -Encoding utf8NoBOM -Force
 }
