@@ -112,6 +112,56 @@ function Convert-DictHumanTsvToImeSrc {
     $lines | Sort-Object -Unique | Out-File -FilePath "dict_human.txt" -Encoding utf8NoBOM -Force
 }
 
+
+class ItemTsv {
+    [string]$reading
+    [string]$word
+    [string]$spell
+    [string]$pair
+    [string]$ref
+    [string]$author
+    ItemTsv([string]$s) {
+        $tsv = $s | ConvertFrom-Csv -Delimiter "`t" -Header "reading", "word", "spell", "grouped", "pair", "ref", "author"
+        $this.reading = $tsv.reading
+        $this.word = $tsv.word
+        $this.spell = $tsv.spell
+        $this.pair = $tsv.pair
+        $this.ref = $tsv.ref
+        $this.author = $tsv.author
+    }
+    [string]GetMain() {
+        return [DictRecord]::new($this.reading, $this.word, "").GetLine("名詞")
+    }
+    [string]GetDictContent() {
+        $hdrElems = @($this.word)
+        if ($this.pair.Length -gt 0) {
+            $hdrElems += ("[／{0}]" -f $this.pair)
+        }
+        $hdrElems += ("（{0}）" -f $this.spell)
+        $header = $hdrElems -join ""
+        $cmtElems = @()
+        if ($this.ref.Length -gt 0) {
+            $cmtElems += ("→" + $this.ref)
+        }
+        $cmtElems += ("[{0}]" -f $this.author)
+        $cmt = $cmtElems -join " "
+        if ([System.Text.Encoding]::GetEncoding("Shift_Jis").GetByteCount($cmt) -ge 250) {
+            "more than 250bytes! : {0}" -f $header | Write-Host
+        }
+        return [DictRecord]::new($this.reading, $header, $cmt).GetLine("名詞")
+    }
+}
+
+function Convert-DictTsvToImeSrc {
+    $lines = New-Object System.Collections.ArrayList
+    $input | ForEach-Object {
+        $rec = [ItemTsv]::new($_)
+        $lines.Add( $rec.GetMain() ) > $null
+        $lines.Add( $rec.GetDictContent() ) > $null
+    }
+    $lines | Sort-Object -Unique | Out-File -FilePath "dict_item.txt" -Encoding utf8NoBOM -Force
+}
+
 ####################
 # Class: FormatJP
 ####################
