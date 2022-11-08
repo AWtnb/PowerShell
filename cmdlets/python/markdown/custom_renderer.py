@@ -46,6 +46,13 @@ Render with custom token
 
 """
 
+class Parenthesis(SpanToken):
+    pattern = re.compile(r"(\uff08.+?\uff09)")
+    parse_inner = True
+    parse_group = 1
+    def __init__(self, mo:re.Match):
+        self.inner_text = mo.group(1)
+
 class CheckBox(SpanToken):
     pattern = re.compile(r"(\[ *\]|\[x\])")
     parse_inner = False
@@ -93,8 +100,12 @@ class CustomRenderer(HTMLRenderer):
     quote_renderer = QuoteRenderer()
 
     def __init__(self):
-        super().__init__(CheckBox, LineBreak, PageBreak)
+        super().__init__(Parenthesis, CheckBox, LineBreak, PageBreak)
         self.page_break = '<div class="page-separator"></div>'
+
+    def render_parenthesis(self, token):
+        template = '<span class="paren">{inner}</span>'
+        return template.format(inner=token.inner_text)
 
     def render_check_box(self, token):
         template = '<input type="checkbox" disabled {stat}>'
