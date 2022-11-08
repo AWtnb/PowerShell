@@ -698,7 +698,7 @@ Set-PSReadLineKeyHandler -Key "alt+c" -BriefDescription "copyToClipboard" -LongD
 Set-PSReadLineKeyHandler -Key "alt+v" -BriefDescription "asVariable" -LongDescription "asVariable" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
-    [PSConsoleReadLine]::Insert($prefix + "v ")
+    [PSConsoleReadLine]::Insert($prefix + "sv ")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+t","alt+V" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
