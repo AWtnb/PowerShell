@@ -198,7 +198,7 @@ Class GoogleImeDb {
     }
 
     static [PSCustomObject[]] GetExportedData () {
-        $path = "C:\Users\{0}\Dropbox\develop\app_config\IME_google\convertion_dict\my.txt" -f $env:USERNAME
+        $path = "C:\Users\{0}\Dropbox\develop\app_config\IME_google\convertion_dict\main.txt" -f $env:USERNAME
         if (Test-Path $path) {
             return $(Get-Content $path | ConvertFrom-Csv -Delimiter "`t" -Header "Reading","Word","POS")
         }

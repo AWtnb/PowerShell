@@ -149,7 +149,6 @@ h6 {
 //////////////////////////////
 
 img {
-    cursor: zoom-in;
     box-shadow: 1px 1px 5px 1px @color-border;
     margin: 2rem auto;
     display: block;
@@ -164,26 +163,6 @@ img {
         color: lighten(@color-main-dark, 30%);
         font-weight: normal;
     }
-}
-img:active {
-    cursor: zoom-out;
-    display: block;
-    z-index: 100;
-    position: fixed;
-    max-height: 100%;
-    max-width: 100%;
-    height: 100%;
-    width: 100%;
-    object-fit: contain;
-    margin: 0 auto;
-    text-align: center;
-    top: 50%;
-    transform: translateY(-50%);
-    padding: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: #333;
 }
 
 img[alt~="right"] {
@@ -523,5 +502,5 @@ table {
 }
 
 span.paren {
-    font-size: .95em;
+    font-size: .9em;
 }

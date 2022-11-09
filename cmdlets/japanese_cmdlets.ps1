@@ -148,7 +148,7 @@ class ItemTsv {
         if ([System.Text.Encoding]::GetEncoding("Shift_Jis").GetByteCount($cmt) -ge 250) {
             "more than 250bytes! : {0}" -f $header | Write-Host
         }
-        return [DictRecord]::new($this.reading, $header, $cmt).GetLine("名詞")
+        return [DictRecord]::new($this.reading, $header, $cmt).GetLine("独立語")
     }
 }
 
