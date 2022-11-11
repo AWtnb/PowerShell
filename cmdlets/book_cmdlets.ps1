@@ -6,14 +6,14 @@ cmdlets for treating book information
                 encoding: utf8bom
 ============================== #>
 
-class YCode {
+class YBookCode {
 
     [string]$CheckDigit
     [string]$FullCode
 
-    YCode([string]$five) {
+    YBookCode([string]$five) {
         $pad = $five.PadLeft(5, "0")
-        $this.CheckDigit = [YCode]::GetCheckDigit($pad)
+        $this.CheckDigit = [YBookCode]::GetCheckDigit($pad)
         $this.FullCode = "9784641" + $pad + $this.CheckDigit
     }
 
@@ -43,16 +43,16 @@ class YCode {
 }
 
 
-function Resolve-YCode {
+function Resolve-YBookCode {
     <#
         .EXAMPLE
-        Resolve-YCode 12345
+        Resolve-YBookCode 12345
     #>
     param (
         [string]$code
         ,[switch]$run
     )
-    $yc = [YCode]::new($code)
+    $yc = [YBookCode]::new($code)
     if ($run) {
         $yc.Run()
         return
@@ -69,7 +69,7 @@ function yBookPage {
     param (
         [parameter(Mandatory)][string]$code
     )
-    [YCode]::new($code).Run()
+    [YBookCode]::new($code).Run()
     Hide-ConsoleWindow
 }
 
