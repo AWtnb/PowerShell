@@ -204,6 +204,13 @@ Set-PSReadlineKeyHandler -Key "ctrl+alt+l" -BriefDescription "toPreviousPipe" -L
         [PSConsoleReadLine]::SetCursorPosition($lastPipe.Extent.EndOffset - 1)
     }
 }
+Set-PSReadlineKeyHandler -Key "ctrl+alt+L" -BriefDescription "toNextPipe" -LongDescription "toNextPipe" -ScriptBlock {
+    $a = [ASTer]::new()
+    $nextPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.StartOffset -gt $a.cursor} | Select-Object -First 1
+    if ($nextPipe) {
+        [PSConsoleReadLine]::SetCursorPosition($nextPipe.Extent.StartOffset + 1)
+    }
+}
 
 Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescription "insert-pipe" -ScriptBlock {
     $a = [ASTer]::new()
@@ -721,6 +728,25 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object
 }
 
 
+##############################
+# ls
+##############################
+
+Set-PSReadLineKeyHandler -Key "ctrl+alt+n,s", "ctrl+alt+n,e", "ctrl+alt+n,c", "ctrl+alt+n,f" -BriefDescription "ls-utilize" -LongDescription "ls-utilize" -ScriptBlock {
+    param($key, $arg)
+    if ($key.keychar -eq "f") {
+        [PSConsoleReadLine]::Insert("ls -file ")
+        return
+    }
+    $cmd = "ls |? Basename -like *"
+    if ($key.keychar -eq "c") {
+        $cmd = $cmd + "*"
+    }
+    [PSConsoleReadLine]::Insert($cmd)
+    if ($key.keychar -in @("s", "c")) {
+        [PSConsoleReadLine]::BackwardChar()
+    }
+}
 
 
 ##############################

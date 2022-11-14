@@ -25,31 +25,3 @@ function Get-FileByExtension {
 }
 Set-Alias lsx Get-FileByExtension
 
-function nameBeginsWith {
-    [OutputType("System.IO.FileInfo", "System.IO.DirectoryInfo")]
-    param ([string]$name, [switch]$Recurce, [switch]$file, [switch]$directory)
-    $filtered = @($input | Where-Object Name -Like "$name*")
-    if ($filtered.Count) {
-        return $filtered
-    }
-    return $(Get-ChildItem "$name*" -Recurse:$Recurce -Directory:$directory -File:$file)
-}
-function nameContains {
-    [OutputType("System.IO.FileInfo", "System.IO.DirectoryInfo")]
-    param ([string]$name, [switch]$Recurce, [switch]$file, [switch]$directory)
-    $filtered = @($input | Where-Object Name -Like "*$name*")
-    if ($filtered.Count) {
-        return $filtered
-    }
-    return $(Get-ChildItem "*$name*" -Recurse:$Recurce -Directory:$directory -File:$file)
-}
-function nameEndsWith {
-    [OutputType("System.IO.FileInfo", "System.IO.DirectoryInfo")]
-    param ([string]$name, [switch]$Recurce, [switch]$file, [switch]$directory)
-    $filtered = @($input | Where-Object BaseName -Like "*$name")
-    if ($filtered.Count) {
-        return $filtered
-    }
-    return $(Get-ChildItem -Recurse:$Recurce -Directory:$directory -File:$file | Where-Object BaseName -Like "*$name")
-}
-

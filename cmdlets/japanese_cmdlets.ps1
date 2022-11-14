@@ -635,3 +635,17 @@ function Get-LinesDelta {
     }
 }
 Set-Alias linesDelta Get-LinesDelta
+
+function Get-LinesSimilarityWithPython {
+    $lines = New-Object System.Collections.ArrayList
+    $input | Where-Object {$_.trim().length} | ForEach-Object {$lines.Add($_) > $null}
+
+    $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\get_similarity.py"
+    Use-TempDir {
+        $in = New-Item -Path ".\in.txt"
+        $out = New-Item -Path ".\out.txt"
+        $lines | Out-File -Encoding utf8NoBOM -FilePath $in.FullName
+        Start-Process -Path python.exe -wait -ArgumentList @("-B", $pyCodePath, $in.FullName, $out.FullName) -NoNewWindow
+        return Get-Content -Path $out.FullName -Encoding utf8NoBOM | ConvertFrom-Json
+    }
+}
