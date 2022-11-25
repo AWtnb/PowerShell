@@ -12,6 +12,7 @@ using namespace Microsoft.PowerShell
 # you can search keychar with `[Console]::ReadKey()`
 
 Set-PSReadlineOption -HistoryNoDuplicates `
+    -PredictionViewStyle ListView `
     -PredictionSource History `
     -BellStyle None `
     -ContinuationPrompt ($Global:PSStyle.Foreground.BrightBlack + "#>" + $Global:PSStyle.Reset) `
@@ -510,7 +511,6 @@ Set-PSReadLineKeyHandler -Key "home" -BriefDescription "smart-home" -LongDescrip
     }
 }
 
-
 Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDescription "smart-paste" -ScriptBlock {
     $cb = @(Get-Clipboard)
     $s = ($cb.Count -gt 1)? ($cb | ForEach-Object {($_ -as [string]).TrimEnd()} | Join-String -Separator "`n" -OutputPrefix "@'`n" -OutputSuffix "`n'@") : $cb
@@ -520,17 +520,24 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
     [PSConsoleReadLine]::Insert($s)
 }
 
+# toggle current token as variable
+Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "toggleVariable" -LongDescription "toggleVariable" -ScriptBlock {
+    $a = [ASTer]::new()
+    $t = $a.GetActiveToken()
+    $newText = ($t.Kind -eq "Variable")? $t.Text.Substring(1) : ("$" + $t.Text)
+    [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
+}
+
 ##############################
-# yank last argument as variable
+# yank-last-argument cutomize
 ##############################
 
 Set-PSReadLineKeyHandler -Key "alt+a" -BriefDescription "yankLastArgAsVariable" -LongDescription "yankLastArgAsVariable" -ScriptBlock {
-    [PSConsoleReadLine]::Insert("$")
     [PSConsoleReadLine]::YankLastArg()
-    $line = [PSBufferState]::new().CommandLine
-    if ($line -match '\$\$') {
-        $newLine = $line -replace '\$\$', "$"
-        [PSConsoleReadLine]::Replace(0, $line.Length, $newLine)
+    $a = [ASTer]::new()
+    $t = $a.GetActiveToken()
+    if ($t.Kind -ne "Variable") {
+        [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), ("$" + $t.Text))
     }
 }
 
@@ -708,7 +715,7 @@ Set-PSReadLineKeyHandler -Key "alt+v" -BriefDescription "asVariable" -LongDescri
     [PSConsoleReadLine]::Insert($prefix + "sv ")
 }
 
-Set-PSReadLineKeyHandler -Key "alt+t","alt+V" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+t" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "tee -Variable ")

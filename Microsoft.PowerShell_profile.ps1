@@ -395,8 +395,10 @@ function prompt {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
     }
 
-    $mf = [MacOSFile]::new()
-    $mf.Rename()
+    if ($pwd.Path.StartsWith("C:")) {
+        $mf = [MacOSFile]::new()
+        $mf.Rename()
+    }
 
     Test-GoogleIme
 
@@ -424,9 +426,6 @@ function Out-FileUtil {
     }
     $outPath = (Get-Location).Path | Join-Path -ChildPath ($basename + "." + $extension)
     $input | Out-File -FilePath $outPath -Encoding utf8 -NoClobber:$(-not $force)
-    $outName = $($outPath | Split-Path -Leaf)
-    "==> '{0}' (registered on HISTORY!)" -f $outName | Write-Host -ForegroundColor Cyan
-    [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory($("ii .\{0}" -f $outName))
 }
 Set-Alias of Out-FileUtil
 
@@ -688,6 +687,35 @@ function ConvertTo-SHA256Hash {
     Update-TypeData -TypeName $_ -Force -MemberType ScriptMethod -MemberName "Pt2Mm" -Value {
         $q = $this.Pt2Q()
         return ($q / 4).RoundTo(1)
+    }
+
+    Update-TypeData -TypeName $_ -Force -MemberType ScriptMethod -MemberName "ToCJK" -Value {
+        $s = $this -as [string]
+        @{
+            "0" = "〇";
+            "1" = "一";
+            "2" = "二";
+            "3" = "三";
+            "4" = "四";
+            "5" = "五";
+            "6" = "六";
+            "7" = "七";
+            "8" = "八";
+            "9" = "九";
+        }.GetEnumerator() | ForEach-Object {
+            $s = $s.Replace($_.key, $_.value)
+        }
+        return $s
+    }
+}
+
+function  Convert-IntToCJK {
+    $re = [regex]::new("\d")
+    return $input | ForEach-Object {
+        return $re.Replace($_, {
+            param($m)
+            return ($m.Value -as [int]).toCJK()
+        })
     }
 }
 

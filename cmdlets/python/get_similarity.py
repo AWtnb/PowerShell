@@ -10,7 +10,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 
 def get_first_elem(s:str) -> str:
-    return s.replace("\u3001", ",").replace("\uff0c", ",").replace("\u30fb", ",").split(",")[0]
+    return s.replace("\u3001", ",").replace("\uff0c", ",").replace("\u30fb", ",").split(",")[0].strip()
 
 def main(input_file_path:str, output_file_path:str):
     lines = Path(input_file_path).read_text("utf-8").splitlines()

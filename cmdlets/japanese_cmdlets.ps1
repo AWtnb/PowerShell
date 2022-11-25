@@ -285,28 +285,9 @@ class FormatJP {
         return $($converted -replace "\(","（" -replace "\)","）")
     }
 
-    static [string] ToKanjiNum ([string]$strData) {
-        $dict = @{
-            "0" = "〇";
-            "1" = "一";
-            "2" = "二";
-            "3" = "三";
-            "4" = "四";
-            "5" = "五";
-            "6" = "六";
-            "7" = "七";
-            "8" = "八";
-            "9" = "九";
-        }
-        $converted = [FormatJP]::ToHalfWidth($strData)
-        $dict.GetEnumerator() | ForEach-Object {
-            $converted = $converted.Replace($_.key, $_.value)
-        }
-        return $converted
-    }
-
     static [string] FromRoman ([string]$strData) {
-        $dict = @{
+        $converted = $strData
+        @{
             "A" = "えい";
             "B" = "ひ";
             "C" = "し";
@@ -333,9 +314,7 @@ class FormatJP {
             "X" = "えくす";
             "Y" = "わい";
             "Z" = "せつと";
-        }
-        $converted = $strData
-        $dict.GetEnumerator() | ForEach-Object {
+        }.GetEnumerator() | ForEach-Object {
             $converted = $converted -replace $_.key, $_.value
         }
         return $converted
@@ -355,7 +334,6 @@ Update-TypeData -MemberName $($_.Name) -TypeName System.String -Force -MemberTyp
     "ConvertTo-Katakana" = "ToKatakana";
     "ConvertTo-Hiragana" = "ToHiragana";
     "ConvertTo-Hairetsu" = "Normalize";
-    "ConvertTo-KanjiNum" = "ToKanjiNum";
     "ConvertFrom-Roman" = "FromRoman";
     "ConvertTo-Roman" = "ToRoman";
     "ConvertTo-HalfWidth" = "ToHalfWidth";
@@ -372,9 +350,6 @@ function $($_.Key) {
     end {}
 }
 "@ | Invoke-Expression }
-
-Set-Alias toHan ConvertTo-HalfWidth
-Set-Alias toHalf ConvertTo-HalfWidth
 
 Update-TypeData -MemberName "CountMatches" -TypeName System.String -Force -MemberType ScriptMethod -Value {
     param ($pattern=".", $case=$true)

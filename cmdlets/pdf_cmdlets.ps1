@@ -19,8 +19,6 @@ class PyPdf {
             return $_
         }
         Start-Process -Path python.exe -Wait -ArgumentList $fullParams -NoNewWindow
-        # $cmd = ('python -B "{0}"' -f $this.pyPath) + ($params | Join-String -OutputPrefix " " -DoubleQuote -Separator " ")
-        # $cmd | Invoke-Expression
     }
 }
 
@@ -66,8 +64,6 @@ function Invoke-PdfOverlayWithPython {
         $overlayPath = (Get-Item -LiteralPath $overlayPdf).FullName
         $py = [PyPdf]::new("overlay.py")
         $py.RunCommand(@($pdfFileObj.FullName, $overlayPath))
-        # $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\pdf\overlay.py"
-        # 'python -B "{0}" "{1}" "{2}"' -f $pyCodePath, $pdfFileObj.FullName, $overlayPath | Invoke-Expression
     }
     end {}
 }
@@ -97,6 +93,27 @@ function Invoke-PdfFilenameWatermarkWithPython {
         }
     }
 }
+
+function pyGenSearchPdf {
+    param(
+        [string]$outName = "search_"
+    )
+    $files = $input | Where-Object {$_.Extension -eq ".pdf"}
+    $orgDir = $pwd.ProviderPath
+    Use-TempDir {
+        $tempDir = $pwd.ProviderPath
+        $files | Copy-Item -Destination $tempDir
+        Get-ChildItem "*.pdf" | Invoke-PdfUnspreadWithPython
+        Get-ChildItem "*.pdf" | Where-Object { $_.BaseName -notmatch "unspread$" } | Remove-Item
+        Get-ChildItem "*_unspread.pdf" | Rename-Item -NewName { ($_.BaseName -replace "_unspread$") + $_.Extension }
+        Get-ChildItem "*.pdf" | Invoke-PdfFilenameWatermarkWithPython -countThrough
+        Get-ChildItem "wm*.pdf" | Invoke-PdfConcWithPython -outName $outName
+        Get-ChildItem | Where-Object { $_.BaseName -eq $outName } | Move-Item -Destination $orgDir
+    }
+}
+
+
+
 
 function Invoke-PdfZipToDiffWithPython {
     param (
