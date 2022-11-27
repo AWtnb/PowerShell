@@ -254,18 +254,18 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -BriefDescription "insert-pipe-to-t
 }
 
 
-Set-PSReadLineKeyHandler -Key "ctrl+n" -BriefDescription "smart-forwardWord" -LongDescription "smart-forwardWord" -ScriptBlock {
-    [PSConsoleReadLine]::ForwardWord()
-    $a = [ASTer]::new()
-    $aToken = $a.GetActiveToken()
-    if (
-        ($aToken.Kind -eq "StringExpandable" -and -not $aToken.Text.EndsWith('"')) `
-        -or `
-        ($aToken.Kind -eq "StringLiteral" -and -not $aToken.Text.EndsWith("'")) `
-    ) {
-        [PSConsoleReadLine]::Insert($aToken.Text.Substring(0,1))
-    }
-}
+# Set-PSReadLineKeyHandler -Key "ctrl+n" -BriefDescription "smart-forwardWord" -LongDescription "smart-forwardWord" -ScriptBlock {
+#     [PSConsoleReadLine]::ForwardWord()
+#     $a = [ASTer]::new()
+#     $aToken = $a.GetActiveToken()
+#     if (
+#         ($aToken.Kind -eq "StringExpandable" -and -not $aToken.Text.EndsWith('"')) `
+#         -or `
+#         ($aToken.Kind -eq "StringLiteral" -and -not $aToken.Text.EndsWith("'")) `
+#     ) {
+#         [PSConsoleReadLine]::Insert($aToken.Text.Substring(0,1))
+#     }
+# }
 
 
 class PSCursorLine {
@@ -524,6 +524,9 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
 Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "toggleVariable" -LongDescription "toggleVariable" -ScriptBlock {
     $a = [ASTer]::new()
     $t = $a.GetActiveToken()
+    if ($t.Extent.StartOffset -ge $t.Extent.EndOffset) {
+        return
+    }
     $newText = ($t.Kind -eq "Variable")? $t.Text.Substring(1) : ("$" + $t.Text)
     [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
 }
