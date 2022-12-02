@@ -662,14 +662,15 @@ Set-PSReadLineKeyHandler -Key "`"","'" -BriefDescription "smartQuotation" -LongD
         return
     }
 
-    $nMark = [regex]::Matches($line, $mark).Count
-    if ($nMark % 2 -eq 1) {
+    $a = [ASTer]::new()
+    $token = $a.GetActiveToken()
+    if ( ($token.Kind -eq "StringLiteral" -and $mark -eq '"') -or ($token.Kind -eq "StringExpandable" -and $mark -eq "'") ) {
         [PSConsoleReadLine]::Insert($mark)
+        return
     }
-    else {
-        [PSConsoleReadLine]::Insert($mark + $mark)
-        [PSConsoleReadLine]::SetCursorPosition($pos+1)
-    }
+
+    [PSConsoleReadLine]::Insert($mark + $mark)
+    [PSConsoleReadLine]::SetCursorPosition($pos+1)
 }
 
 
