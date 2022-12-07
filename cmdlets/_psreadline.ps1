@@ -198,14 +198,14 @@ class ASTer {
 }
 
 
-Set-PSReadlineKeyHandler -Key "ctrl+alt+l" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
+Set-PSReadlineKeyHandler -Key "ctrl+alt+k" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
     $a = [ASTer]::new()
     $lastPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $a.cursor} | Select-Object -Last 1
     if ($lastPipe) {
         [PSConsoleReadLine]::SetCursorPosition($lastPipe.Extent.EndOffset - 1)
     }
 }
-Set-PSReadlineKeyHandler -Key "ctrl+alt+L" -BriefDescription "toNextPipe" -LongDescription "toNextPipe" -ScriptBlock {
+Set-PSReadlineKeyHandler -Key "ctrl+alt+j" -BriefDescription "toNextPipe" -LongDescription "toNextPipe" -ScriptBlock {
     $a = [ASTer]::new()
     $nextPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.StartOffset -gt $a.cursor} | Select-Object -First 1
     if ($nextPipe) {
