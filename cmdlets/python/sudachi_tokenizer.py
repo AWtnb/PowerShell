@@ -1,9 +1,8 @@
 """
 sudachiPy で形態素解析して JSON 形式でファイルに出力する
 
-ビルド時にエラーが起きる場合は Build Tools for Visual Studio 2019 をインストールもしくはアップデートすること。
-    https://github.com/WorksApplications/SudachiPy/issues/145
-    https://sudachi-dev.slack.com/archives/CBCF278AC/p1604632785006000?thread_ts=1604632556.005900&cid=CBCF278AC
+ビルドに rust を使用するようになったので、初回の pip install 時に rust がインストールされている必要がある。
+エラーメッセージで案内される https://rustup.rs/ をインストールして本体を再起動してから実行すれば解決する（はず）。
 
 encoding: utf8
 """
