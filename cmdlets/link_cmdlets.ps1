@@ -167,3 +167,32 @@ function New-ShortCutOnMyDataSources {
 }
 
 
+function Set-ShortcutFiler {
+    param (
+        $filerPath = "$($env:USERPROFILE)\Dropbox\portable_apps\tablacus\TE64.exe"
+    )
+    begin {
+        $shell  = New-Object -ComObject WScript.Shell
+    }
+    process {
+        if ($_.Extension -ne ".lnk") {
+            "{0} is not shortcut file!" -f $_.Name | Write-Host -ForegroundColor Magenta
+            return
+        }
+        if ($shell.CreateShortcut($_).TargetPath -eq $filerPath) {
+            "filer of {0} is already modified!" -f $_.Name | Write-Host -ForegroundColor Magenta
+            return
+        }
+        $tmpLnk = $shell.CreateShortcut($_)
+        $openDir = $tmpLnk.TargetPath
+        if (-not (Test-Path $openDir -PathType Container)) {
+            "{0} is not shortcut to folder!" -f $_.Name | Write-Host -ForegroundColor Magenta
+            return
+        }
+        $tmpLnk.Arguments = $openDir
+        $tmpLnk.TargetPath = $filerPath
+        $tmpLnk.save()
+    }
+    end {
+    }
+}
