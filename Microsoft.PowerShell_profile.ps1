@@ -827,56 +827,7 @@ function Write-StringHighLight {
 }
 Set-Alias hilight Write-StringHighLight
 
-##############################
-# plookup
-##############################
 
-if(-not ('Pwsh.Array' -as [type]))
-{Add-Type -Namespace Pwsh -Name Array -UsingNamespace "System.Collections.Generic","System.Linq" -MemberDefinition  @'
-
-public static string[] Sieve(string[] lines, string search, bool ignoreCase = false) {
-    StringComparison opt = (ignoreCase)? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-    List<string> gl = new List<string>(lines);
-    return gl.FindAll(s => s.Equals(search, opt)).ToArray();
-}
-
-public static int[] FindIndex(string[] lines, string search, bool ignoreCase = false) {
-    StringComparison opt = (ignoreCase)? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-    List<string> gl = new List<string>(lines);
-    return gl.Select((s,i) => s.Equals(search, opt) ? i : -1).Where(i => i != -1).ToArray();
-}
-
-'@ }
-
-function plookup {
-    param (
-        [Object[]]$lookupObjectList
-        ,[string]$lookProperty
-        ,[string[]]$returnProperty
-        ,[switch]$ignoreCase
-    )
-    $targetProperties = $lookupObjectList.ForEach({$_.PSObject.Properties[$lookProperty].Value})
-    foreach ($line in $input){
-        $foundIndex = [Pwsh.Array]::FindIndex($targetProperties, $line, $ignoreCase)
-        $hash = [ordered]@{
-            "SearchBy" = $line
-        }
-        foreach ($p in $returnProperty) {
-            if (@($foundIndex).Count -lt 1) {
-                $hash.Add($p, "(NOTFOUND)")
-            }
-            elseif (@($foundIndex).Count -eq 1) {
-                $found = $lookupObjectList[$foundIndex].PsObject.BaseObject[0].PsObject.Properties[$p].Value
-                $hash.Add($p, $found)
-            }
-            else {
-                $matched = @($foundIndex).ForEach({$lookupObjectList[$foundIndex].PsObject.BaseObject[0].PsObject.Properties[$p].Value}) -join ";"
-                $hash.Add($p, ("(DUPLICATE:{0})" -f $matched))
-            }
-        }
-        [PSCustomObject]$hash | Write-Output
-    }
-}
 
 #################################################################
 # loading custom cmdlets
