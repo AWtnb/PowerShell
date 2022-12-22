@@ -58,81 +58,95 @@ function Set-ShortCutHotkey {
     end {}
 }
 
+class PsLinker {
+    [string]$srcPath
+    [string]$srcName
+    [string]$workDir
+    [string]$linkPath
+    PsLinker([string]$srcPath, [string]$workDir) {
+        $src = Get-Item -LiteralPath $srcPath
+        $this.srcPath = $src.FullName
+        $this.srcName = $src.Name
+        $this.workDir = ($workDir.Length -gt 0)? (Get-Item -LiteralPath $workDir).FullName : (Get-Location).Path
+        $this.linkPath = $this.workDir | Join-Path -ChildPath $this.srcName
+    }
 
+    AskInvoke() {
+        "'{0}' already exists on '{1}'!" -f $this.srcName, $this.workDir | Write-Host -ForegroundColor Red
+        if ((Read-Host "open the directory? (y/n)") -eq "y") {
+            Invoke-Item $this.workDir
+        }
+    }
 
-function Test-Admin {
-    return (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+    MakeSymbolicLink() {
+        $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+        if (-not $isAdmin) {
+            "Need to run as ADMIN..." | Write-Host -ForegroundColor Red
+            return
+        }
+        if (Test-Path $this.linkPath) {
+            $this.AskInvoke()
+            return
+        }
+        try {
+            New-Item -Path $this.linkPath -Value $this.srcPath -ItemType SymbolicLink -ErrorAction Stop
+        }
+        catch {
+            "failed to make new SymbolicLink '{0}'!" -f $this.srcPath | Write-Error
+        }
+    }
+
+    MakeJunction() {
+        if (Test-Path $this.linkPath) {
+            $this.AskInvoke()
+            return
+        }
+        try {
+            New-Item -Path $this.linkPath -Value $this.srcPath -ItemType Junction -ErrorAction Stop
+        }
+        catch {
+            "failed to make new Junction '{0}'!" -f $this.srcPath | Write-Error
+        }
+    }
+
+    MakeShortcut() {
+        if (Test-Path $this.linkPath) {
+            $this.AskInvoke()
+            return
+        }
+        $wsShell = New-Object -ComObject WScript.Shell
+        $shortcut = $WsShell.CreateShortcut(($this.linkPath + ".lnk"))
+        $shortcut.TargetPath = $this.srcPath
+        $shortcut.Save()
+    }
 }
+
 
 function New-SymbolicLink {
     param (
         [parameter(Mandatory)][string]$src
         ,[string]$linkLocation
     )
-    $wd = ($linkLocation.Length -gt 0)? (Get-Item -LiteralPath $linkLocation).FullName : (Get-Location).Path
-    $linkSrc = Get-Item -LiteralPath $src
-    $linkPath = $wd | Join-Path -ChildPath $linkSrc.Name
-    if (Test-Path $linkPath) {
-        "'{0}' already exists!" -f $linkPath | Write-Host -ForegroundColor Red
-        $ask = Read-Host "open the directory? (y/n)"
-        if ($ask -eq "y") {
-            Invoke-Item $wd
-        }
-        return
-    }
-    try {
-        New-Item -Path $linkPath -Value $linkSrc.FullName -ItemType SymbolicLink -ErrorAction Stop
-    }
-    catch {
-        "failed to make new SymbolicLink '{0}'!" -f $linkPath | Write-Error
-    }
+    $linker = [PsLinker]::New($src, $linkLocation)
+    $linker.MakeSymbolicLink()
 }
 
 function New-Junction {
     param (
-        [parameter(Mandatory)][string]$src
-        ,[string]$junctionLocation
+    [parameter(Mandatory)][string]$src
+    ,[string]$junctionLocation
     )
-    $wd = ($junctionLocation.Length -gt 0)? (Get-Item -LiteralPath $junctionLocation).FullName : (Get-Location).Path
-    $linkSrc = Get-Item -LiteralPath $src
-    $jctPath = $wd | Join-Path -ChildPath $linkSrc.Name
-    if (Test-Path $jctPath) {
-        "'{0}' already exists!" -f $jctPath | Write-Host -ForegroundColor Red
-        $ask = Read-Host "open the directory? (y/n)"
-        if ($ask -eq "y") {
-            Invoke-Item $wd
-        }
-        return
-    }
-    try {
-        New-Item -Path $jctPath -Value $linkSrc.FullName -ItemType Junction -ErrorAction Stop
-    }
-    catch {
-        "failed to make new Junction '{0}'!" -f $jctPath | Write-Error
-    }
+    $linker = [PsLinker]::New($src, $junctionLocation)
+    $linker.MakeJunction()
 }
 
 function New-ShortCut {
     param (
-        [parameter(Mandatory)][string]$pathToJump
+        [parameter(Mandatory)][string]$src
         ,[string]$shortcutPlace
     )
-    $linkSrc = Get-Item -LiteralPath $pathToJump
-    $linkName = $linkSrc.BaseName + ".lnk"
-    $wd = ($shortcutPlace.Length -gt 0)? (Get-Item -LiteralPath $shortcutPlace).FullName : (Get-Location).Path
-    $shortcutPath = $wd | Join-Path -ChildPath $linkName
-    if (Test-Path $shortcutPath) {
-        "'{0}' already exists!" -f $shortcutPath | Write-Host -ForegroundColor Red
-        $ask = Read-Host "open the directory? (y/n)"
-        if ($ask -eq "y") {
-            Invoke-Item $wd
-        }
-        return
-    }
-    $wsShell = New-Object -ComObject WScript.Shell
-    $shortcut = $WsShell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = $linkSrc.FullName
-    $shortcut.Save()
+    $linker = [PsLinker]::New($src, $shortcutPlace)
+    $linker.MakeShortcut()
 }
 
 function New-ShortCutOnStartup {
