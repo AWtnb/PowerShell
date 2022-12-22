@@ -92,7 +92,7 @@ class PsLinker {
             New-Item -Path $this.linkPath -Value $this.srcPath -ItemType SymbolicLink -ErrorAction Stop
         }
         catch {
-            "failed to make new SymbolicLink '{0}'!" -f $this.srcPath | Write-Error
+            "failed to make new SymbolicLink '{0}'!" -f $this.linkPath | Write-Error
         }
     }
 
@@ -105,7 +105,7 @@ class PsLinker {
             New-Item -Path $this.linkPath -Value $this.srcPath -ItemType Junction -ErrorAction Stop
         }
         catch {
-            "failed to make new Junction '{0}'!" -f $this.srcPath | Write-Error
+            "failed to make new Junction '{0}'!" -f $this.linkPath | Write-Error
         }
     }
 
