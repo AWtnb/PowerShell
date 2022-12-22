@@ -81,7 +81,7 @@ class PsLinker {
     MakeSymbolicLink() {
         $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
         if (-not $isAdmin) {
-            "Need to run as ADMIN..." | Write-Host -ForegroundColor Red
+            "Need to run as ADMIN to make symlnk of '{0}'..." -f $this.srcPath | Write-Host -ForegroundColor Red
             return
         }
         if (Test-Path $this.linkPath) {
@@ -110,12 +110,13 @@ class PsLinker {
     }
 
     MakeShortcut() {
-        if (Test-Path $this.linkPath) {
+        $shortcutPath = $this.linkPath + ".lnk"
+        if (Test-Path $shortcutPath) {
             $this.AskInvoke()
             return
         }
         $wsShell = New-Object -ComObject WScript.Shell
-        $shortcut = $WsShell.CreateShortcut(($this.linkPath + ".lnk"))
+        $shortcut = $WsShell.CreateShortcut($shortcutPath)
         $shortcut.TargetPath = $this.srcPath
         $shortcut.Save()
     }
