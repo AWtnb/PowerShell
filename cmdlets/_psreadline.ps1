@@ -99,7 +99,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDe
 
 # open draft
 Set-PSReadLineKeyHandler -Key "alt+d" -BriefDescription "openDraft" -LongDescription "openDraft" -ScriptBlock {
-    $draft = "C:\Users\{0}\Dropbox\draft.txt" -f $env:USERNAME
+    $draft = "C:\Personal\draft.txt"
     if (Test-Path $draft -PathType Leaf) {
         Start-Process $draft
         Hide-ConsoleWindow

@@ -155,6 +155,10 @@ function psMoko {
         ,[string]$exclude = "_obsolete"
     )
     $dataPath = "C:\Personal\launch.yaml"
+    if (-not (Test-Path $dataPath)) {
+        "cannnot find '{0}'" -f $dataPath | Write-Host -ForegroundColor Red
+        return
+    }
     $exePath = "C:\Users\{0}\Dropbox\develop\code\go\moko\src\moko.exe" -f $env:USERNAME
     $filerPath = "C:\Users\{0}\Dropbox\portable_apps\tablacus\TE64.exe" -f $env:USERNAME
     $opt = @("--src", $dataPath, "--filer", $filerPath, "--exclude", $exclude)
