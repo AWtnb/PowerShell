@@ -156,7 +156,7 @@ function New-ShortCutOnStartup {
     )
     if (Test-Path $path) {
         $startup = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
-        New-ShortCut -pathToJump $path -shortcutPlace $startup
+        New-ShortCut -src $path -shortcutPlace $startup
     }
     else {
         "INVALID PATH! : '{0}'" -f $path | Write-Host -ForegroundColor Magenta
@@ -173,7 +173,7 @@ function New-ShortCutOnMyDataSources {
     )
     if (Test-Path $path) {
         $myDataSource = "C:\Users\{0}\Documents\My Data Sources" -f $env:USERNAME
-        New-ShortCut -pathToJump $path -shortcutPlace $myDataSource
+        New-ShortCut -src $path -shortcutPlace $myDataSource
         "created shortcut '{0}' on 'MY DATA SOURCE'!" -f ($path | Split-Path -Leaf) | Write-Host -ForegroundColor Green
     }
     else {
