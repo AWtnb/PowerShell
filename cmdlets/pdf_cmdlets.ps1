@@ -13,7 +13,7 @@ class PyPdf {
     }
     RunCommand([string[]]$params){
         $fullParams = (@("-B", $this.pyPath) + $params) | ForEach-Object {
-            if ($_ -match "\s") {
+            if ($_ -match " ") {
                 return ($_ | Join-String -DoubleQuote)
             }
             return $_
@@ -189,6 +189,23 @@ function Invoke-PdfRotateWithPython {
 }
 Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
 
+
+function Invoke-PdfSpreadWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("spread.py")
+        $py.RunCommand(@($file.FullName))
+    }
+    end {}
+}
+Set-Alias pdfSpreadPy Invoke-PdfSpreadWithPython
 
 function Invoke-PdfUnspreadWithPython {
     param (
