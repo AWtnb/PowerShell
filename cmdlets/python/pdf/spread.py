@@ -10,7 +10,7 @@ from pdfrw import PdfReader, PdfWriter, PageMerge
 
 # https://github.com/pmaupin/pdfrw/blob/master/examples/4up.py
 
-def fixpage(*pages):
+def allocate(*pages):
     result = PageMerge() + pages
     if len(result) > 1:
         result[-1].x += result[0].w
@@ -28,10 +28,10 @@ def main(file_path:str):
     for idx in range(0, len(pages), 2):
         lpage = pages[idx]
         if idx+1 == len(pages):
-            out_pages.append(fixpage(lpage))
+            out_pages.append(allocate(lpage))
         else:
             rpage = pages[idx+1]
-            out_pages.append(fixpage(lpage, rpage))
+            out_pages.append(allocate(lpage, rpage))
 
     PdfWriter(out_path).addpages(out_pages).write()
 
