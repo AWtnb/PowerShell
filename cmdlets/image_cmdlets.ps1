@@ -329,13 +329,14 @@ function Get-ImageSize {
         $fileObj = Get-Item -LiteralPath $inputObj
         $fs = [System.IO.File]::OpenRead($fileObj.FullName)
         $img = [System.Drawing.Bitmap]::FromStream($fs, $false, $false)
-        [PSCustomObject]@{
+        $info = [PSCustomObject]@{
             "Name" = $fileObj.Name;
             "Width" = $img.Width;
             "Height" = $img.Height;
         }
         $img.Dispose()
         $fs.Close()
+        return $info
     }
     end {}
 }
