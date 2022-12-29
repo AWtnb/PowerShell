@@ -17,7 +17,7 @@ class Tag(SpanToken):
     parse_group = 1
 
 class QuoteSource(SpanToken):
-    pattern = re.compile(r"~{(.+?)}")
+    pattern = re.compile(r"::(.+)$")
     parse_group = 1
 
 class QuoteRenderer(HTMLRenderer):
