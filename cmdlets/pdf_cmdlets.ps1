@@ -190,7 +190,7 @@ function Invoke-PdfRotateWithPython {
 Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
 
 
-function Invoke-PdfSpreadWithPython {
+function Invoke-PdfToImageWithPython {
     param (
         [parameter(ValueFromPipeline = $true)]$inputObj
     )
@@ -200,8 +200,30 @@ function Invoke-PdfSpreadWithPython {
         if ($file.Extension -ne ".pdf") {
             return
         }
-        $py = [PyPdf]::new("spread.py")
+        $py = [PyPdf]::new("to_image.py")
         $py.RunCommand(@($file.FullName))
+    }
+    end {}
+}
+Set-Alias pdfImagePy Invoke-PdfToImageWithPython
+
+function Invoke-PdfSpreadWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[switch]$singleTopPage
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("spread.py")
+        $params = @($file.FullName)
+        if ($singleTopPage) {
+            $params += "--singleTopPage"
+        }
+        $py.RunCommand($params)
     }
     end {}
 }

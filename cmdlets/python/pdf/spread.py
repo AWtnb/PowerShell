@@ -3,7 +3,7 @@ pdfrw で単ページ PDF を見開きにする
 encoding: utf8
 """
 
-import sys
+import argparse
 from pathlib import Path
 
 from pdfrw import PdfReader, PdfWriter, PageMerge
@@ -17,7 +17,7 @@ def allocate(*pages):
     return result.render()
 
 
-def main(file_path:str):
+def main(file_path:str, single_toppage:bool=False):
 
     pdf_path = Path(file_path)
     out_path = str(pdf_path.with_stem(pdf_path.stem + "_spread"))
@@ -25,6 +25,10 @@ def main(file_path:str):
     pages = PdfReader(file_path).pages
 
     out_pages = []
+    if single_toppage:
+        top_page = pages.pop(0)
+        out_pages.append(allocate(top_page))
+
     for idx in range(0, len(pages), 2):
         lpage = pages[idx]
         if idx+1 == len(pages):
@@ -36,4 +40,10 @@ def main(file_path:str):
     PdfWriter(out_path).addpages(out_pages).write()
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filePath", type=str)
+    parser.add_argument("--singleTopPage", action="store_true")
+    args = parser.parse_args()
+
+    main(args.filePath, args.singleTopPage)
+
