@@ -17,7 +17,7 @@ def allocate(*pages):
     return result.render()
 
 
-def main(file_path:str, single_toppage:bool=False):
+def main(file_path:str, single_toppage:bool=False, to_left:bool=False):
 
     pdf_path = Path(file_path)
     out_path = str(pdf_path.with_stem(pdf_path.stem + "_spread"))
@@ -35,7 +35,10 @@ def main(file_path:str, single_toppage:bool=False):
             out_pages.append(allocate(lpage))
         else:
             rpage = pages[idx+1]
-            out_pages.append(allocate(lpage, rpage))
+            if to_left:
+                out_pages.append(allocate(rpage, lpage))
+            else:
+                out_pages.append(allocate(lpage, rpage))
 
     PdfWriter(out_path).addpages(out_pages).write()
 
@@ -43,7 +46,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("filePath", type=str)
     parser.add_argument("--singleTopPage", action="store_true")
+    parser.add_argument("--vertical", action="store_true")
     args = parser.parse_args()
 
-    main(args.filePath, args.singleTopPage)
+    main(args.filePath, args.singleTopPage, args.vertical)
 

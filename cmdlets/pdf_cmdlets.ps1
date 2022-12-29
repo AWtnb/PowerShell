@@ -211,6 +211,7 @@ function Invoke-PdfSpreadWithPython {
     param (
         [parameter(ValueFromPipeline = $true)]$inputObj
         ,[switch]$singleTopPage
+        ,[switch]$vertical
     )
     begin {}
     process {
@@ -223,11 +224,29 @@ function Invoke-PdfSpreadWithPython {
         if ($singleTopPage) {
             $params += "--singleTopPage"
         }
+        if ($vertical) {
+            $params += "--vertical"
+        }
         $py.RunCommand($params)
     }
     end {}
 }
 Set-Alias pdfSpreadPy Invoke-PdfSpreadWithPython
+
+function pyGenSpreadPdf {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+        ,[switch]$singleTopPage
+        ,[switch]$vertical
+    )
+    $file = Get-Item -LiteralPath $inputObj
+    if ($file.Extension -ne ".pdf") {
+        return
+    }
+    Invoke-PdfSpreadWithPython -inputObj $file -singleTopPage:$singleTopPage -vertical:$vertical
+    $spreadFilePath = $file.FullName -replace "\.pdf$", "_spread.pdf" | Get-Item
+    Invoke-PdfToImageWithPython -inputObj $spreadFilePath
+}
 
 function Invoke-PdfUnspreadWithPython {
     param (
