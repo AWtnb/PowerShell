@@ -132,10 +132,23 @@ function New-SymbolicLink {
     $linker.MakeSymbolicLink()
 }
 
+function New-SymlnkOnPersonalBin {
+    param (
+        [parameter(Mandatory)][string]$src
+    )
+    $linkLocation = "C:\Personal\tools\bin"
+    if (-not (Test-Path $linkLocation)) {
+        "'{0}' not exists!" -f $linkLocation | Write-Host -ForegroundColor Red
+        return
+    }
+    $linker = [PsLinker]::New($src, $linkLocation)
+    $linker.MakeSymbolicLink()
+}
+
 function New-Junction {
     param (
-    [parameter(Mandatory)][string]$src
-    ,[string]$junctionLocation
+        [parameter(Mandatory)][string]$src
+        ,[string]$junctionLocation
     )
     $linker = [PsLinker]::New($src, $junctionLocation)
     $linker.MakeJunction()

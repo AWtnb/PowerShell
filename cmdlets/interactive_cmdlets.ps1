@@ -10,7 +10,7 @@ function mokof {
     param(
         [switch]$ascii
     )
-    $exePath = "C:\Users\{0}\Dropbox\develop\code\go\mokof\mokof.exe" -f $env:USERNAME
+    $exePath = "C:\Personal\tools\bin\mokof.exe"
     if ($ascii) {
         $input | & $exePath | Write-Output
     }
@@ -159,7 +159,7 @@ function psMoko {
         "cannnot find '{0}'" -f $dataPath | Write-Host -ForegroundColor Red
         return
     }
-    $exePath = "C:\Users\{0}\Dropbox\develop\code\go\moko\src\moko.exe" -f $env:USERNAME
+    $exePath = "C:\Personal\tools\bin\moko.exe"
     $filerPath = "C:\Users\{0}\Dropbox\portable_apps\tablacus\TE64.exe" -f $env:USERNAME
     $opt = @("--src", $dataPath, "--filer", $filerPath, "--exclude", $exclude)
     if ($all) {
