@@ -87,7 +87,17 @@ function Set-Keyrate {
     [PersonalKeyRateSettings.KeyRate]::Main($params)
 }
 
-$PSScriptRoot | Join-Path -ChildPath "_config.json" | Get-Item | ForEach-Object {
-    $conf = $_ | Get-Content | ConvertFrom-Json
-    Set-Keyrate -delay $conf.keyrate.delay -rate $conf.keyrate.rate
+Invoke-Command -ScriptBlock {
+    $delay = 210
+    $rate = 16
+    $confPath = $PSScriptRoot | Join-Path -ChildPath "_config.json"
+    if (Test-Path $confPath) {
+        $conf = ($confPath | Get-Item | Get-Content | ConvertFrom-Json)
+        $delay = $conf.keyrate.delay
+        $rate = $conf.keyrate.rate
+    }
+    else {
+        "{0} is missing!" -f $confPath | Write-Host
+    }
+    Set-Keyrate -delay $delay -rate $rate
 }
