@@ -595,15 +595,27 @@ function Invoke-7Z {
     param(
         [string]$path
         ,[string]$outname
+        ,[switch]$compress
     )
-    $file = Get-Item -LiteralPath $path
-    if ($file.Extension -notin @(".zip", ".7z")) {
-        return
+    $target = Get-Item -LiteralPath $path
+    if ($compress) {
+        if ($target.Extension) {
+            return
+        }
+        if (-not $outname) {
+            $outname = $target.BaseName + ".zip"
+        }
+        "7z a '{0}' '{1}'" -f $outname, $target.FullName | Invoke-Expression
     }
-    if (-not $outname) {
-        $outname = $file.BaseName
+    else {
+        if ($target.Extension -notin @(".zip", ".7z")) {
+            return
+        }
+        if (-not $outname) {
+            $outname = $target.BaseName
+        }
+        "7z x '{0}' -o'{1}'" -f $target.FullName, $outname | Invoke-Expression
     }
-    "7z x '{0}' -o'{1}'" -f $file.FullName, $outname | Invoke-Expression
 }
 Set-PSReadLineKeyHandler -Key "alt+'" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
