@@ -599,9 +599,6 @@ function Invoke-7Z {
     )
     $target = Get-Item -LiteralPath $path
     if ($compress) {
-        if ($target.Extension) {
-            return
-        }
         if (-not $outname) {
             $outname = $target.BaseName + ".zip"
         }
