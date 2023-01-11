@@ -192,7 +192,8 @@ Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
 
 function Invoke-PdfToImageWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]$inputObj,
+        [int]$dpi = 300
     )
     begin {}
     process {
@@ -201,7 +202,7 @@ function Invoke-PdfToImageWithPython {
             return
         }
         $py = [PyPdf]::new("to_image.py")
-        $py.RunCommand(@($file.FullName))
+        $py.RunCommand(@($file.FullName, $dpi))
     }
     end {}
 }
@@ -233,11 +234,12 @@ function Invoke-PdfSpreadWithPython {
 }
 Set-Alias pdfSpreadPy Invoke-PdfSpreadWithPython
 
-function pyGenSpreadPdf {
+function pyGenPdfSpreadImg {
     param (
         [parameter(ValueFromPipeline = $true)]$inputObj
         ,[switch]$singleTopPage
         ,[switch]$vertical
+        ,[int]$dpi = 300
     )
     $file = Get-Item -LiteralPath $inputObj
     if ($file.Extension -ne ".pdf") {
@@ -245,7 +247,7 @@ function pyGenSpreadPdf {
     }
     Invoke-PdfSpreadWithPython -inputObj $file -singleTopPage:$singleTopPage -vertical:$vertical
     $spreadFilePath = $file.FullName -replace "\.pdf$", "_spread.pdf" | Get-Item
-    Invoke-PdfToImageWithPython -inputObj $spreadFilePath
+    Invoke-PdfToImageWithPython -inputObj $spreadFilePath -dpi $dpi
 }
 
 function Invoke-PdfUnspreadWithPython {

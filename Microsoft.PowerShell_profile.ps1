@@ -589,6 +589,15 @@ function Restart-Keyhac {
     Start-Process "C:\Personal\tools\keyhac\keyhac.exe"
 }
 
+# pip
+
+function pipinst {
+    Start-Process -Path python.exe -Wait -ArgumentList @("-m","pip","install","--upgrade","pip") -NoNewWindow
+    Start-Process -Path python.exe -Wait -ArgumentList @("-m","pip","install","--upgrade",$args[0]) -NoNewWindow
+}
+
+
+
 # 7zip
 
 function Invoke-7Z {
