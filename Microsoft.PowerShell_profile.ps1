@@ -604,23 +604,19 @@ function Invoke-7Z {
     param(
         [string]$path
         ,[string]$outname
-        ,[switch]$compress
     )
     $target = Get-Item -LiteralPath $path
-    if ($compress) {
-        if (-not $outname) {
-            $outname = $target.BaseName + ".zip"
-        }
-        "7z a '{0}' '{1}'" -f $outname, $target.FullName | Invoke-Expression
-    }
-    else {
-        if ($target.Extension -notin @(".zip", ".7z")) {
-            return
-        }
+    if ($target.Extension -in @(".zip", ".7z")) {
         if (-not $outname) {
             $outname = $target.BaseName
         }
         "7z x '{0}' -o'{1}'" -f $target.FullName, $outname | Invoke-Expression
+    }
+    else {
+        if (-not $outname) {
+            $outname = $target.BaseName + ".zip"
+        }
+        "7z a '{0}' '{1}'" -f $outname, $target.FullName | Invoke-Expression
     }
 }
 Set-PSReadLineKeyHandler -Key "alt+'" -ScriptBlock {
