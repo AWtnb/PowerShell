@@ -289,7 +289,8 @@ function Invoke-PdfCropCenterWithPython {
 function Invoke-PdfTrimGalleyMarginWithPython {
     param (
         [parameter(ValueFromPipeline = $true)]$inputObj
-        ,[float]$tombowPercent = 8.0
+        ,[float]$tombowPercentH = 8.0
+        ,[float]$tombowPercentV = 8.0
     )
     begin {}
     process {
@@ -298,7 +299,7 @@ function Invoke-PdfTrimGalleyMarginWithPython {
             return
         }
         $py = [PyPdf]::new("trim.py")
-        $py.RunCommand(@($file.Fullname, $tombowPercent))
+        $py.RunCommand(@($file.Fullname, $tombowPercentH, $tombowPercentV))
     }
     end {}
 }
