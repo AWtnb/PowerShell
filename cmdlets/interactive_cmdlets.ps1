@@ -152,7 +152,7 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
 function psMoko {
     param (
         [switch]$all
-        ,[string]$exclude = "_obsolete"
+        ,[string]$exclude = "_obsolete,node_modules"
     )
     $dataPath = "C:\Personal\launch.yaml"
     if (-not (Test-Path $dataPath)) {

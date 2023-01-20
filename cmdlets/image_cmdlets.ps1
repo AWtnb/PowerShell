@@ -12,48 +12,6 @@ foreach ($assembly in @("System.Drawing", "System.Windows.Forms")) {
     }
 }
 
-function Set-ExifDate {
-    <#
-        .SYNOPSIS
-        exiftool を使用して JPEG 画像の EXIF 撮影日時情報を追加する
-    #>
-    param (
-        [parameter(ValueFromPipeline = $true)]$inputObj,
-        [int]$year,
-        [int]$month,
-        [int]$date,
-        [int]$hour = 00,
-        [int]$minute = 00,
-        [int]$sec = 00
-    )
-
-    begin {
-        $t = Get-Date
-        if (-not $year) {
-            $year = $t.Year
-        }
-        if (-not $month) {
-            $month = $t.Month
-        }
-        if (-not $date) {
-            $date = $t.Day
-        }
-        $timestamp = "{0:d4}-{1:d2}-{2:d2} {3:d2}:{4:d2}:{5:d2}" -f $year, $month, $date, $hour, $minute, $sec
-        "Adding Exif Time {0} to:" -f $timestamp | Write-Host -ForegroundColor Cyan
-    }
-    process {
-        $fileObj = Get-Item -LiteralPath $inputObj
-        if ($fileObj.Extension -match "jpe?g$") {
-            if ($fileObj.Fullname -match "\s") {
-                "ERROR: '{0}' has whitespace in path!" -f $fileObj.Name | Write-Error
-                return
-            }
-            ("exiftool -alldates='{0}' '{1}'" -f $timestamp, $fileObj.Name | Invoke-Expression) > $null
-            "  {0}" -f $fileObj.Name | Write-Host
-        }
-    }
-    end {}
-}
 
 function Get-ExifDate {
     <#
