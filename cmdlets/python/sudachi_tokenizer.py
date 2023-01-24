@@ -17,7 +17,7 @@ def main(input_file_path:str, output_file_path:str, ignore_paren:bool=False):
 
     reg = re.compile(r"\(.+?\)|\[.+?\]|（.+?）|［.+?］")
 
-    tokenizer_obj = dictionary.Dictionary().create()
+    tknzr = dictionary.Dictionary().create()
     lines = Path(input_file_path).read_text("utf-8").splitlines()
 
     out = []
@@ -29,7 +29,7 @@ def main(input_file_path:str, output_file_path:str, ignore_paren:bool=False):
             if ignore_paren:
                 target = reg.sub("", line)
             tokens = []
-            for t in tokenizer_obj.tokenize(target, tokenizer.Tokenizer.SplitMode.C):
+            for t in tknzr.tokenize(target, tokenizer.Tokenizer.SplitMode.C):
                 tokens.append({
                     "surface": t.surface(),
                     "pos": t.part_of_speech()[0],

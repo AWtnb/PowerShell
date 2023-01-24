@@ -413,25 +413,26 @@ function Convert-LetterToUnicode {
 class SudachiTokenParser {
     [string]$reading = ""
     [string]$detail = ""
-    [string]$markup = ""
 
     SudachiTokenParser($token) {
         $surface = $token.surface
-        if ($token.pos -match "記号" -or $token.pos -match "空白" -or $surface -match "^([ァ-ヴ・ー]|[a-zA-Zａ-ｚＡ-Ｚ]|[0-9０-９]|[\W\s])+$") {
-            $this.reading = $surface
+        if ($token.pos -match "記号" -or $token.pos -match "空白" -or $surface -match "^([ぁ-んァ-ヴ・ー]|[a-zA-Zａ-ｚＡ-Ｚ]|[0-9０-９]|[\W\s])+$") {
+            if ($surface -match "[ぁ-ん]") {
+                $this.reading = [FormatJP]::ToKatakana($surface)
+            }
+            else {
+                $this.reading = $surface
+            }
             $this.detail = $surface
-            $this.markup = $surface
             return
         }
         if (-not $token.reading) {
             $this.reading = $surface
             $this.detail = "{0}(?)" -f $surface
-            $this.markup = $surface
             return
         }
         $this.reading = $token.reading
-        $this.detail = ($surface -match "^[ぁ-ん]+$")? $surface : ("{0}({1})" -f $surface, $this.reading)
-        $this.markup = ($surface -match "^[ぁ-ん]+$")? $surface : ("<ruby>{0}<rt>{1}</rt></ruby>" -f $surface, $this.reading)
+        $this.detail = "{0}({1})" -f $surface, $this.reading
     }
 
 }
@@ -459,13 +460,6 @@ class SudachiTokensReader {
         return $stack -join " / "
     }
 
-    [string] GetMarkup() {
-        $stack = New-Object System.Collections.ArrayList
-        foreach ($token in $this.tokens) {
-            $stack.Add($token.markup) > $null
-        }
-        return $stack | Join-String -Separator "" -OutputPrefix "<p>" -OutputSuffix "</p>";
-    }
 
 }
 
@@ -494,7 +488,6 @@ class SudachiPy {
                 "Tokenize" = $reader.GetDetail();
                 "Normalized" = [FormatJP]::Normalize($reading);
                 "Roman" = [FormatJP]::ToRoman($reading);
-                "Markup" = $reader.GetMarkup();
             }
         }
     }
