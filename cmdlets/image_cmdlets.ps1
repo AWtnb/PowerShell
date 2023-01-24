@@ -307,31 +307,31 @@ function moul {
     & ("C:\Users\{0}\Dropbox\portable_apps\cli\moul\moul.exe" -f $env:USERNAME) $args
 }
 
-function Invoke-Squoosh {
-    param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
-        ,[int]$quality = 90
-        ,[int]$maxWidth
-        ,[switch]$asWebp
-        ,[string]$suffix = "_sqsh"
-    )
-    begin {
-        $fileType = ($asWebp)? "--webp" : "--mozjpeg"
-        $cmd = "squoosh-cli " + $fileType
-        $cmd = $cmd + " '{quality:$($quality)}' --output-dir '$($PWD.Path)' --suffix '$($suffix)$($quality)'"
-    }
-    process {
-        $file = Get-Item -LiteralPath $inputObj
-        if ($file.Extension -in @(".jpeg", ".jpg", ".png")) {
-            $width = (Get-ImageSize -inputObj $file).Width
-            $sizeOpt = ($maxWidth -and ($width -gt $maxWidth))? " --resize '{width:$maxWidth}'" : ""
-            $cmd = $cmd + $sizeOpt
-            "$cmd '$($file.FullName)'" | Invoke-Expression
-        }
-    }
-    end {
-    }
-}
+# function Invoke-Squoosh {
+#     param (
+#         [parameter(ValueFromPipeline = $true)]$inputObj
+#         ,[int]$quality = 90
+#         ,[int]$maxWidth
+#         ,[switch]$asWebp
+#         ,[string]$suffix = "_sqsh"
+#     )
+#     begin {
+#         $fileType = ($asWebp)? "--webp" : "--mozjpeg"
+#         $cmd = "squoosh-cli " + $fileType
+#         $cmd = $cmd + " '{quality:$($quality)}' --output-dir '$($PWD.Path)' --suffix '$($suffix)$($quality)'"
+#     }
+#     process {
+#         $file = Get-Item -LiteralPath $inputObj
+#         if ($file.Extension -in @(".jpeg", ".jpg", ".png")) {
+#             $width = (Get-ImageSize -inputObj $file).Width
+#             $sizeOpt = ($maxWidth -and ($width -gt $maxWidth))? " --resize '{width:$maxWidth}'" : ""
+#             $cmd = $cmd + $sizeOpt
+#             "$cmd '$($file.FullName)'" | Invoke-Expression
+#         }
+#     }
+#     end {
+#     }
+# }
 
 function Invoke-ImageMagickWatermarkSignature {
     param (

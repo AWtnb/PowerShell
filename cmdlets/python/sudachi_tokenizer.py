@@ -11,8 +11,7 @@ import sys
 import re
 from pathlib import Path
 
-from sudachipy import tokenizer
-from sudachipy import dictionary
+from sudachipy import tokenizer, dictionary
 
 def main(input_file_path:str, output_file_path:str, ignore_paren:bool=False):
 

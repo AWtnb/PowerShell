@@ -424,6 +424,9 @@ function Out-FileUtil {
     if ($extension.StartsWith(".")) {
         $extension = $extension.Substring(1)
     }
+    if (-not $basename) {
+        $basename = Get-Date -Format yyyyMMddHHmmss
+    }
     $outPath = (Get-Location).Path | Join-Path -ChildPath ($basename + "." + $extension)
     $input | Out-File -FilePath $outPath -Encoding utf8 -NoClobber:$(-not $force)
 }

@@ -60,7 +60,8 @@ body {
 
 .container{
     width: @width-container;
-    margin: 0 auto 50vh auto;
+    margin: 0 auto;
+    padding-bottom: 50vh;
     position: relative;
 }
 @media print {
@@ -370,7 +371,7 @@ table {
     font-weight: lighter;
     margin: 2rem auto;
     word-break: break-all;
-    max-width: (@width-container - 2rem);
+    max-width: calc(100% - 2rem);
     min-width: 50%;
     border-collapse: collapse;
     border-spacing: 0;
@@ -412,7 +413,7 @@ table {
 .toc {
     position: absolute;
     width: 16rem;
-    left: @width-container;
+    right: -16rem;
     top: -1rem;
     height: 100%;
     font-size: .95rem;

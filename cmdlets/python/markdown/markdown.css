@@ -66,7 +66,8 @@ body del * {
 }
 .container {
   width: 40rem;
-  margin: 0 auto 50vh auto;
+  margin: 0 auto;
+  padding-bottom: 50vh;
   position: relative;
 }
 @media print {
@@ -353,7 +354,7 @@ table {
   font-weight: lighter;
   margin: 2rem auto;
   word-break: break-all;
-  max-width: 38rem;
+  max-width: calc(100% - 2rem);
   min-width: 50%;
   border-collapse: collapse;
   border-spacing: 0;
@@ -385,7 +386,7 @@ table tbody tr:nth-child(even) {
 .toc {
   position: absolute;
   width: 16rem;
-  left: 40rem;
+  right: -16rem;
   top: -1rem;
   height: 100%;
   font-size: 0.95rem;

@@ -18,6 +18,7 @@ class PsCurrentDirExtension : System.Management.Automation.IValidateSetValuesGen
     }
 }
 function Get-FileByExtension {
+    [OutputType("System.IO.FileInfo")]
     param (
         [ValidateSet([PsCurrentDirExtension])][string]$extension
     )

@@ -6,10 +6,17 @@ cmdlets for treating markdown
                 encoding: utf8bom
 ============================== #>
 
-
 function Invoke-MarkdownRenderPython {
     param (
-        [string]$path
+        [parameter(Mandatory)]
+        [ArgumentCompleter({
+            return (Get-ChildItem "*.md").Name | ForEach-Object {".\" + $_} | ForEach-Object {
+                if ($_ -match "\s") {
+                    return $_ | Join-String -DoubleQuote
+                }
+                return $_
+            }
+        })][string]$path
         ,[switch]$invoke
         ,[switch]$noDefaultCss
         ,[string]$faviconUnicode = "1F4DD"
@@ -57,14 +64,3 @@ Set-PSReadLineKeyHandler -Key "ctrl+M" -BriefDescription "render-as-markdown" -L
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
-function Get-FaviconMarkup {
-    param (
-        [parameter(Mandatory)][string]$codepoint
-    )
-    if ("System.Web" -notin ([System.AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object{$_.GetName().Name})) {
-        Add-Type -AssemblyName System.Web
-    }
-    $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50%" y="50%" style="dominant-baseline:central;text-anchor:middle;font-size:90px;">&#x{0};</text></svg>' -f $codepoint
-    $encoded = [regex]::Replace($svg, "[^a-z/\.]", { [System.Web.HttpUtility]::UrlEncode($args.Value) })
-    return ('<link rel="icon" href="data:image/svg+xml,{0}">' -f $encoded.Replace("+", "%20"))
-}
