@@ -72,7 +72,7 @@ body del * {
 }
 @media print {
   .container {
-    margin-bottom: 0;
+    padding-bottom: 0;
   }
 }
 .main > p {
