@@ -381,4 +381,3 @@ function Invoke-ImageMagickWatermarkSignature {
         Remove-Item -Path $tmpDirPath -Recurse
     }
 }
-

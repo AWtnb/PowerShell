@@ -20,6 +20,14 @@ class PyPdf {
         }
         Start-Process -Path python.exe -Wait -ArgumentList $fullParams -NoNewWindow
     }
+    static [string[]] getFiles() {
+        return Get-ChildItem -File | Where-Object {$_.Extension -eq ".pdf"} | ForEach-Object {".\" + $_.Name} | ForEach-Object {
+            if ($_ -match "\s") {
+                return $_ | Join-String -DoubleQuote
+            }
+            return $_
+        }
+    }
 }
 
 function Invoke-PdfConcWithPython {
@@ -51,7 +59,9 @@ Set-Alias pdfConcPy Invoke-PdfConcWithPython
 
 function Invoke-PdfOverlayWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[string]$overlayPdf
     )
     begin {}
@@ -70,7 +80,9 @@ function Invoke-PdfOverlayWithPython {
 
 function Invoke-PdfFilenameWatermarkWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[int]$startIdx = 1
         ,[switch]$countThrough
     )
@@ -95,7 +107,7 @@ function Invoke-PdfFilenameWatermarkWithPython {
 }
 
 function pyGenSearchPdf {
-    param(
+    param (
         [string]$outName = "search_"
     )
     $files = $input | Where-Object {$_.Extension -eq ".pdf"}
@@ -117,8 +129,12 @@ function pyGenSearchPdf {
 
 function Invoke-PdfZipToDiffWithPython {
     param (
-        [string]$oddFile,
-        [string]$evenFile,
+        [string]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $oddFile,
+        [string]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $evenFile,
         [string]$outName = "outdiff"
     )
     $odd = Get-Item -LiteralPath $oddFile
@@ -134,7 +150,9 @@ function Invoke-PdfZipToDiffWithPython {
 
 function Invoke-PdfExtractWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[int]$from = 1
         ,[int]$to = 0
     )
@@ -157,7 +175,9 @@ function Invoke-PdfExtractStepWithPython {
         Invoke-PdfExtractStepWithPython -path hoge.pdf -froms 1,4,6
     #>
     param (
-        [string]$path
+        [string]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $path
         ,[int[]]$froms
     )
     $file = Get-Item -LiteralPath $path
@@ -173,7 +193,9 @@ function Invoke-PdfExtractStepWithPython {
 
 function Invoke-PdfRotateWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[ValidateSet(90, 180, 270)][int]$clockwise = 180
     )
     begin {}
@@ -192,7 +214,9 @@ Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
 
 function Invoke-PdfToImageWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj,
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj,
         [int]$dpi = 300
     )
     begin {}
@@ -210,7 +234,9 @@ Set-Alias pdfImagePy Invoke-PdfToImageWithPython
 
 function Invoke-PdfSpreadWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[switch]$singleTopPage
         ,[switch]$vertical
     )
@@ -236,7 +262,9 @@ Set-Alias pdfSpreadPy Invoke-PdfSpreadWithPython
 
 function pyGenPdfSpreadImg {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[switch]$singleTopPage
         ,[switch]$vertical
         ,[int]$dpi = 300
@@ -252,7 +280,9 @@ function pyGenPdfSpreadImg {
 
 function Invoke-PdfUnspreadWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
     )
     begin {}
     process {
@@ -270,7 +300,9 @@ Set-Alias pdfUnspreadPy Invoke-PdfUnspreadWithPython
 
 function Invoke-PdfCropCenterWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[ValidateSet("head", "tail", "both")][string]$mode = "both"
     )
     begin {}
@@ -288,7 +320,9 @@ function Invoke-PdfCropCenterWithPython {
 
 function Invoke-PdfTrimGalleyMarginWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[float]$tombowPercentH = 8.0
         ,[float]$tombowPercentV = 8.0
     )
@@ -308,7 +342,9 @@ Set-Alias pdfTrimMarginPy Invoke-PdfTrimGalleyMarginWithPython
 
 function Invoke-PdfSwapWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[string]$newPdf
         ,[int]$swapStartPage = 1
     )
@@ -325,8 +361,12 @@ function Invoke-PdfSwapWithPython {
 
 function Invoke-PdfZipPagesWithPython {
     param (
-        [string]$oddFile,
-        [string]$evenFile,
+        [string]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $oddFile,
+        [string]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $evenFile,
         [string]$outName = "outzip"
     )
     $odd = Get-Item -LiteralPath $oddFile
@@ -342,7 +382,9 @@ function Invoke-PdfZipPagesWithPython {
 
 function Invoke-PdfUnzipPagesWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
         ,[switch]$evenPages
     )
     begin {
@@ -361,7 +403,9 @@ function Invoke-PdfUnzipPagesWithPython {
 
 function Invoke-PdfSplitPagesWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
     )
     begin {
     }
