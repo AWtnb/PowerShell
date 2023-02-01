@@ -49,10 +49,6 @@ function Invoke-MarkdownRenderPython {
     }
     Start-Process -path python.exe -wait -NoNewWindow -ArgumentList $params
 
-    if ($invoke) {
-        Hide-ConsoleWindow
-    }
-
 }
 Set-Alias mdRenderPy Invoke-MarkdownRenderPython
 

@@ -264,12 +264,17 @@ blockquote p {
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
-blockquote p + div.src {
+blockquote hr {
+  display: none;
+}
+blockquote hr + p:has(> em) {
+  text-align: end;
+  line-height: 1;
+  margin-top: -1em;
+}
+blockquote hr + p:has(> em) > em {
   color: #5e7590;
   font-size: 0.8rem;
-  line-height: 1;
-  text-align: end;
-  margin-top: -1em;
 }
 blockquote ol li::marker {
   font-style: inherit;

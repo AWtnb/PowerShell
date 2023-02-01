@@ -258,12 +258,17 @@ blockquote {
         margin-top: 1rem;
         margin-bottom: 1rem;
     }
-    p + div.src {
-        color: lighten(@color-code-dark, 20%);
-        font-size: .8rem;
-        line-height: 1;
+    hr {
+        display: none;
+    }
+    hr + p:has(> em) {
         text-align: end;
+        line-height: 1;
         margin-top: -1em;
+        > em {
+            color: lighten(@color-code-dark, 20%);
+            font-size: .8rem;
+        }
     }
     ol li::marker {
         font-style: inherit;

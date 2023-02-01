@@ -238,6 +238,7 @@ function Invoke-PdfSpreadWithPython {
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$singleTopPage
+        ,[switch]$toLeft
         ,[switch]$vertical
     )
     begin {}
@@ -250,6 +251,9 @@ function Invoke-PdfSpreadWithPython {
         $params = @($file.FullName)
         if ($singleTopPage) {
             $params += "--singleTopPage"
+        }
+        if ($toLeft) {
+            $params += "--toLeft"
         }
         if ($vertical) {
             $params += "--vertical"
