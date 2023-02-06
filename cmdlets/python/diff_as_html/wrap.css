@@ -23,7 +23,7 @@ td {
   vertical-align: top;
   padding: 0.4em;
 }
-td[nowrap="nowrap"] {
+td[nowrap] {
   white-space: pre-line !important;
   word-break: break-word;
   max-width: 400px;
