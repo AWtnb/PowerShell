@@ -2,51 +2,95 @@ import argparse
 from pathlib import Path
 from difflib import HtmlDiff
 
+import lxml.html
+
+
+def decode_elem(elem: lxml.html.Element) -> str:
+    return lxml.html.tostring(elem, encoding="unicode")
+
+def get_filler_row() -> lxml.html.Element:
+    tr = lxml.html.Element("tr")
+    for i in range(4):
+        td = lxml.html.Element("td")
+        if i in (0, 2):
+            td.classes.add("diff_header")
+        tr.append(td)
+    tr.classes.add("filler")
+    return tr
 
 class PyDiff:
 
-    def __init__(self, from_path:str, to_path:str) -> None:
+    def __init__(self, from_path: str, to_path: str, skip_unchanged: bool) -> None:
         f_path = Path(from_path)
         t_path = Path(to_path)
         f = f_path.read_text("utf-8").splitlines()
         t = t_path.read_text("utf-8").splitlines()
-        df = HtmlDiff()
-        self.markup = df.make_table(f, t, fromdesc=f_path.name, todesc=t_path.name)
+        self.markup = HtmlDiff().make_table(
+            f, t, fromdesc=f_path.name, todesc=t_path.name)
+        self.html = lxml.html.fromstring(self.markup)
+        self.skip_unchanged = skip_unchanged
+
+    def get_thead(self) -> lxml.html.Element:
+        tr = lxml.html.Element("tr")
+        for i, elem in enumerate(self.html.xpath("//thead/tr/th")):
+            th = lxml.html.Element("th")
+            if i in (1, 3):
+                th.classes.add("diff_header")
+                th.text = elem.text_content()
+            tr.append(th)
+        thead = lxml.html.Element("thead")
+        thead.append(tr)
+        return thead
+
+    def get_tbody(self) -> lxml.html.Element:
+        tbody = lxml.html.Element("tbody")
+        for table_row in self.html.xpath("//tbody/tr"):
+            tr = lxml.html.Element("tr")
+            for i, table_cell in enumerate(table_row.xpath("td")):
+                if i in (0, 3):
+                    continue
+                tr.append(table_cell)
+            if tr.xpath("//span"):
+                tr.classes.add("changed")
+            else:
+                tr.classes.add("unchanged")
+                tbody.append(get_filler_row())
+            tbody.append(tr)
+        return tbody
+
+    def get_table(self) -> lxml.html.Element:
+        table = lxml.html.Element("table")
+        if self.skip_unchanged:
+            table.set("compress", None)
+        table.append(self.get_thead())
+        table.append(self.get_tbody())
+        return table
+
+    def get_body(self) -> lxml.html.Element:
+        main = lxml.html.Element("main")
+        main.append(self.get_table())
+        body = lxml.html.Element("body")
+        body.append(main)
+        return body
 
 
-    def compress_markup(self) -> None:
-        markup_lines = self.markup.splitlines()
-        pre = markup_lines[:7]
-        trs = markup_lines[7:-2]
-        post = markup_lines[-2:]
-        filler = '<tr class="filler"><td class="diff_next"></td><td class="diff_header"></td><td nowrap="nowrap"></td><td class="diff_next"></td><td class="diff_header"></td><td nowrap="nowrap"></td></tr>'
-        minimal_lines = []
-        for i, line in enumerate(trs):
-            if ('class="diff_chg"' in line) or ('class="diff_sub"' in line) or ('class="diff_add"' in line):
-                minimal_lines.append([-1, filler])
-                minimal_lines.append([i, line])
-                if i == 0:
-                    minimal_lines.pop(-2)
-                if len(minimal_lines) > 2 and minimal_lines[-3][0] + 1 == i:
-                    minimal_lines.pop(-2)
-        self.markup = "\n".join(pre + [x[1] for x in minimal_lines] + post)
-
-def main(from_file:str, to_file:str, out_path:str, template_path:str, css_path:str, skip_unchanged:bool) -> None:
-    pd = PyDiff(from_file, to_file)
-    if skip_unchanged:
-        pd.compress_markup()
-    style_sheet = Path(css_path).read_text("utf-8")
-    template = Path(template_path).read_text("utf-8")
-    html_page = template.replace(
-        "<!-- INSERT -->", "<style>\n{}\n</style>".format(style_sheet)
-    ).replace(
-        '<div class="main"></div>', '<div class="main">\n{}\n</div>'.format(pd.markup)
-    )
+def main(from_file: str, to_file: str, out_path: str, css_path: str, skip_unchanged: bool) -> None:
+    css = "<style>{}</style>".format(Path(css_path).read_text("utf-8"))
+    pd = PyDiff(from_file, to_file, skip_unchanged)
+    html_page = "\n".join([
+        '<!DOCTYPE html>',
+        '<html lang="ja">',
+        '<head>',
+        '<meta charset="utf-8" />',
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />',
+        '<title>Diff</title>',
+        css,
+        '</head>',
+        decode_elem(pd.get_body()),
+        '</html>'
+    ])
     Path(out_path).write_text(html_page, "utf-8")
-    print("compared '{}' -> '{}' as '{}'.".format(
-        Path(from_file).name,
-        Path(to_file).name,
-        Path(out_path).name))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -57,5 +101,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     css_path = Path(__file__).with_name("wrap.css")
-    template_path = Path(__file__).with_name("template.html")
-    main(args.fromFile, args.toFile, args.outFile, template_path, css_path, args.compress)
+    main(args.fromFile, args.toFile, args.outFile, css_path, args.compress)

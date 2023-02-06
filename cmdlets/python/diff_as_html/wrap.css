@@ -1,38 +1,65 @@
-* {font-family: "PlemolJP";}
-table {
-    margin: 20px auto;
-    border: 1px solid #aaa;
+* {
+  font-family: "PlemolJP";
 }
-thead, th, tbody {border: 1px solid #aaa;}
-th {background:#e0e0e0;}
+:root {
+  font-size: 16px;
+}
+table {
+  margin: 20px auto;
+  border: 1px solid #aaa;
+  border-collapse: collapse;
+}
+thead,
+th,
+tbody {
+  border: 1px solid #aaa;
+}
+th {
+  background: #e0e0e0;
+}
 td {
-    border-left: 1px solid #aaa;
-    border-right: 1px solid #aaa;
-    vertical-align: top;
-    padding: .4em;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+  vertical-align: top;
+  padding: 0.4em;
 }
 td[nowrap="nowrap"] {
-    white-space: pre-line !important;
-    word-break: break-word;
-    max-width: 400px;
+  white-space: pre-line !important;
+  word-break: break-word;
+  max-width: 400px;
 }
 td.diff_header {
-    background: none;
-    font-weight: bold;
-    color: #aaa;
-    text-align:right;
-    font-size: .95em;
-    max-width: 2rem;
+  background: none;
+  font-weight: bold;
+  color: #aaa;
+  text-align: right;
+  font-size: 0.95em;
+  max-width: 2rem;
 }
-tr.filler td {line-height: 0.5;}
-tr.filler td.diff_header::after {
-    content: "\fe19";
-    font-size: .8em;
+.diff_next {
+  display: none;
 }
-.diff_next {display: none;}
-.diff_add {background-color:#4ccc78;}
-.diff_chg {background-color:#ffdd33;}
+.diff_add {
+  background-color: #4ccc78;
+}
+.diff_chg {
+  background-color: #ffdd33;
+}
 .diff_sub {
-    background-color:#ed7a7a;
-    color: #fff;
+  background-color: #ed7a7a;
+  color: #fff;
+}
+
+table:not([compress]) tr.filler,
+table[compress] tr.unchanged + tr.filler,
+table[compress] tr.filler + tr.unchanged {
+  display: none;
+}
+table[compress] tr.filler td {
+  line-height: 0.5;
+  color: gray;
+}
+table[compress] tr.filler td::after {
+  content: "\fe19";
+  font-size: 0.8em;
 }
