@@ -218,6 +218,22 @@ function Get-CommentOnActiveWordDocument {
     return $adoc.GetComments()
 }
 
+function Get-MatchPatternOnActiveWordDocument {
+    param (
+        [parameter(Mandatory)][string]$pattern
+        ,[switch]$case
+    )
+
+    $adoc = [ActiveDocument]::new()
+    $paragraphs = $adoc.GetParagraphs()
+    if ($paragraphs.Count -lt 1) {
+        return
+    }
+
+    $grep = @($paragraphs | Select-String -Pattern $pattern -AllMatches -CaseSensitive:$case)
+    return $($grep.Matches.Value | Group-Object -NoElement | Sort-Object Count)
+}
+
 function Invoke-GrepOnActiveWordDocument {
     <#
         .SYNOPSIS

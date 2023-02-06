@@ -104,7 +104,13 @@ class Markup:
 
         self.additional_style = '<style>\n{}\n</style>'.format(md.additional_css)
 
-        dom = DomTree(markup, md.get_timestamp())
+        dom = DomTree(markup)
+        dom.adjust_index("//*[contains(@class, 'force-order')]")
+        dom.set_heading_id("h2 | h3 | h4 | h5 | h6")
+        dom.fix_spacing("h2 | h3 | h4 | h5")
+        dom.set_link_target()
+        dom.set_timestamp(md.get_timestamp())
+
         self.content = dom.get_content()
         self.toc = '<div class="toc">{}</div>'.format(dom.get_toc())
 

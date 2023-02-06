@@ -38,7 +38,7 @@ def main(from_file:str, to_file:str, out_path:str, template_path:str, css_path:s
     style_sheet = Path(css_path).read_text("utf-8")
     template = Path(template_path).read_text("utf-8")
     html_page = template.replace(
-        "<style></style>", "<style>\n{}\n</style>".format(style_sheet)
+        "<!-- INSERT -->", "<style>\n{}\n</style>".format(style_sheet)
     ).replace(
         '<div class="main"></div>', '<div class="main">\n{}\n</div>'.format(pd.markup)
     )

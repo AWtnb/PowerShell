@@ -8,15 +8,10 @@ def decode(elem) -> str:
     return lxml.html.tostring(elem, encoding="unicode")
 
 class DomTree:
-    def __init__(self, markup:str="", timestamp:str="") -> None:
+    def __init__(self, markup:str="") -> None:
         self._root = lxml.html.fromstring(markup)
-        self._adjust_index("//*[contains(@class, 'force-order')]")
-        self._set_heading_id("h2 | h3 | h4 | h5 | h6")
-        self._fix_spacing("h2 | h3 | h4 | h5")
-        self._set_link_target()
-        self._set_timestamp(timestamp)
 
-    def _adjust_index(self, x_path:str) -> None:
+    def adjust_index(self, x_path:str) -> None:
         for elem in self._root.xpath(x_path):
             start_idx = elem.get("start") or 1
             counter = int(start_idx)
@@ -24,12 +19,12 @@ class DomTree:
                 ol.set("start", str(counter))
                 counter += len(ol.xpath("li"))
 
-    def _set_heading_id(self, x_path:str) -> None:
+    def set_heading_id(self, x_path:str) -> None:
         elems = self._root.xpath(x_path)
         for i, hd in enumerate(elems):
             hd.set("id", "section-{}".format(i))
 
-    def _fix_spacing(self, x_path:str) -> None:
+    def fix_spacing(self, x_path:str) -> None:
         for elem in self._root.xpath(x_path):
             t = elem.text_content()
             if t:
@@ -37,13 +32,13 @@ class DomTree:
                 if l >= 2 and l <= 4:
                     elem.classes.add("spacing-{}".format(l))
 
-    def _set_link_target(self) -> None:
+    def set_link_target(self) -> None:
         for elem in self._root.xpath("//a"):
             if not str(elem.get("href")).startswith("#"):
                 elem.set("target", "_blank")
                 elem.set("rel", "noopener noreferrer")
 
-    def _set_timestamp(self, ts:str) -> None:
+    def set_timestamp(self, ts:str) -> None:
         div = lxml.html.Element("div")
         div.classes.add("timestamp")
         div.text = ts
