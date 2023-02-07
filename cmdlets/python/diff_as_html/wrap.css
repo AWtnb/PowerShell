@@ -21,7 +21,7 @@ td {
   border-left: 1px solid #aaa;
   border-right: 1px solid #aaa;
   vertical-align: top;
-  padding: 0.4em;
+  padding: 0 4px;
 }
 td[nowrap] {
   white-space: pre-line !important;
@@ -50,16 +50,17 @@ td.diff_header {
   color: #fff;
 }
 
-table:not([compress]) tr.filler,
-table[compress] tr.unchanged + tr.filler,
-table[compress] tr.filler + tr.unchanged {
-  display: none;
+tr:hover {
+  background-color: #abebff;
 }
-table[compress] tr.filler td {
+tr.filler {
   line-height: 0.5;
   color: gray;
 }
-table[compress] tr.filler td::after {
+tr.filler td {
+  padding: 8px 4px;
+}
+tr.filler td::after {
   content: "\fe19";
   font-size: 0.8em;
 }

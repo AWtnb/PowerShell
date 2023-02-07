@@ -8,6 +8,7 @@ import lxml.html
 def decode_elem(elem: lxml.html.Element) -> str:
     return lxml.html.tostring(elem, encoding="unicode")
 
+
 def get_filler_row() -> lxml.html.Element:
     tr = lxml.html.Element("tr")
     for i in range(4):
@@ -17,6 +18,22 @@ def get_filler_row() -> lxml.html.Element:
         tr.append(td)
     tr.classes.add("filler")
     return tr
+
+
+def has_class(elem: lxml.html.Element, class_name: str) -> bool:
+    return class_name in list(elem.classes)
+
+
+def filter_unchanged_trs(trs: list[lxml.html.Element]) -> list[lxml.html.Element]:
+    changed = []
+    for tr in trs:
+        changed.append(tr)
+        if len(changed) and has_class(changed[-1], "unchanged"):
+            changed.pop()
+            if not len(changed) or not has_class(changed[-1], "filler"):
+                changed.append(get_filler_row())
+    return changed
+
 
 class PyDiff:
 
@@ -42,8 +59,8 @@ class PyDiff:
         thead.append(tr)
         return thead
 
-    def get_tbody(self) -> lxml.html.Element:
-        tbody = lxml.html.Element("tbody")
+    def get_trs(self) -> list[lxml.html.Element]:
+        trs = []
         for table_row in self.html.xpath("//tbody/tr"):
             tr = lxml.html.Element("tr")
             for i, table_cell in enumerate(table_row.xpath("td")):
@@ -54,14 +71,20 @@ class PyDiff:
                 tr.classes.add("changed")
             else:
                 tr.classes.add("unchanged")
-                tbody.append(get_filler_row())
+            trs.append(tr)
+        return trs
+
+    def get_tbody(self) -> lxml.html.Element:
+        tbody = lxml.html.Element("tbody")
+        trs = self.get_trs()
+        if self.skip_unchanged:
+            trs = filter_unchanged_trs(trs)
+        for tr in trs:
             tbody.append(tr)
         return tbody
 
     def get_table(self) -> lxml.html.Element:
         table = lxml.html.Element("table")
-        if self.skip_unchanged:
-            table.set("compress", None)
         table.append(self.get_thead())
         table.append(self.get_tbody())
         return table
