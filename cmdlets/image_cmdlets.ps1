@@ -67,12 +67,18 @@ function Get-ExifDate {
 }
 
 function Rename-ExifDate {
+    param (
+        [switch]$execute
+    )
+    $color = ($execute)? "Cyan" : "White"
     $input | Where-Object Extension -Match "\.jpe?g$" | ForEach-Object {
         $itemName = $_.Name
         $newName = "{0}_{1}" -f ($_ | Get-ExifDate).Timestamp, $itemName
         try {
-            "RENAMED: '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor Cyan
-            $_ | Rename-Item -NewName $newName -ErrorAction Stop
+            "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
+            if ($execute) {
+                $_ | Rename-Item -NewName $newName -ErrorAction Stop
+            }
         }
         catch {
             "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Host -ForegroundColor Magenta
@@ -107,14 +113,20 @@ function Get-CR2Timestamp {
 }
 
 function Rename-CR2Timestamp {
+    param (
+        [switch]$execute
+    )
+    $color = ($execute)? "Cyan" : "White"
     $input | Where-Object Extension -eq ".CR2" | ForEach-Object {
         $itemName = $_.Name
         $timestamp = ($_ | Get-CR2Timestamp).Timestamp
         if ($timestamp) {
             $newName = "{0}_{1}" -f $timestamp, $itemName
             try {
-                "RENAMED: '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor Cyan
-                $_ | Rename-Item -NewName $newName -ErrorAction Stop
+                "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
+                if ($execute) {
+                    $_ | Rename-Item -NewName $newName -ErrorAction Stop
+                }
             }
             catch {
                 "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Error
@@ -125,12 +137,15 @@ function Rename-CR2Timestamp {
 
 
 function eosm6Rename {
+    param (
+        [switch]$execute
+    )
     $input | Where-Object Name -Match "IMG" | ForEach-Object {
         if ($_.Extension -eq ".cr2") {
-            $_ | Rename-CR2Timestamp
+            $_ | Rename-CR2Timestamp -execute:$execute
         }
         elseif ($_.Extension -eq ".jpg") {
-            $_ | Rename-ExifDate
+            $_ | Rename-ExifDate -execute:$execute
         }
      }
 }
