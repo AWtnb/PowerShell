@@ -183,14 +183,19 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+z" -ScriptBlock {
 }
 
 function hinagata {
-    $templateDir = $PSScriptRoot | Join-Path -ChildPath "template"
-    $names = ($templateDir | Get-ChildItem -Filter "*.txt").Name
-    $selected = $names | mokof -ascii
-    if ($selected) {
-        $item = $templateDir | Join-Path -ChildPath $selected | Get-Item
-        $item | Get-Content | Set-Clipboard
-        "COPIED: '{0}'" -f $item.Name | Write-Host -ForegroundColor Yellow
-        Start-Process "https://awtnb.github.io/hinagata/"
+    $templateDir = "C:\Personal\tools\templates"
+    if (Test-Path -Path $templateDir -PathType Container) {
+        $names = ($templateDir | Get-ChildItem -Filter "*.txt").Name
+        $selected = $names | mokof -ascii
+        if ($selected) {
+            $item = $templateDir | Join-Path -ChildPath $selected | Get-Item
+            $item | Get-Content | Set-Clipboard
+            "COPIED: '{0}'" -f $item.Name | Write-Host -ForegroundColor Yellow
+            Start-Process "https://awtnb.github.io/hinagata/"
+        }
+    }
+    else {
+        "Cannot find templates..." | Write-Host -ForegroundColor Magenta
     }
 }
 
