@@ -249,10 +249,9 @@ function ConvertFrom-CsvUtil {
     if ($verbatim) {
         return $($content | ConvertFrom-Csv -Delimiter $delimiter)
     }
-    $header = @()
     $firstLine = ($content | Select-Object -First 1) -split $delimiter
-    1..$firstLine.Count | ForEach-Object {
-        $header += [Base26]::FromDecimal($_)
+    $header = 1..$firstLine.Count | ForEach-Object {
+        return [Base26]::FromDecimal($_)
     }
     return $($content | ConvertFrom-Csv -Delimiter $delimiter -Header $header)
 }

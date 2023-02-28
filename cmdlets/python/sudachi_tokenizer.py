@@ -13,34 +13,55 @@ from pathlib import Path
 
 from sudachipy import tokenizer, dictionary
 
-def main(input_file_path:str, output_file_path:str, ignore_paren:bool=False):
 
-    reg = re.compile(r"\(.+?\)|\[.+?\]|（.+?）|［.+?］")
+class ParsedLine:
+    def __init__(self, line: str) -> None:
+        self.raw_line = line
+        self.line = line
+        self.tokens = []
+
+    def trim_paren(self) -> None:
+        reg_paren = re.compile(
+            r"\(.+?\)|\[.+?\]|\uff08.+?\uff09|\uff3b.+?\uff3d")
+        self.line = reg_paren.sub("", self.line)
+
+    def trim_noise(self) -> None:
+        reg_noise = re.compile(r"　　[^\d]?\d.*$|　→.+$")
+        self.line = reg_noise.sub("", self.line)
+
+
+def main(input_file_path: str, output_file_path: str, ignore_paren: bool = False, focus_name: bool = False):
 
     tknzr = dictionary.Dictionary().create()
     lines = Path(input_file_path).read_text("utf-8").splitlines()
 
     out = []
     for line in lines:
-        if not line:
-            out.append({"line": "", "tokens": []})
+        pl = None
+        if len(line.strip()) < 1:
+            pl = ParsedLine("")
         else:
-            target = line
+            pl = ParsedLine(line)
             if ignore_paren:
-                target = reg.sub("", line)
-            tokens = []
-            for t in tknzr.tokenize(target, tokenizer.Tokenizer.SplitMode.C):
-                tokens.append({
+                pl.trim_paren()
+            if focus_name:
+                pl.trim_noise()
+            for t in tknzr.tokenize(pl.line, tokenizer.Tokenizer.SplitMode.C):
+                pl.tokens.append({
                     "surface": t.surface(),
                     "pos": t.part_of_speech()[0],
                     "reading": t.reading_form(),
-                    "c_type": t.part_of_speech()[4],
-                    "c_form": t.part_of_speech()[5]
                 })
-            out.append({"line": line, "tokens": tokens})
+        out.append({
+            "raw_line": pl.raw_line,
+            "line": pl.line,
+            "tokens": pl.tokens
+        })
 
     Path(output_file_path).write_text(str(out), "utf-8")
 
+
 if __name__ == "__main__":
     ignore_paren = sys.argv[3] == "IgnoreParen"
-    main(*sys.argv[1:3], ignore_paren)
+    focus_name = sys.argv[4] == "FocusName"
+    main(*sys.argv[1:3], ignore_paren, focus_name)

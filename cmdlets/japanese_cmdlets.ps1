@@ -466,14 +466,16 @@ class SudachiTokensReader {
 class SudachiPy {
     [PSCustomObject[]]$parsed
 
-    SudachiPy([string[]]$lines, [bool]$ignoreParen=$false) {
+    SudachiPy([string[]]$lines, [bool]$ignoreParen=$false, [bool]$focusName=$false) {
         $sudachiPath = $PSScriptRoot | Join-Path -ChildPath "python\sudachi_tokenizer.py"
         Use-TempDir {
             $in = New-Item -Path ".\in.txt"
             $out = New-Item -Path ".\out.txt"
             $lines | Out-File -Encoding utf8NoBOM -FilePath $in.FullName
-            $opt = ($ignoreParen)? "IgnoreParen" : "IncludeParen"
-            Start-Process -Path python.exe -wait -ArgumentList @("-B", $sudachiPath, $in.FullName, $out.FullName, $opt) -NoNewWindow
+            $opt = @()
+            $opt += (($ignoreParen)? "IgnoreParen" : "IncludeParen")
+            $opt += (($focusName)? "FocusName" : "IncludeNoise")
+            Start-Process -Path python.exe -wait -ArgumentList (@("-B", $sudachiPath, $in.FullName, $out.FullName) + $opt) -NoNewWindow
             $this.parsed = Get-Content -Path $out.FullName -Encoding utf8NoBOM | ConvertFrom-Json
         }
     }
@@ -481,9 +483,10 @@ class SudachiPy {
     [PSCustomObject[]] GetReading() {
         return $this.parsed | ForEach-Object {
             $reader = [SudachiTokensReader]::new($_.tokens)
+            $line = $_.raw_line
             $reading = $reader.GetReading()
             return [PSCustomObject]@{
-                "Line" = $_.line;
+                "Line" = $line;
                 "Reading" = $reading;
                 "Tokenize" = $reader.GetDetail();
                 "Normalized" = [FormatJP]::Normalize($reading);
@@ -500,6 +503,8 @@ function Invoke-SudachiTokenizer {
     <#
     .PARAMETER ignoreParen
     指定時は （） や ［］ に囲まれた部分に対する読み情報を付加しない
+    .PARAMETER focusName
+    指定時は2倍アキの後ろにあるノンブルや矢印後の見よ先項目は無視する
     .NOTES
     ビルドに rust を使用するようになったので、初回の pip install 時に rust がインストールされている必要がある。
     エラーメッセージで案内される https://rustup.rs/ をインストールして本体を再起動してから実行すれば解決する（はず）。
@@ -508,6 +513,7 @@ function Invoke-SudachiTokenizer {
     param (
         [parameter(ValueFromPipeline = $true)][string[]]$inputLine
         ,[switch]$ignoreParen
+        ,[switch]$focusName
     )
     begin {
         $lines = New-Object System.Collections.ArrayList
@@ -516,7 +522,7 @@ function Invoke-SudachiTokenizer {
         $inputLine.ForEach({$lines.Add($_) > $null})
     }
     end {
-        [SudachiPy]::new($lines, $ignoreParen) | Write-Output
+        [SudachiPy]::new($lines, $ignoreParen, $focusName) | Write-Output
     }
 }
 
@@ -530,17 +536,11 @@ function Get-ReadingWithSudachi {
     }
     process {
         $inputLine.ForEach({
-            if ($forBookIndex) {
-                $trim = $_ -replace "　　.+" -replace "　→.+"
-                $lines.Add($trim) > $null
-            }
-            else {
-                $lines.Add($_) > $null
-            }
+            $lines.Add($_) > $null
         })
     }
     end {
-        $sudachi = [SudachiPy]::new($lines, $forBookIndex)
+        $sudachi = [SudachiPy]::new($lines, $forBookIndex, $forBookIndex)
         $sudachi.GetReading() | Write-Output
     }
 }

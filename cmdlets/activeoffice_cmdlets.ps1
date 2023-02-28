@@ -293,6 +293,32 @@ function Copy-ActiveWordDocument {
     $word.Documents.Add($word.ActiveDocument.Fullname) > $null
 }
 
+function Split-ActiveWordDocumentBySection {
+    $word = Get-ActiveWordApp
+    if (-not $word) {
+        return
+    }
+    if (-not $word.ActiveDocument.path) {
+        Write-Host "unsaved document!!" -ForegroundColor Magenta
+        return
+    }
+    $counter = 1
+    $docPath = Get-Item $word.ActiveDocument.Fullname
+    $word.ActiveDocument.Sections | ForEach-Object {
+        $_.Range.Copy()
+        $newDoc = $word.Documents.Add($docPath.FullName)
+        $newDoc.content.Select()
+        $word.Selection.Paste()
+        if ($newDoc.Sections.Count -gt 1) {
+            $newDoc.Sections(1).Range.Paragraphs.Last.Range.Delete() > $null
+        }
+        $newName = "{0}_sec{1:d3}{2}" -f $docPath.BaseName, $counter, $docPath.Extension
+        $newPath = $docPath.Directory | Join-Path -ChildPath $newName
+        $newDoc.SaveAs2($newPath)
+        $counter += 1
+    }
+}
+
 
 function Set-NotationShadingOnActiveWordDocument {
     <#
@@ -813,7 +839,7 @@ function Get-EmbeddedDataOnActiveWordDocument {
         $chart = $wd.Selection.ShapeRange(1).Chart
     }
     if (-not $chart) {
-        "selecte ONE chart!" | Write-Host -ForegroundColor Magenta
+        "select ONE chart!" | Write-Host -ForegroundColor Magenta
         return
     }
 
