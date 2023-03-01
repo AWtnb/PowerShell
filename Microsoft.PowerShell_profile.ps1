@@ -368,11 +368,10 @@ Class Prompter {
     }
 
     [string] GetPrompt() {
-        $warning = ""
         if (($pwd.Path | Split-Path -Leaf) -ne "Desktop") {
-            $warning = $Global:PSStyle.Foreground.Red
+            return $Global:PSStyle.Foreground.BrightRed + "#!!>" + $this.stopDeco
         }
-        return $warning + "#>" + $this.stopDeco
+        return "#>"
     }
 
     [void] Display() {

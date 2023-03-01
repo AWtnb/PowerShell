@@ -127,3 +127,54 @@ function Get-OfficeLastSaveTime {
     }
     end {}
 }
+
+function Convert-PowerpointSlide2PDF {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+    )
+    begin {
+        $vbConst = [PSCustomObject]@{
+            ppFixedFormatTypePDF = 2;
+            ppFixedFormatIntentPrint = 2;
+            ppPrintHandoutHorizontalFirst = 2;
+            ppPrintOutputSlides = 1;
+        }
+        $slides = @()
+    }
+    process {
+        $fileObj = Get-Item -LiteralPath $inputObj
+        if ($fileObj.Extension -match "pptx?$") {
+            $slides += $fileObj
+        }
+    }
+    end {
+        $powerpoint = New-Object -ComObject PowerPoint.Application
+        $powerpoint.Visible = $true
+        $slides | ForEach-Object {
+            "converting '{0}' to PDF..." -f $_.Name | Write-Host
+            try {
+                $presen = $powerpoint.Presentations.Open($_.FullName, $null, $true)
+                $outPath = $_.FullName -replace "\.pptx$", ".pdf"
+                $max = $presen.Slides.Count
+                $presen.PrintOptions.Ranges.Add(1, $max) > $null
+                $presen.ExportAsFixedFormat(
+                    $outPath,
+                    $vbConst.ppFixedFormatTypePDF,
+                    $vbConst.ppFixedFormatIntentPrint,
+                    $false,
+                    $vbConst.ppPrintHandoutHorizontalFirst,
+                    $vbConst.ppPrintOutputSlides,
+                    $false,
+                    $presen.PrintOptions.Ranges.Item(1)
+                )
+                $presen.Close()
+                "==> finished!" | Write-Host
+            }
+            catch {
+                "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
+            }
+        }
+        $powerpoint.Quit()
+        Clear-ComReference
+    }
+}

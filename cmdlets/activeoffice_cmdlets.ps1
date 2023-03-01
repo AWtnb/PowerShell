@@ -305,12 +305,20 @@ function Split-ActiveWordDocumentBySection {
     $counter = 1
     $docPath = Get-Item $word.ActiveDocument.Fullname
     $word.ActiveDocument.Sections | ForEach-Object {
-        $_.Range.Copy()
         $newDoc = $word.Documents.Add($docPath.FullName)
-        $newDoc.content.Select()
-        $word.Selection.Paste()
-        if ($newDoc.Sections.Count -gt 1) {
-            $newDoc.Sections(1).Range.Paragraphs.Last.Range.Delete() > $null
+        if ($counter -gt 1) {
+            1..($counter - 1) | ForEach-Object {
+                $newDoc.Sections(1).Range.Delete() > $null
+            }
+        }
+        $rest = $newDoc.Sections.Count
+        if ($rest -gt 1) {
+            1..($rest - 1) | ForEach-Object {
+                $newDoc.Sections(2).Range.Delete() > $null
+            }
+            if ($newDoc.Sections.Count -gt 1) {
+                $newDoc.Sections(1).Range.Paragraphs.Last.Range.Characters.Last.Delete() > $null
+            }
         }
         $newName = "{0}_sec{1:d3}{2}" -f $docPath.BaseName, $counter, $docPath.Extension
         $newPath = $docPath.Directory | Join-Path -ChildPath $newName
@@ -864,7 +872,7 @@ function Get-EmbeddedDataOnActiveWordDocument {
 
 
 
-function Add-Image2ActivePptSlide {
+function Add-Image2ActivePowerpointSlide {
     param (
         [int]$widthCm
     )
