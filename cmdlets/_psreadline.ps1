@@ -36,6 +36,8 @@ Set-PSReadLineOption -colors @{
     "InlinePrediction" = $Global:PSStyle.Foreground.Blue;
 }
 
+Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
+
 # history
 Set-PSReadLineKeyHandler -Key "ctrl+r" -Function ReverseSearchHistory
 Set-PSReadLineKeyHandler -Key "ctrl+R" -Function ForwardSearchHistory
