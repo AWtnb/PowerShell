@@ -154,7 +154,7 @@ function Invoke-PdfExtractWithPython {
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[int]$from = 1
-        ,[int]$to = 0
+        ,[int]$to = -1
     )
     begin {}
     process {

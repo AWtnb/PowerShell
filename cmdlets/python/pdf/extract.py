@@ -14,21 +14,24 @@ def main(file_path:str, p_from:str, p_to:str):
     range_end = int(p_to)
 
     pdf = PdfReader(file_path)
+    pdf_path = Path(file_path)
 
     try:
-        if range_begin <= 0:
-            range_begin = len(pdf.pages) + range_begin
-            assert 0 <= range_begin, "start-page is smaller than 0!"
-        if range_end <= 0:
-            range_end = len(pdf.pages) + range_end
-            assert 0 <= range_end, "end-page is smaller than 0!"
+        assert 0 != range_begin, "start-page index starts from 1 (or -1)!"
+        if range_begin < 0:
+            range_begin = len(pdf.pages) + range_begin + 1
+            assert 0 < range_begin, "too small start-page!"
+        assert 0 != range_end, "end-page index starts from 1 (or -1)!"
+        if range_end < 0:
+            range_end = len(pdf.pages) + range_end + 1
+            assert 0 < range_end, "too small end-page!"
         assert range_begin <= range_end, "start-page is bigger than end-page!"
-        assert range_end <= len(pdf.pages), "end-page is bigger than max page!"
+        assert range_end <= len(pdf.pages), "too big end-page!"
     except AssertionError as err:
-        print("OUT-OF-RANGE: {}".format(err), file=sys.stderr)
+        print(pdf_path.name)
+        print("OUT-OF-RANGE-ERROR: {}".format(err), file=sys.stderr)
         return
 
-    pdf_path = Path(file_path)
     out_path = pdf_path.with_stem("{}_{:03}-{:03}".format(pdf_path.stem, range_begin, range_end))
 
     writer = PdfWriter(out_path)
