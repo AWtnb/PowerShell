@@ -745,7 +745,12 @@ function Move-ItemToObsDir {
     $items = @()
     $cbStr = Get-Clipboard
     if ($cbStr.Length) {
-        $items = @(($cbStr -replace '"' -replace " ?C:", "|C:") -split "\|" | Where-Object { Test-Path $_ } | Get-Item)
+        $items = ($cbStr -replace '" "', '"\n"') -split "\n" | ForEach-Object {
+            if ($_.StartsWith('"')) {
+                return $_ -replace '"'
+            }
+            return $_ -split " "
+        } | Where-Object { Test-Path $_ } | Get-Item
     }
     else {
         $items = @([Windows.Forms.Clipboard]::GetFileDropList() | Get-Item)

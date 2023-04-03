@@ -423,3 +423,22 @@ function Invoke-PdfSplitPagesWithPython {
     }
     end {}
 }
+
+function Invoke-PdfTextExtractWithPython {
+    param (
+        [parameter(ValueFromPipeline = $true)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
+    )
+    begin {
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("get_text.py")
+        $py.RunCommand(@($file.FullName))
+    }
+    end {}
+}
