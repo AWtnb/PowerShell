@@ -128,7 +128,6 @@ Class GoogleImeDb {
     GoogleImeDb($name) {
         $this.name = $name
         $this.localDirPath = "C:\Users\{0}\AppData\LocalLow\Google\Google Japanese Input" -f $env:USERNAME
-        $this.cloudDirPath = "C:\Users\{0}\Dropbox\develop\app_config\IME_google\db" -f $env:USERNAME
         $localPath = $this.localDirPath | Join-Path -ChildPath $this.name
         if (Test-Path $localPath) {
             $this.localFile = Get-Item -LiteralPath $localPath
@@ -136,6 +135,7 @@ Class GoogleImeDb {
         else {
             $this.missing += $localPath
         }
+        $this.cloudDirPath = "C:\Users\{0}\Dropbox\develop\app_config\IME_google\db" -f $env:USERNAME
         $cloudPath = $this.cloudDirPath | Join-Path -ChildPath $this.name
         if (Test-Path $cloudPath) {
             $this.cloudFile = Get-Item -LiteralPath $cloudPath
@@ -192,6 +192,15 @@ Class GoogleImeDb {
         }
     }
 
+    [string] DecotateByRequirement ([string]$s) {
+        $psColor = $global:PSStyle
+        $ansiSeq = @{
+            "UPLOAD" = $psColor.Foreground.Green;
+            "DOWNLOAD" = $psColor.Foreground.Cyan;
+        }[$this.require]
+        return $ansiSeq + $s + $psColor.Reset
+    }
+
     static [void] Dialog ([bool]$register) {
         $opt = ($register)? "--mode=word_register_dialog" : "--mode=dictionary_tool"
         Start-Process -FilePath "C:\Program Files (x86)\Google\Google Japanese Input\GoogleIMEJaTool.exe" -ArgumentList $opt
@@ -217,17 +226,13 @@ function Test-GoogleIme {
             }
             return
         }
-        $psColor = $global:PSStyle
-        $ansiSeq = @{
-            "UPLOAD" = $psColor.Foreground.Green;
-            "DOWNLOAD" = $psColor.Foreground.Cyan;
-        }[$db.require]
-        "[Google IME]`n{0} is required on '{1}'!`n(last update: {2})" -f @($db.require, $db.name, $db.lastUpdate | ForEach-Object {$ansiSeq + $_ + $psColor.Reset}) | Write-Host
 
-        if ((Read-Host -Prompt "==> Execute Sync?(y/n)") -eq "y") {
+        "[Google IME] '{0}' is updated on {1} :" -f @($db.name, $db.lastUpdate | ForEach-Object { $db.DecotateByRequirement($_)}) | Write-Host
+
+        $askPrompt = "==> {0}? (y/n)" -f $db.DecotateByRequirement($db.require)
+        if ((Read-Host -Prompt $askPrompt) -eq "y") {
             $db.Sync()
-            "`u{2705}" | Write-Host -NoNewline -ForegroundColor (($db.require -eq "UPLOAD")? "Green" : "Cyan")
-            " {0} completed: '{1}'`n" -f $db.require, $db.name | Write-Host
+            "`u{2705} {0} of '{1}' is successfully finished!`n" -f @($db.require, $db.name |ForEach-Object { $db.DecotateByRequirement($_) }) | Write-Host
         }
         else {
             "`u{2716}" | Write-Host -ForegroundColor Red -NoNewline
