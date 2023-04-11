@@ -67,6 +67,9 @@ class PsLinker {
         $src = Get-Item -LiteralPath $srcPath
         $this.srcPath = $src.FullName
         $this.srcName = $src.Name
+        if ($this.srcName.Length -lt 1) {
+            $this.srcName = $this.srcPath | Split-Path -Leaf
+        }
         $this.workDir = ($workDir.Length -gt 0)? (Get-Item -LiteralPath $workDir).FullName : (Get-Location).Path
         $this.linkPath = $this.workDir | Join-Path -ChildPath $this.srcName
     }
@@ -215,6 +218,7 @@ function Set-ShortcutFiler {
         $openDir = $tmpLnk.TargetPath
         if (-not (Test-Path $openDir -PathType Container)) {
             "{0} is not shortcut to folder!" -f $_.Name | Write-Host -ForegroundColor Magenta
+            $tmpLnk.save()
             return
         }
         $tmpLnk.Arguments = $openDir
