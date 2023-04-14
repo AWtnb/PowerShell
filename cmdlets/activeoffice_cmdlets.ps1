@@ -242,13 +242,10 @@ function Invoke-GrepOnActiveWordDocument {
         検索語
         .PARAMETER case
         指定時は大文字小文字を区別
-        .PARAMETER context
-        前後何行ずつを表示するかをカンマ区切りで指定
     #>
     param (
         [parameter(Mandatory)]$pattern
         ,[switch]$case
-        ,[int[]]$context = 0
     )
 
     $adoc = [ActiveDocument]::new()
@@ -257,20 +254,10 @@ function Invoke-GrepOnActiveWordDocument {
         return
     }
 
-    $grep = $paragraphs | Select-String -Pattern $pattern -AllMatches -CaseSensitive:$case -Context $context
+    $grep = $paragraphs | Select-String -Pattern $pattern -AllMatches -CaseSensitive:$case
     foreach ($g in $grep) {
-
-        $g.Context.PreContext | Where-Object {$_} | ForEach-Object {
-            "    :{0}" -f $_ | Write-Host -ForegroundColor DarkGray
-        }
-
-        "{0:d4}:" -f $g.LineNumber | Write-Host -ForegroundColor DarkGray -NoNewline
+        "{0:d4}:" -f $g.LineNumber | Write-Host -ForegroundColor Blue -NoNewline
         $g.Line | hilight -pattern $pattern -case:$case
-
-        $g.Context.PostContext | Where-Object {$_} | ForEach-Object {
-            "    :{0}" -f $_ | Write-Host -ForegroundColor DarkGray
-        }
-
     }
 
     if ($grep.Matches.Count -gt 0) {

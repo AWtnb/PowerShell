@@ -745,12 +745,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object
 # ls
 ##############################
 
-Set-PSReadLineKeyHandler -Key "ctrl+alt+l,s", "ctrl+alt+l,e", "ctrl+alt+l,c", "ctrl+alt+l,f" -BriefDescription "ls-utilize" -LongDescription "ls-utilize" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+b,s", "ctrl+b,e", "ctrl+b,c" -BriefDescription "basename-file-match" -LongDescription "basename-file-match" -ScriptBlock {
     param($key, $arg)
-    if ($key.keychar -eq "f") {
-        [PSConsoleReadLine]::Insert("ls -file ")
-        return
-    }
     $cmd = "ls |? Basename -like *"
     if ($key.keychar -eq "c") {
         $cmd = $cmd + "*"

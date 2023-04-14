@@ -826,11 +826,11 @@ Class PsHighlight {
         $this.reg = ($case)? [regex]::new($pattern) : [regex]::new($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
         $this.color = $color
     }
+    [string]Wrap([System.Text.RegularExpressions.Match]$m) {
+        return $global:PSStyle.Background.PSObject.Properties[$this.color].Value + $global:PSStyle.Foreground.Black + $m.Value + $global:PSStyle.Reset
+    }
     [string]Markup([string]$s) {
-        return $this.reg.Replace($s, {
-            param($m)
-            return $global:PSStyle.Background.PSObject.Properties[$this.color].Value + $global:PSStyle.Foreground.Black + $m.Value + $global:PSStyle.Reset
-        })
+        return $this.reg.Replace($s, $this.Wrap)
     }
 }
 
