@@ -326,9 +326,9 @@ function Find-SameFile {
         ,[string]$searchIn = "."
     )
     begin {
-        $hashToPath = @{}
+        $hashGruop = @{}
         Get-ChildItem -Path $searchIn -File -Recurse | Get-FileHash | Group-Object -Property Hash | ForEach-Object {
-            $hashToPath.Add($_.Name, @($_.Group.Path))
+            $hashGruop.Add($_.Name, @($_.Group.Path))
         }
     }
     process {
@@ -336,7 +336,7 @@ function Find-SameFile {
         if ($target.Extension) {
             $targetHash = (Get-FileHash $target.Fullname).hash
             $found = New-Object System.Collections.ArrayList
-            foreach ($p in $hashToPath[$targetHash]) {
+            foreach ($p in $hashGruop[$targetHash]) {
                 if ($p -and $p -ne $target.FullName) {
                     $found.Add( [System.IO.Path]::GetRelativePath($searchIn, $p) ) > $null
                 }

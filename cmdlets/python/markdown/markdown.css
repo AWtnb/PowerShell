@@ -1,24 +1,24 @@
-@import url('https://cdn.jsdelivr.net/npm/yakuhanjp@3.4.1/dist/css/yakuhanjp_s-noto.min.css');
+@import url("https://cdn.jsdelivr.net/npm/yakuhanjp@3.4.1/dist/css/yakuhanjp_s-noto.min.css");
 @font-face {
   font-family: 'Noto Sans JP';
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosansjp/v42/-F6pfjtqLzI2JPCgQBnw7HFQaioq1A.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosansjp/v51/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFE8j75s.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans JP';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosansjp/v42/-F62fjtqLzI2JPCgQBnw7HFowA.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosansjp/v51/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFBEj75s.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans JP';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosansjp/v42/-F6pfjtqLzI2JPCgQBnw7HFQei0q1A.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosansjp/v51/-F6jfjtqLzI2JPCgQBnw7HFyzSD-AsregP8VFPYk75s.ttf) format('truetype');
 }
 @font-face {
   font-family: 'M PLUS 1 Code';
@@ -30,7 +30,7 @@
 html {
   background: #fff;
   color: #272727;
-  font-family: YakuHanJPs_Noto, 'Noto Sans JP', sans-serif;
+  font-family: YakuHanJPs_Noto, "Noto Sans JP", sans-serif;
   font-size: 14px;
 }
 body {
@@ -284,7 +284,7 @@ blockquote ol li::marker {
   color: inherit;
 }
 :not(pre) > code {
-  font-family: 'M PLUS 1 Code', sans-serif;
+  font-family: "M PLUS 1 Code", sans-serif;
   font-size: 0.9em;
   padding: 0 4px;
   margin: 0 0.1em;
@@ -304,7 +304,7 @@ pre {
   line-height: 1.25;
 }
 pre code {
-  font-family: 'M PLUS 1 Code', sans-serif;
+  font-family: "M PLUS 1 Code", sans-serif;
   font-size: 0.9rem;
   color: #364352;
   word-break: break-all;
@@ -335,7 +335,7 @@ pre.codeblock-header[data-label="right"]::before {
 }
 pre.codeblock-header[data-label="right"] > code {
   font-size: 1rem;
-  font-family: YakuHanJPs_Noto, 'Noto Sans JP', sans-serif;
+  font-family: YakuHanJPs_Noto, "Noto Sans JP", sans-serif;
 }
 pre.codeblock-header[data-label="endnote"] {
   text-align: right;
@@ -352,7 +352,7 @@ pre.codeblock-header[data-label="endnote"]::before {
 }
 pre.codeblock-header[data-label="endnote"] > code {
   font-size: 0.85rem;
-  font-family: YakuHanJPs_Noto, 'Noto Sans JP', sans-serif;
+  font-family: YakuHanJPs_Noto, "Noto Sans JP", sans-serif;
 }
 table {
   font-size: 0.9rem;
@@ -390,8 +390,8 @@ table tbody tr:nth-child(even) {
 }
 .toc {
   position: absolute;
-  width: 16rem;
-  right: -16rem;
+  left: calc(-1 * calc((100vw - 40rem) / 2) + 1em);
+  width: calc(calc((100vw - 40rem) / 2) - 2em);
   top: -1rem;
   height: 100%;
   font-size: 0.95rem;
@@ -399,11 +399,12 @@ table tbody tr:nth-child(even) {
 .toc ul {
   position: sticky;
   top: 1rem;
+  margin: 0;
 }
 .toc li {
   text-align: left;
   padding-left: 0;
-  line-height: 1;
+  line-height: 1.2;
   margin: 8px auto;
 }
 .toc li.toc-h2 {
