@@ -53,9 +53,6 @@ class DomTree:
                 a = lxml.html.Element("a")
                 a.set("href", "#{}".format(hd.get("id") or ""))
                 a.text = hd.text_content()
-                # max_width = 16 - int(hd.tag[1:]) - 2
-                # if max_width < len(a.text):
-                #     a.text = a.text[:(max_width - 1)] + "..."
                 li = lxml.html.Element("li")
                 li.classes.add("toc-{}".format(hd.tag))
                 li.append(a)

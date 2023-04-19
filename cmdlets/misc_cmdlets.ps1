@@ -30,7 +30,7 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
 
 function ConvertFrom-Base64 {
     param (
-        [parameter(ValueFromPipeline = $true)][string]$inputLine
+        [parameter(ValueFromPipeline)][string]$inputLine
     )
     begin {}
     process {
@@ -40,7 +40,7 @@ function ConvertFrom-Base64 {
 }
 function ConvertTo-Base64 {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -101,7 +101,7 @@ Update-TypeData -TypeName "System.Int32" -Force -MemberType ScriptMethod -Member
 
 function ConvertFrom-Base26 {
     param (
-        [parameter(ValueFromPipeline = $true)]$s
+        [parameter(ValueFromPipeline)]$s
     )
     begin {}
     process {
@@ -112,7 +112,7 @@ function ConvertFrom-Base26 {
 
 function ConvertTo-Base26 {
     param (
-        [parameter(ValueFromPipeline = $true)]$s
+        [parameter(ValueFromPipeline)]$s
     )
     begin {}
     process {
@@ -188,7 +188,7 @@ function Convert-Rgb2Colorcode {
 }
 function Convert-Int2Colorcode {
     param (
-        [parameter(ValueFromPipeline = $true)][int]$i
+        [parameter(ValueFromPipeline)][int]$i
     )
     begin {}
     process {
@@ -198,7 +198,7 @@ function Convert-Int2Colorcode {
 }
 function Convert-Colorcode2Rgb {
     param (
-        [parameter(ValueFromPipeline = $true)]$colorcode
+        [parameter(ValueFromPipeline)]$colorcode
     )
     begin {}
     process {
@@ -208,7 +208,7 @@ function Convert-Colorcode2Rgb {
 }
 function Convert-Colorcode2Int {
     param (
-        [parameter(ValueFromPipeline = $true)]$colorcode
+        [parameter(ValueFromPipeline)]$colorcode
     )
     begin {}
     process {
@@ -322,7 +322,7 @@ if(-not ('Pwsh.SHA256' -as [type]))
 
 function Find-SameFile {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
         ,[string]$searchIn = "."
     )
     begin {
@@ -546,7 +546,7 @@ function Get-AddressByPostalCode {
                                                             # => 東京都千代田区神田美土代町
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputLine
+        [parameter(ValueFromPipeline)]$inputLine
     )
     begin {
     }
@@ -630,7 +630,7 @@ function ConvertTo-Mp3 {
 
 function Get-Mp3Property {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
         $sh = New-Object -ComObject Shell.Application
@@ -652,7 +652,7 @@ function Get-Mp3Property {
 }
 function Test-Url {
     param (
-        [parameter(ValueFromPipeline = $true)][string]$inputLine
+        [parameter(ValueFromPipeline)][string]$inputLine
     )
     begin {
     }
@@ -702,7 +702,7 @@ function Invoke-FileDownload {
 
 function Invoke-Monolith {
     param (
-        [parameter(ValueFromPipeline = $true)][string]$inputLine
+        [parameter(ValueFromPipeline)][string]$inputLine
         ,[string]$outDir
     )
     begin {

@@ -15,7 +15,7 @@ function Clear-ComReference {
 
 function Convert-WordDocument2PDF {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
         $vbConst = [PSCustomObject]@{
@@ -72,7 +72,7 @@ Set-Alias word2pdf Convert-WordDocument2PDF
 
 function Convert-Doc2Docx {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
         $vbConst = [PSCustomObject]@{
@@ -108,7 +108,7 @@ function Convert-Doc2Docx {
 
 function Get-OfficeLastSaveTime {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
         $shell = New-Object -Com Shell.Application
@@ -130,7 +130,7 @@ function Get-OfficeLastSaveTime {
 
 function Convert-PowerpointSlide2PDF {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
         $vbConst = [PSCustomObject]@{

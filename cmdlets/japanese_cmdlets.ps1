@@ -388,7 +388,7 @@ Update-TypeData -MemberName FromUnicode -TypeName System.String -Force -MemberTy
 
 function Convert-UnicodeToLetter {
     param (
-        [parameter(ValueFromPipeline = $true)]$code
+        [parameter(ValueFromPipeline)]$code
     )
     begin {}
     process {
@@ -399,7 +399,7 @@ function Convert-UnicodeToLetter {
 
 function Convert-LetterToUnicode {
     param (
-        [parameter(ValueFromPipeline = $true)]$s
+        [parameter(ValueFromPipeline)]$s
     )
     begin {}
     process {
@@ -410,11 +410,11 @@ function Convert-LetterToUnicode {
     end {}
 }
 
-class SudachiTokenParser {
+class SudachiTokenWrapper {
     [string]$reading = ""
     [string]$detail = ""
 
-    SudachiTokenParser($token) {
+    SudachiTokenWrapper($token) {
         $surface = $token.surface
         if ($token.pos -match "記号" -or $token.pos -match "空白" -or $surface -match "^([ぁ-んァ-ヴ・ー]|[a-zA-Zａ-ｚＡ-Ｚ]|[0-9０-９]|[\W\s])+$") {
             if ($surface -match "[ぁ-ん]") {
@@ -441,7 +441,7 @@ class SudachiTokensReader {
     [PSCustomObject[]]$tokens
 
     SudachiTokensReader($rawTokens) {
-        $this.tokens = $rawTokens.ForEach({[SudachiTokenParser]::new($_)})
+        $this.tokens = $rawTokens.ForEach({[SudachiTokenWrapper]::new($_)})
     }
 
     [string] GetReading() {
@@ -511,7 +511,7 @@ function Invoke-SudachiTokenizer {
     #>
 
     param (
-        [parameter(ValueFromPipeline = $true)][string[]]$inputLine
+        [parameter(ValueFromPipeline)][string[]]$inputLine
         ,[switch]$ignoreParen
         ,[switch]$focusName
     )
@@ -528,7 +528,7 @@ function Invoke-SudachiTokenizer {
 
 function Get-ReadingWithSudachi {
     param (
-        [parameter(ValueFromPipeline = $true)][string[]]$inputLine
+        [parameter(ValueFromPipeline)][string[]]$inputLine
         ,[switch]$forBookIndex
     )
     begin {
@@ -544,6 +544,26 @@ function Get-ReadingWithSudachi {
         $sudachi.GetReading() | Write-Output
     }
 }
+
+function Invoke-SortByReading {
+    param (
+        [parameter(ValueFromPipeline)][string[]]$inputLine
+    )
+    begin {
+        $lines = New-Object System.Collections.ArrayList
+    }
+    process {
+        $inputLine.ForEach({
+            $lines.Add($_) > $null
+        })
+    }
+    end {
+        $sudachi = [SudachiPy]::new($lines, $forBookIndex, $forBookIndex)
+        $sudachi.GetReading() | Sort-Object Normalized | ForEach-Object {$_.Line} | Write-Output
+    }
+}
+
+
 
 
 function Convert-LinesToBookIndexReading {

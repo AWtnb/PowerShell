@@ -12,7 +12,7 @@ function Get-Shortcut {
         ls | Get-Shortcut
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -27,7 +27,7 @@ function Get-Shortcut {
 
 function Set-ShortCutHotkey {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
         ,[string]$hotkey = ""
     )
     begin {}

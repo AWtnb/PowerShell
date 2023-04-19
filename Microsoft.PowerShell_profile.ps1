@@ -463,7 +463,7 @@ function ii. {
 
 function iit {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputLine
+        [parameter(ValueFromPipeline)]$inputLine
     )
     begin {}
     process {
@@ -652,7 +652,7 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
 
 function ConvertTo-SHA256Hash {
     param (
-        [parameter(ValueFromPipeline = $true)][string]$str
+        [parameter(ValueFromPipeline)][string]$str
     )
     begin {}
     process {

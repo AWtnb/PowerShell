@@ -281,7 +281,7 @@ function ConvertTo-IdNumber {
 
 function Format-EmbedYoutube {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputLine
+        [parameter(ValueFromPipeline)]$inputLine
     )
     begin {}
     process {
@@ -292,7 +292,7 @@ function Format-EmbedYoutube {
 
 function Get-SortInfo {
     param (
-        [parameter(ValueFromPipeline = $true)][string]$inputLine
+        [parameter(ValueFromPipeline)][string]$inputLine
     )
     <#
         .EXAMPLE

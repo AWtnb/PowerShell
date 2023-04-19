@@ -59,7 +59,7 @@ Set-Alias pdfConcPy Invoke-PdfConcWithPython
 
 function Invoke-PdfOverlayWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[string]$overlayPdf
@@ -80,7 +80,7 @@ function Invoke-PdfOverlayWithPython {
 
 function Invoke-PdfFilenameWatermarkWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[int]$startIdx = 1
@@ -150,7 +150,7 @@ function Invoke-PdfZipToDiffWithPython {
 
 function Invoke-PdfExtractWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[int]$from = 1
@@ -193,7 +193,7 @@ function Invoke-PdfExtractStepWithPython {
 
 function Invoke-PdfRotateWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[ValidateSet(90, 180, 270)][int]$clockwise = 180
@@ -214,7 +214,7 @@ Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
 
 function Invoke-PdfToImageWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj,
         [int]$dpi = 300
@@ -234,7 +234,7 @@ Set-Alias pdfImagePy Invoke-PdfToImageWithPython
 
 function Invoke-PdfSpreadWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$singleTopPage
@@ -266,7 +266,7 @@ Set-Alias pdfSpreadPy Invoke-PdfSpreadWithPython
 
 function pyGenPdfSpreadImg {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$singleTopPage
@@ -284,7 +284,7 @@ function pyGenPdfSpreadImg {
 
 function Invoke-PdfUnspreadWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
     )
@@ -304,7 +304,7 @@ Set-Alias pdfUnspreadPy Invoke-PdfUnspreadWithPython
 
 function Invoke-PdfCropCenterWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[ValidateSet("head", "tail", "both")][string]$mode = "both"
@@ -324,7 +324,7 @@ function Invoke-PdfCropCenterWithPython {
 
 function Invoke-PdfTrimGalleyMarginWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[float]$tombowPercentH = 8.0
@@ -346,7 +346,7 @@ Set-Alias pdfTrimMarginPy Invoke-PdfTrimGalleyMarginWithPython
 
 function Invoke-PdfSwapWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[string]$newPdf
@@ -386,7 +386,7 @@ function Invoke-PdfZipPagesWithPython {
 
 function Invoke-PdfUnzipPagesWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$evenPages
@@ -407,7 +407,7 @@ function Invoke-PdfUnzipPagesWithPython {
 
 function Invoke-PdfSplitPagesWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
     )
@@ -426,7 +426,7 @@ function Invoke-PdfSplitPagesWithPython {
 
 function Invoke-PdfTextExtractWithPython {
     param (
-        [parameter(ValueFromPipeline = $true)]
+        [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
     )

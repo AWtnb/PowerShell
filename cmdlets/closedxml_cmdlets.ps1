@@ -96,7 +96,7 @@ Class ParseExcel {
 
 function Invoke-ClosedXmlExcelParse {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -112,7 +112,7 @@ function Invoke-ClosedXmlExcelParse {
 
 function Invoke-ClosedXmlExcelSearch {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
         ,[string]$pattern
         ,[switch]$case
     )

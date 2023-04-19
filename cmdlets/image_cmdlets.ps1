@@ -22,7 +22,7 @@ function Get-ExifDate {
         Get-ExifDate -inputObj .\hogehoge.jpeg
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
         class Jpeg {
@@ -88,7 +88,7 @@ function Rename-ExifDate {
 
 function Get-CR2Timestamp {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -157,7 +157,7 @@ function Invoke-ImageMagickWatermarkFromFile {
         Invoke-ImageMagickWatermarkFromFile -inputObj .\hogehoge.jpeg -watermarkPath .\watermark\mark.png
     #>
     param(
-        [parameter(ValueFromPipeline = $true)]$inputObj,
+        [parameter(ValueFromPipeline)]$inputObj,
         [string]$watermarkPath,
         [int]$transparency = 75
     )
@@ -184,7 +184,7 @@ function Invoke-ImageMagickWatermarkFromFile {
 
 function Invoke-ClearWhiteArea {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj,
+        [parameter(ValueFromPipeline)]$inputObj,
         [int]$fuzz = 20
     )
     begin {}
@@ -198,7 +198,7 @@ function Invoke-ClearWhiteArea {
 
 function Invoke-ImageMagickPng2Ico {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -213,7 +213,7 @@ function Invoke-ImageMagickPng2Ico {
 
 function Invoke-ImageMagickShadow {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -227,7 +227,7 @@ function Invoke-ImageMagickShadow {
 
 function Invoke-ImageMagickResize {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj,
+        [parameter(ValueFromPipeline)]$inputObj,
         [int]$maxWidth = 500
     )
     begin {}
@@ -295,7 +295,7 @@ function Invoke-Pngs2Gif {
 
 function Get-ImageSize {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -324,7 +324,7 @@ function moul {
 
 # function Invoke-Squoosh {
 #     param (
-#         [parameter(ValueFromPipeline = $true)]$inputObj
+#         [parameter(ValueFromPipeline)]$inputObj
 #         ,[int]$quality = 90
 #         ,[int]$maxWidth
 #         ,[switch]$asWebp
@@ -350,7 +350,7 @@ function moul {
 
 function Invoke-ImageMagickWatermarkSignature {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
         ,[string]$s
     )
     begin {

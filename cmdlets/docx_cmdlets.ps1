@@ -118,7 +118,7 @@ function Get-DocxContent {
         ls | Get-DocxContent
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -139,7 +139,7 @@ function Get-DocxContent {
 
 function Get-DocxParagraph {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -154,7 +154,7 @@ function Get-DocxParagraph {
 
 function Get-DocxMarkeredString {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
         ,[string]$color = "yellow"
     )
     begin {}
@@ -176,7 +176,7 @@ function Get-DocxMarkeredString {
 
 function Get-DocxBoldString {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -195,15 +195,15 @@ function Get-DocxBoldString {
     end {}
 }
 
-    function Invoke-DocxGrep {
+function Invoke-DocxGrep {
     <#
         .EXAMPLE
         ls | Invoke-DocxGrep -pattern "ほげ"
         Invoke-DocxGrep -inputObj .\hoge.docx "ほげ"
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
-        ,[string]$pattern
+        [parameter(Mandatory, ValueFromPipeline, ValueFromRemainingArguments)]$inputObj
+        ,[parameter(Mandatory)][string]$pattern
         ,[switch]$case
         ,[switch]$asObject
     )
@@ -211,7 +211,7 @@ function Get-DocxBoldString {
         $result = New-Object System.Collections.ArrayList
     }
     process {
-        $fileObj = Get-Item -LiteralPath $inputObj
+        $fileObj = Get-Item -LiteralPath $inputObj[0]
         if ($fileObj.Extension -ne ".docx") {
             return
         }
@@ -262,7 +262,7 @@ function Get-DocxMatchPattern {
         Get-DocxMatchPattern -inputObj .\hoge.docx -pattern ".+?さん"
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
         ,[string]$pattern
     )
     begin {
@@ -303,7 +303,7 @@ function Get-DocxComment {
         ls | Get-DocxComment
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
@@ -331,24 +331,18 @@ function Get-DocxComment {
 }
 
 function Invoke-DocxCommentGrep {
-    <#
-        .EXAMPLE
-        ls -recurse | Grep-DocxComment です
-    #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
-        ,[string]$pattern
-        ,[string]$authorMatch = "."
+        [parameter(Mandatory, ValueFromPipeline, ValueFromRemainingArguments)]$inputObj
+        ,[parameter(Mandatory)][string]$pattern
         ,[switch]$case
         ,[switch]$asObject
     )
     begin {
         $result = New-Object System.Collections.ArrayList
-        # $reg = ($case)? [regex]$pattern : [regex]"(?i)$pattern"
         $reg = ($case)? [regex]::new($pattern) : [regex]::new($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
     }
     process {
-        $fileObj = Get-Item -LiteralPath $inputObj
+        $fileObj = Get-Item -LiteralPath $inputObj[0]
         if ($fileObj.Extension -ne ".docx") {
             return
         }
@@ -381,10 +375,8 @@ function Invoke-DocxCommentGrep {
             "{0}:" -f ($path | Resolve-Path -Relative) | Write-Host -ForegroundColor Blue -NoNewline
             $_.Group.MatcheValues.Count | Write-Host -ForegroundColor Green
             $_.Group | ForEach-Object {
-                if ($_.Author -match $authorMatch) {
-                    "{0}:" -f $_.Author | Write-Host -ForegroundColor DarkGreen -NoNewline
-                    $_.Line | hilight -pattern $pattern -case:$case
-                }
+                "By {0}:" -f $_.Author | Write-Host -ForegroundColor DarkGreen -NoNewline
+                $_.Line | hilight -pattern $pattern -case:$case
             }
         }
     }
