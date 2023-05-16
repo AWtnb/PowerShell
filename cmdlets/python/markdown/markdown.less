@@ -14,9 +14,12 @@
 @color-code-dark: #364352;
 @color-code-dark-sub: lighten(#364352, 40%);
 @color-code-light: #f6f6f6;
-@width-container: 40rem;
 @font-main: YakuHanJPs_Noto, "Noto Sans JP", sans-serif;
 @font-code: "M PLUS 1 Code", sans-serif;
+
+:root {
+  --width-container: 40rem;
+}
 
 html {
   background: #fff;
@@ -58,7 +61,7 @@ body {
 }
 
 .container {
-  width: @width-container;
+  width: var(--width-container);
   margin: 0 auto;
   padding-bottom: 50vh;
   position: relative;
@@ -426,7 +429,7 @@ table {
   color: #666;
 }
 
-@width-side: calc((100vw - @width-container) / 2);
+@width-side: calc((100vw - var(--width-container)) / 2);
 
 .toc {
   position: absolute;
