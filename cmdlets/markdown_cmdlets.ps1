@@ -19,6 +19,7 @@ function Invoke-MarkdownRenderPython {
         })][string]$path
         ,[switch]$invoke
         ,[switch]$noDefaultCss
+        ,[switch]$openDir
         ,[string]$faviconUnicode = "1F4DD"
     )
 
@@ -49,6 +50,9 @@ function Invoke-MarkdownRenderPython {
     }
     Start-Process -path python.exe -wait -NoNewWindow -ArgumentList $params
 
+    if ($openDir) {
+        $path | Split-Path -Parent | Invoke-Item
+    }
 }
 Set-Alias mdRenderPy Invoke-MarkdownRenderPython
 
