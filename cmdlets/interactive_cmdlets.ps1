@@ -141,7 +141,6 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
     $filtered = $src.Name | mokof -ascii
     if ($filtered) {
         $selected = $src | Where-Object name -eq $filtered | Select-Object -First 1
-        # $wd = $env:USERPROFILE | Join-Path -ChildPath "Dropbox\develop\app_config\PowerShell\PowerShell"
         $wd = $c.profPath | Split-Path -Parent
         'code -g "{0}:{1}" "{2}"' -f $selected.path, $selected.lineNum, $wd | Invoke-Expression
     }

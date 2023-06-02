@@ -745,14 +745,15 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object
 # ls
 ##############################
 
-Set-PSReadLineKeyHandler -Key "ctrl+b,s", "ctrl+b,e", "ctrl+b,c" -BriefDescription "basename-file-match" -LongDescription "basename-file-match" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+b,s", "ctrl+b,e", "ctrl+b,c", "ctrl+b,S", "ctrl+b,E", "ctrl+b,C" -BriefDescription "basename-file-match" -LongDescription "basename-file-match" -ScriptBlock {
     param($key, $arg)
-    $cmd = "ls |? Basename -like *"
-    if ($key.keychar -eq "c") {
+    $opr = ($key.keychar -cin @("S", "E", "C"))? "-notlike" : "-like"
+    $cmd = "ls |? Basename {0} *" -f $opr
+    if ($key.keychar -ieq "c") {
         $cmd = $cmd + "*"
     }
     [PSConsoleReadLine]::Insert($cmd)
-    if ($key.keychar -in @("s", "c")) {
+    if ($key.keychar -iin @("s", "c")) {
         [PSConsoleReadLine]::BackwardChar()
     }
 }
