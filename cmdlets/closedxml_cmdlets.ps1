@@ -27,7 +27,7 @@ https://www.nuget.org/packages/ClosedXML
 
 #>
 
-$PSScriptRoot | Join-Path -ChildPath "lib\closedxml" | Get-ChildItem | ForEach-Object {
+$PSScriptRoot | Join-Path -ChildPath "lib\closedxml" | Get-ChildItem | Where-Object {$_.Extension -eq ".dll"} | ForEach-Object {
     if ($_.Basename -notin ([System.AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object{$_.GetName().Name})) {
         Add-Type -Path $_.FullName
     }

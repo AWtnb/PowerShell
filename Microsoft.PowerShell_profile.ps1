@@ -767,7 +767,7 @@ class PwshRepo {
 
     [void]Sync() {
         $this.GetUnusedItems() | Where-Object {$_} | Sort-Object {$_.Fullname.split("\").Length} -Descending | Remove-Item
-        $this.activeDir | Get-ChildItem -Exclude @("Modules", "Scripts") | Copy-Item -Recurse -Exclude @("*.dll", "*.txt") -Destination $this.repoDir -Force
+        $this.activeDir | Get-ChildItem -Exclude @("Modules", "Scripts") | Copy-Item -Recurse -Destination $this.repoDir -Force
     }
 
     [void]Invoke() {
