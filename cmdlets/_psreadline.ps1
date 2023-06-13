@@ -55,7 +55,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription
 
 # reload
 Set-PSReadLineKeyHandler -Key "alt+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
-    [PSConsoleReadLine]::RevertLine()
+    [PSBufferState]::new().RevertLine()
     [PSConsoleReadLine]::Insert('<#SKIPHISTORY#> . $PROFILE')
     [PSConsoleReadLine]::AcceptLine()
 }
@@ -71,7 +71,7 @@ Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(
 # load clipboard
 Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
     $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() -split "`n"|sv CLIPPING'
-    [PSConsoleReadLine]::RevertLine()
+    [PSBufferState]::new().RevertLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
@@ -95,7 +95,7 @@ function ccat ([string]$encoding = "utf8") {
     }
 }
 Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
-    [PSConsoleReadLine]::RevertLine()
+    [PSBufferState]::new().RevertLine()
     [PSConsoleReadLine]::Insert("ccat ")
 }
 
@@ -256,19 +256,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -BriefDescription "insert-pipe-to-t
 }
 
 
-# Set-PSReadLineKeyHandler -Key "ctrl+n" -BriefDescription "smart-forwardWord" -LongDescription "smart-forwardWord" -ScriptBlock {
-#     [PSConsoleReadLine]::ForwardWord()
-#     $a = [ASTer]::new()
-#     $aToken = $a.GetActiveToken()
-#     if (
-#         ($aToken.Kind -eq "StringExpandable" -and -not $aToken.Text.EndsWith('"')) `
-#         -or `
-#         ($aToken.Kind -eq "StringLiteral" -and -not $aToken.Text.EndsWith("'")) `
-#     ) {
-#         [PSConsoleReadLine]::Insert($aToken.Text.Substring(0,1))
-#     }
-# }
-
 
 class PSCursorLine {
     [string]$Text
@@ -303,15 +290,23 @@ class PSBufferState {
     [int]$SelectionLength
 
     PSBufferState() {
-        $line = $pos = $null
-        [PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$pos)
-        $this.Commandline = $line
-        $this.CursorPos = $pos
-        $this.CursorLine = [PSCursorLine]::new($line, $pos)
+        $stat = $this.GetState()
+        $this.Commandline = $stat.line
+        $this.CursorPos = $stat.pos
+        $this.CursorLine = [PSCursorLine]::new($this.Commandline, $this.CursorPos)
         $start = $length = $null
         [PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$length)
         $this.SelectionStart = $start
         $this.SelectionLength = $length
+    }
+
+    [PSCustomObject] GetState() {
+        $line = $pos = $null
+        [PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$pos)
+        return [PSCustomObject]@{
+            "line" = $line;
+            "pos" = $pos;
+        }
     }
 
     [void] ToggleLineComment() {
@@ -344,6 +339,18 @@ class PSBufferState {
             $top = $this.CursorLine.StartPos
             [PSConsoleReadLine]::Replace($top, $indent, " " * ($indent - 2))
             [PSConsoleReadLine]::SetCursorPosition($this.CursorPos - 2)
+        }
+    }
+
+    [void] RevertLine() {
+        $limit = 100
+        while ($this.GetState().line) {
+            $limit -= 1
+            if ($limit -lt 0) {
+                "Aborted due to infinite loop." | Write-Error
+                return
+            }
+            [PSConsoleReadLine]::RevertLine()
         }
     }
 

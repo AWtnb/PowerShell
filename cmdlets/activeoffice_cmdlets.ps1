@@ -904,6 +904,34 @@ function Add-Image2ActivePowerpointSlide {
     }
 }
 
+function Invoke-SplitActivePowerPointSlides {
+    $presen = Get-ActivePptPresentation
+    if (-not $presen) { return }
+
+    $powerpoint = New-Object -ComObject PowerPoint.Application
+    $powerpoint.Visible = $true
+
+    1..$presen.Slides.Count | ForEach-Object {
+        $idx = $_
+        $f = Get-Item $presen.Fullname
+        $newPath = Join-Path -Path $f.Directory -ChildPath ($f.BaseName + ("_page{0:d3}.pptx" -f $idx))
+        $f | Copy-Item -Destination $newPath
+        $newPresen = $powerpoint.Presentations.Open($newPath)
+        for ($i = 1; $i -lt $idx; $i++) {
+            $newPresen.Slides(1).Delete()
+        }
+        $limit = 900
+        while ($newPresen.Slides.Count -gt 1) {
+            $limit -= 1
+            if ($limit -lt 0) {
+                "Aborted due to infinite loop!" | Write-Error
+                break
+            }
+            $newPresen.Slides(2).Delete()
+        }
+        $newPresen.Save()
+    }
+}
 
 function Copy-ActiveExcelSheet {
     <#
