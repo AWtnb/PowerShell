@@ -281,36 +281,38 @@ function Copy-ActiveWordDocument {
 }
 
 function Split-ActiveWordDocumentBySection {
-    $word = Get-ActiveWordApp
-    if (-not $word) {
+    $doc = Get-ActiveWordDocument
+    if (-not $doc) { return }
+    if ($doc.Sections.Count -lt 2) {
+        "document has only 1 section." | Write-Host
         return
     }
-    if (-not $word.ActiveDocument.path) {
-        Write-Host "unsaved document!!" -ForegroundColor Magenta
-        return
-    }
-    $counter = 1
-    $docPath = Get-Item $word.ActiveDocument.Fullname
-    $word.ActiveDocument.Sections | ForEach-Object {
-        $newDoc = $word.Documents.Add($docPath.FullName)
-        if ($counter -gt 1) {
-            1..($counter - 1) | ForEach-Object {
-                $newDoc.Sections(1).Range.Delete() > $null
-            }
+    $word = New-Object -ComObject Word.Application
+    $word.Visible = $true
+
+    $f = Get-Item $doc.Fullname
+    1..$doc.Sections.Count | ForEach-Object {
+        $idx = $_
+        $newPath = Join-Path -Path $f.Directory -ChildPath ($f.BaseName + ("_section{0:d3}" -f $idx) + $f.Extension)
+        $f | Copy-Item -Destination $newPath
+        $newDoc = $word.Documents.Open($newPath)
+        for ($i = 1; $i -lt $idx; $i++) {
+            $newDoc.Sections(1).Range.Delete() > $null
         }
-        $rest = $newDoc.Sections.Count
-        if ($rest -gt 1) {
-            1..($rest - 1) | ForEach-Object {
-                $newDoc.Sections(2).Range.Delete() > $null
+        $limit = 900
+        while ($newDoc.Sections.Count -gt 2) {
+            $limit -= 1
+            if ($limit -lt 0) {
+                "Aborted due to infinite loop!" | Write-Error
+                break
             }
-            if ($newDoc.Sections.Count -gt 1) {
-                $newDoc.Sections(1).Range.Paragraphs.Last.Range.Characters.Last.Delete() > $null
-            }
+            $newDoc.Sections(2).Range.Delete() > $null
         }
-        $newName = "{0}_sec{1:d3}{2}" -f $docPath.BaseName, $counter, $docPath.Extension
-        $newPath = $docPath.Directory | Join-Path -ChildPath $newName
-        $newDoc.SaveAs2($newPath)
-        $counter += 1
+        if ($newDoc.Sections.Count -eq 2) {
+            $newDoc.Sections(2).Range.Delete() > $null
+            $newDoc.Sections(1).Range.Paragraphs.Last.Range.Characters.Last.Delete() > $null
+        }
+        $newDoc.Save()
     }
 }
 
@@ -580,6 +582,7 @@ class WdStyler {
         if ($wd) {
             $wd.ActiveDocument.TrackFormatting = $false
             $this.Document = $wd.ActiveDocument
+            $this.Document.ConvertNumbersToText([WdConst]::wdNumberAllNumbers)
             $this.BaseStyle = $this.Document.Styles([WdConst]::wdStyleNormal)
         }
     }
@@ -664,13 +667,54 @@ function Set-MyStyleToActiveWordDocument {
         .SYNOPSIS
         現在開いている Word 文書に自作スタイルを適用する
     #>
+    param (
+        [switch]$onlyMarker
+    )
     $styler = [WdStyler]::new()
     $styler.SetMarker()
-    $styler.SetCharacter()
-    $styler.SetTable()
+    if (-not $onlyMarker) {
+        $styler.SetCharacter()
+        $styler.SetTable()
+    }
 }
 
-function Invoke-ConvertNumberToTextOnActiveWordDocument {
+function Set-FilenameToHeaderOnActiveWordDocument {
+    param (
+        [string]$prefix = "ファイル名：《"
+        ,[string]$suffix = "》"
+        ,[switch]$force
+    )
+
+    function getHeaderText([System.Object]$section) {
+        return $section.Headers | ForEach-Object {
+            if ($_.Range) {
+                return $_.Range.Text.Trim()
+            }
+            return ""
+        } | Join-String -Separator ""
+    }
+
+    $doc = Get-ActiveWordDocument
+    if (-not $doc) { return }
+
+    $headerStr = $prefix + $doc.Name + $suffix
+
+    for ($i = 1; $i -le $doc.Sections.Count; $i++) {
+        $sec = $doc.Sections($i)
+        $s = getHeaderText $sec
+        if ($s.Length -gt 1 -and (-not $force)) {
+            "[SKIP] Header on section {0} is non-empty!" -f $i | Write-Host
+            continue
+        }
+        foreach ($h in $sec.Headers) {
+            $r = $h.Range
+            $r.Text = $headerStr
+            $r.Paragraphs.Alignment = 2 #wdAlignParagraphRight
+        }
+    }
+}
+
+function Format-AutoNumberOnActiveWordDocument {
     <#
         .SYNOPSIS
         現在開いている Word 文書中の自動入力数値を文字列に変換する
@@ -904,17 +948,22 @@ function Add-Image2ActivePowerpointSlide {
     }
 }
 
-function Invoke-SplitActivePowerPointSlides {
+function Split-ActivePowerPointSlides {
     $presen = Get-ActivePptPresentation
     if (-not $presen) { return }
+
+    if ($presen.Slides.Count -lt 2) {
+        "only 1 slide." | Write-Host
+        return
+    }
 
     $powerpoint = New-Object -ComObject PowerPoint.Application
     $powerpoint.Visible = $true
 
+    $f = Get-Item $presen.Fullname
     1..$presen.Slides.Count | ForEach-Object {
         $idx = $_
-        $f = Get-Item $presen.Fullname
-        $newPath = Join-Path -Path $f.Directory -ChildPath ($f.BaseName + ("_page{0:d3}.pptx" -f $idx))
+        $newPath = Join-Path -Path $f.Directory -ChildPath ($f.BaseName + ("_page{0:d3}" -f $idx) + $f.Extension)
         $f | Copy-Item -Destination $newPath
         $newPresen = $powerpoint.Presentations.Open($newPath)
         for ($i = 1; $i -lt $idx; $i++) {
