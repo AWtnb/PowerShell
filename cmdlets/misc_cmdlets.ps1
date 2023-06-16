@@ -741,57 +741,6 @@ function akitablogConsole {
     'copy(Array.from(document.querySelectorAll("#calendarplugin-154614 > div.calbody > table > tbody > tr:nth-child(2) > td > table > tbody td a")).map(td=>td.href).join("\r\n"))' | Write-Output
 }
 
-function Move-ItemToObsDir {
-    $items = @()
-    $cbStr = Get-Clipboard
-    if ($cbStr.Length) {
-        $items = ($cbStr -replace '" "', '"\n"') -split "\n" | ForEach-Object {
-            if ($_.StartsWith('"')) {
-                return $_ -replace '"'
-            }
-            return $_ -split " "
-        } | Where-Object { Test-Path $_ } | Get-Item
-    }
-    else {
-        $items = @([Windows.Forms.Clipboard]::GetFileDropList() | Get-Item)
-    }
-    if ($items.Count -lt 1) {
-        return
-    }
-    $p = $null
-    foreach ($item in $items) {
-        if ($item.Directory) {$p = $item.Directory; break}
-        if ($item.Parent) {$p = $item.Parent; break}
-    }
-    if (-not $p) {
-        return
-    }
-    $dest = $p.Fullname | Join-Path -ChildPath "_obsolete"
-    if (-not (Test-Path $dest)) {
-        New-Item -Path $dest -ItemType Directory > $null
-    }
-    "Moving to: " | Write-Host -ForegroundColor Blue -NoNewline
-    $dest | Write-Host
-    "--------------------------" | Write-Host -ForegroundColor Blue
-    $items | ForEach-Object {
-        try {
-            $_ | Move-Item -Destination $dest -ErrorAction Stop
-           "- " | Write-Host -ForegroundColor Blue -NoNewline
-           $_.Name | Write-Host
-        }
-        catch {
-            "Same file exists in '{0}'!" -f $dest | Write-Error
-        }
-    }
-}
-
-Set-PSReadLineKeyHandler -Key "ctrl+alt+o" -BriefDescription "move-to-obsDir" -LongDescription "move-to-obsDir" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Move-ItemToObsDir")
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-}
-
-
 
 function Get-FileProperties {
     param (
@@ -838,61 +787,51 @@ function Get-LocalFont {
     }
 }
 
-
-# function Convert-TsvToDocsifyWiki {
-#     $template = @"
-# ### {0}
-
-# | 章タイトル | 図表番号 | 引用表記 |
-# | :--- | :--- | :--- |
-# | ``{1}`` | ``{2}`` | ``{3}`` |
-
-# > {4}
-
-# {5}
-# ---
-
-# "@
-
-#     $tsv = $input | ConvertFrom-Csv -Delimiter "`t" -Header "ChapterName","FigureIndex","FigureName","Citation","Reference","Note"
-#     $tsv | ForEach-Object {
-#         $n = $_.Note
-#         $note = ($n.Length)? "+ $n`n" : ""
-#         $c = $_.Citation
-#         $cite = ($c.Length)? $c : " "
-#         $template -f $_.FigureName, $_.ChapterName, $_.FigureIndex, $cite, $_.Reference, $note | Write-Output
-#     }
-
-# }
-
-# function Convert-TsvToNotionWiki {
-#     $template = @"
-
-# ## {0}
-
-# + ``{1}``
-# + ``{2}``
-# + ``{3}``
-# "@
-#     $tsv = $input | ConvertFrom-Csv -Delimiter "`t" -Header "ChapterName","FigureIndex","FigureName","Citation","Reference","Note"
-#     $tsv | ForEach-Object {
-#         $c = $_.Citation.Trim()
-#         $cite = ($c.Length)? $c : "(no credit)"
-#         $fn = $_.FigureName.Trim()
-#         $name = ($fn.Length)? $fn : "(no name)"
-#         $fi = $_.FigureIndex.Trim()
-#         $index = ($fi.Length)? $fi : "(no index)"
-#         $fmt = @($template -f $name, ($_.ChapterName.replace("--", "――").Trim()), $index, $cite)
-#         if ($c.Length) {
-#             $ref = $_.Reference.Trim()
-#             if($ref.Length) {
-#                 $fmt += "    > $ref"
-#             }
-#         }
-#         $n = $_.Note
-#         if ($n.Length) {
-#             $fmt += "+ 備考：$($n)"
-#         }
-#         $fmt | Write-Output
-#     }
-# }
+function Move-ItemToObsDir {
+    $items = @()
+    $cbStr = Get-Clipboard
+    if ($cbStr.Length) {
+        $items = ($cbStr -replace '" "', '"\n"') -split "\n" | ForEach-Object {
+            if ($_.StartsWith('"')) {
+                return $_ -replace '"'
+            }
+            return $_ -split " "
+        } | Where-Object { Test-Path $_ } | Get-Item
+    }
+    else {
+        $items = @([Windows.Forms.Clipboard]::GetFileDropList() | Get-Item)
+    }
+    if ($items.Count -lt 1) {
+        return
+    }
+    $p = $null
+    foreach ($item in $items) {
+        if ($item.Directory) {$p = $item.Directory; break}
+        if ($item.Parent) {$p = $item.Parent; break}
+    }
+    if (-not $p) {
+        return
+    }
+    $dest = $p.Fullname | Join-Path -ChildPath "_obsolete"
+    if (-not (Test-Path $dest)) {
+        New-Item -Path $dest -ItemType Directory > $null
+    }
+    "Moving to: " | Write-Host -ForegroundColor Blue -NoNewline
+    $dest | Write-Host
+    "--------------------------" | Write-Host -ForegroundColor Blue
+    $items | ForEach-Object {
+        try {
+            $_ | Move-Item -Destination $dest -ErrorAction Stop
+           "- " | Write-Host -ForegroundColor Blue -NoNewline
+           $_.Name | Write-Host
+        }
+        catch {
+            "Same file exists in '{0}'!" -f $dest | Write-Error
+        }
+    }
+}
+Set-PSReadLineKeyHandler -Key "ctrl+alt+o" -BriefDescription "move-to-obsDir" -LongDescription "move-to-obsDir" -ScriptBlock {
+    [PSBufferState]::new().RevertLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Move-ItemToObsDir")
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}

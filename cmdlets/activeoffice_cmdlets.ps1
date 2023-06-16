@@ -556,16 +556,26 @@ function Copy-ActiveWordDocumentForCleanup {
 
     $doc.TrackRevisions = $false
     Write-Host "Turned off track-revisions"
-    $doc.AcceptAllRevisions()
-    Write-Host "Accepted all revisions"
+    $wdRevisionProperty = 3
+    $wdRevisionParagraphProperty = 10
+    $wdRevisionSectionProperty = 12
+    $noisyRevs = @($wdRevisionProperty, $wdRevisionParagraphProperty, $wdRevisionSectionProperty)
+    $doc.Revisions | ForEach-Object {
+        if ($_.Type -in $noisyRevs) {
+            $_.Accept()
+        }
+    }
+    Write-Host "Accepted all noisy revisions"
     $doc.Save()
     Write-Host "Saved '$($doc.Name)'"
 
     $orgPath = $doc.Fullname
-    $newPath = $orgPath -replace "(\.docx?)$", '_cmtleft$1'
+    $newPath = $orgPath -replace "(\.docx?)$", '_backup$1'
     Copy-Item -Path $orgPath -Destination $newPath
     Write-Host "Copied current document"
 
+    $doc.AcceptAllRevisions()
+    Write-Host "Removed all revisions on this document"
     $doc.DeleteAllComments()
     Write-Host "Removed all comments on this document"
 

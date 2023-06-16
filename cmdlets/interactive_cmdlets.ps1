@@ -65,7 +65,7 @@ class PSAvailable {
                     "lineNum" = $_.LineNumber;
                 }
             ) > $null
-    }
+        }
     }
 
     SetClasses() {
@@ -198,54 +198,7 @@ function hinagata {
     }
 }
 
-# function Invoke-DesktopItem ([switch]$file) {
-#     $desktop = "C:\Users\{0}\Desktop" -f $env:USERNAME
-#     $items = @(Get-ChildItem $desktop -Name -File:$file)
-#     if ($items) {
-#         $filtered = $items | mokof
-#         if ($filtered) {
-#             return $($desktop | Join-Path -ChildPath $filtered | Get-Item)
-#         }
-#     }
-# }
 
-# function ide {
-#     $item = Invoke-DesktopItem
-#     if ($item) {
-#         Invoke-Item $item
-#         Hide-ConsoleWindow
-#     }
-# }
-# function idc {
-#     $item = Invoke-DesktopItem -file
-#     if ($item) {
-#         [System.Windows.Forms.Clipboard]::SetFileDropList($item)
-#     }
-# }
-# function idx {
-#     $item = Invoke-DesktopItem -file
-#     if (-not $item) {
-#         return
-#     }
-#     $fullname = $item.Fullname
-#     try {
-#         $dataObj = New-Object System.Windows.Forms.DataObject
-#         $dataObj.SetFileDropList($fullname)
-#         $byteStream = [byte[]](([System.Windows.Forms.DragDropEffects]::Move -as [byte]), 0, 0, 0)
-#         $memoryStream = New-Object System.IO.MemoryStream
-#         $memoryStream.Write($byteStream)
-#         $dataObj.SetData("Preferred DropEffect", $memoryStream)
-#         [System.Windows.Forms.Clipboard]::SetDataObject($dataObj, $true)
-
-#         Write-Host "CUT item on desktop: " -NoNewline
-#         $color = ($item.GetType().Name -eq "DirectoryInfo")? "Yellow" : "Blue"
-#         Write-Host $item.Name -ForegroundColor $color
-#         Invoke-Taskview
-#     }
-#     catch {
-#         Write-Host $_.Exception.Message -ForegroundColor Red
-#     }
-# }
 
 
 function Invoke-RDriveDatabase {

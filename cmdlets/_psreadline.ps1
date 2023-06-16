@@ -53,13 +53,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription
     [PSConsoleReadLine]::Insert("<#SKIPHISTORY#>exit")
 }
 
-# reload
-Set-PSReadLineKeyHandler -Key "alt+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
-    [PSBufferState]::new().RevertLine()
-    [PSConsoleReadLine]::Insert('<#SKIPHISTORY#> . $PROFILE')
-    [PSConsoleReadLine]::AcceptLine()
-}
-
 # completion
 Set-PSReadLineKeyHandler -Key "alt+i" -BriefDescription "insert-invoke" -LongDescription "insert-invoke" -ScriptBlock {
     [PSConsoleReadLine]::Insert("Invoke*")
@@ -68,14 +61,6 @@ Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(
     [PSConsoleReadLine]::Insert("*")
 }
 
-# load clipboard
-Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
-    $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() -split "`n"|sv CLIPPING'
-    [PSBufferState]::new().RevertLine()
-    [PSConsoleReadLine]::Insert($command)
-    [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
-    [PSConsoleReadLine]::AcceptLine()
-}
 
 # format string
 Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "ctrl+k,4", "ctrl+k,5", "ctrl+k,6", "ctrl+k,7", "ctrl+k,8", "ctrl+k,9" -ScriptBlock {
@@ -84,20 +69,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "c
     [Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
 }
 
-# open from clipboard path
-function ccat ([string]$encoding = "utf8") {
-    $clip = (Get-Clipboard | Select-Object -First 1) -replace '"'
-    if (Test-Path $clip -PathType Leaf) {
-        Get-Content $clip -Encoding $encoding
-    }
-    else {
-        "invalid-path!" | Write-Host -ForegroundColor Magenta
-    }
-}
-Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
-    [PSBufferState]::new().RevertLine()
-    [PSConsoleReadLine]::Insert("ccat ")
-}
+
 
 # open draft
 Set-PSReadLineKeyHandler -Key "alt+d" -BriefDescription "openDraft" -LongDescription "openDraft" -ScriptBlock {
@@ -397,6 +369,38 @@ class PSBufferState {
     }
 
 }
+
+# reload
+Set-PSReadLineKeyHandler -Key "alt+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
+    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::Insert('<#SKIPHISTORY#> . $PROFILE')
+    [PSConsoleReadLine]::AcceptLine()
+}
+
+# load clipboard
+Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
+    $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() -split "`n"|sv CLIPPING'
+    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::Insert($command)
+    [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
+    [PSConsoleReadLine]::AcceptLine()
+}
+
+# open from clipboard path
+function ccat ([string]$encoding = "utf8") {
+    $clip = (Get-Clipboard | Select-Object -First 1) -replace '"'
+    if (Test-Path $clip -PathType Leaf) {
+        Get-Content $clip -Encoding $encoding
+    }
+    else {
+        "invalid-path!" | Write-Host -ForegroundColor Magenta
+    }
+}
+Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
+    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::Insert("ccat ")
+}
+
 
 Set-PSReadLineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
     if ([PSBufferState]::IsSelecting()) {
