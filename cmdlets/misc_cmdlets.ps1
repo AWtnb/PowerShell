@@ -616,7 +616,7 @@ function Invoke-Youtubedl {
     )
     $target = $url -replace "(^https.+watch\?v=.{11}).+$",'$1'
     $opt = ($fullMovie)? "" : "--extract-audio --audio-format mp3"
-    "youtube-dl {0} --restrict-filenames {1}" -f $target, $opt | Invoke-Expression
+    'yt-dlp {0} --restrict-filenames {1} --output "%(title)s_%(id)s.%(ext)s"' -f $target, $opt | Invoke-Expression
 }
 
 function ConvertTo-Mp3 {
