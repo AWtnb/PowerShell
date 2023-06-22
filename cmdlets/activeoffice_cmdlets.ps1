@@ -911,7 +911,20 @@ function Get-EmbeddedDataOnActiveWordDocument {
 
 }
 
+function Set-ActivePowerpointaSlideSize {
+    param (
+        [int]$widthMm
+        ,[int]$heightMm
+    )
+    $presen = Get-ActivePptPresentation
+    if (-not $presen) { return }
+    $presen.PageSetup.SlideWidth = $widthMm * 72 / 25.4
+    $presen.PageSetup.SlideHeight = $heightMm * 72 / 25.4
+}
 
+function Set-ActivePowerpointaSlideSizeAsB4 {
+    Set-ActivePowerpointaSlideSize -widthMm 364 -heightMm 257
+}
 
 function Add-Image2ActivePowerpointSlide {
     param (
