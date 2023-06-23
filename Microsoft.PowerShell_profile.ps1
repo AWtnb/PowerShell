@@ -778,7 +778,7 @@ class PwshRepo {
 }
 
 function Invoke-Repository {
-    $repoDir = "C:\Personal\sync\develop\pwsh"
+    $repoDir = "C:\Personal\sync\develop\pwsh-repo"
     if (Test-Path $repoDir) {
         $repo = [PwshRepo]::new($repoDir)
         $repo.Invoke()
