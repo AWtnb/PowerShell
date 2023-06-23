@@ -432,7 +432,7 @@ function Out-FileUtil {
         $basename = Get-Date -Format yyyyMMddHHmmss
     }
     $outPath = (Get-Location).Path | Join-Path -ChildPath ($basename + "." + $extension)
-    $input | Out-File -FilePath $outPath -Encoding utf8 -NoClobber:$(-not $force)
+    $input | Join-String -Separator "`r`n" | Out-File -FilePath $outPath -Encoding utf8 -NoClobber:$(-not $force)
 }
 Set-Alias of Out-FileUtil
 
