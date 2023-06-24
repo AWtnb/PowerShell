@@ -437,7 +437,7 @@ function Out-FileUtil {
 Set-Alias of Out-FileUtil
 
 function Invoke-KeyhacMaster {
-    $keyhacPath = Join-Path $env:USERPROFILE -ChildPath "Dropbox\develop\code\python\keyhac-master"
+    $keyhacPath = "C:\Personal\sync\develop\python\keyhac-master"
     if (Test-Path $keyhacPath) {
         'code "{0}"' -f $keyhacPath | Invoke-Expression
     }
