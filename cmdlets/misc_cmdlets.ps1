@@ -6,6 +6,14 @@ MISC
                 encoding: utf8bom
 ============================== #>
 
+function Set-DropboxIgnore {
+    param (
+        [string]$path
+    )
+    $fullpath = (Get-Item -Path $path).FullName -replace "\\$"
+    Set-Content -Path $fullpath -Stream com.dropbox.ignored -Value 1
+}
+
 
 class Base64 {
 
