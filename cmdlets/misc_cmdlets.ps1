@@ -9,8 +9,13 @@ MISC
 function Set-DropboxIgnore {
     param (
         [string]$path
+        ,[switch]$clear
     )
     $fullpath = (Get-Item -Path $path).FullName -replace "\\$"
+    if ($clear) {
+        Clear-Content -Path $fullpath -Stream com.dropbox.ignored
+        return
+    }
     Set-Content -Path $fullpath -Stream com.dropbox.ignored -Value 1
 }
 
