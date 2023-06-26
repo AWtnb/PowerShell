@@ -6,18 +6,18 @@ MISC
                 encoding: utf8bom
 ============================== #>
 
-function Set-DropboxIgnore {
-    param (
-        [string]$path
-        ,[switch]$clear
-    )
-    $fullpath = (Get-Item -Path $path).FullName -replace "\\$"
-    if ($clear) {
-        Clear-Content -Path $fullpath -Stream com.dropbox.ignored
-        return
-    }
-    Set-Content -Path $fullpath -Stream com.dropbox.ignored -Value 1
-}
+# function Set-DropboxIgnore {
+#     param (
+#         [string]$path
+#         ,[switch]$clear
+#     )
+#     $fullpath = (Get-Item -Path $path).FullName -replace "\\$"
+#     if ($clear) {
+#         Clear-Content -Path $fullpath -Stream com.dropbox.ignored
+#         return
+#     }
+#     Set-Content -Path $fullpath -Stream com.dropbox.ignored -Value 1
+# }
 
 
 class Base64 {
@@ -847,4 +847,45 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+o" -BriefDescription "move-to-obsDir" -L
     [PSBufferState]::new().RevertLine()
     [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Move-ItemToObsDir")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
+
+function Find-MissingValuesInSerialNumber {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputLine
+        ,[int]$matchGroupIdx = 0
+        ,[switch]$asObject
+    )
+    begin {
+        $reg = [regex]::new("\d+")
+        $arr = New-Object System.Collections.ArrayList
+    }
+    process {
+        $s = $inputLine -as [string]
+        $m = $reg.Matches($s)
+        if ($m.Count -and ($matchGroupIdx -lt $m.Count)) {
+            $arr.Add([PSCustomObject]@{
+                "line" = $s;
+                "number" = $m[$matchGroupIdx].Value -as [int];
+            }) > $null
+        }
+    }
+    end {
+        for ($i = 1; $i -lt $arr.Count; $i++) {
+            $prev = $arr[$i - 1]
+            $cur = $arr[$i]
+            if ($prev.number + 1 -eq $cur.number) { continue }
+            if (-not $asObject) { $prev.line | Write-Host -ForegroundColor DarkGray }
+            for ($n = $prev.number + 1; $n -lt $cur.number; $n++) {
+                if ($asObject) {
+                    [PSCustomObject]@{
+                        "Missing" = $n;
+                    } | Write-Output
+                }
+                else {
+                    $n | Write-Host -ForegroundColor Yellow
+                }
+            }
+            if (-not $asObject) { $cur.line | Write-Host -ForegroundColor DarkGray }
+        }
+    }
 }

@@ -38,7 +38,7 @@ function New-DiaryTemplate {
                 $template,
                 (-split "・" * 10),
                 ("――" * 10)
-            ) | Out-File -Path ($dir | Join-Path -ChildPath $fn)
+            ) | Out-File -Path ($dir | Join-Path -ChildPath $fn) -Encoding utf8NoBOM
             "creating '{0}'" -f $fn | Write-Host
         }
     }
@@ -60,5 +60,5 @@ function Invoke-ConcDiary {
     $files | ForEach-Object {
         "+ '{0}'" -f $_.Name | Write-Host
         Get-Content $_
-    } | Out-File -Path ("Diary_{0}.txt" -f $outName)
+    } | Out-File -Path ("Diary_{0}.txt" -f $outName) -Encoding utf8NoBOM
 }

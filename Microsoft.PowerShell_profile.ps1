@@ -13,6 +13,14 @@ pwsh profile
 $progressPreference = "silentlyContinue"
 
 
+[System.Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("utf-8")
+"Output encoding: UTF8" | Write-Host -ForegroundColor Yellow
+
+function Reset-OutputEncodingToSJIS {
+    [System.Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("shift_jis")
+    "Output encoding: reset to default (shift_jis)" | Write-Host -ForegroundColor Yellow
+}
+
 #################################################################
 # functions arround prompt customization
 #################################################################
@@ -432,7 +440,7 @@ function Out-FileUtil {
         $basename = Get-Date -Format yyyyMMddHHmmss
     }
     $outPath = (Get-Location).Path | Join-Path -ChildPath ($basename + "." + $extension)
-    $input | Join-String -Separator "`r`n" | Out-File -FilePath $outPath -Encoding utf8 -NoClobber:$(-not $force)
+    $input | Join-String -Separator "`r`n" | Out-File -FilePath $outPath -Encoding utf8NoBOM -NoClobber:$(-not $force)
 }
 Set-Alias of Out-FileUtil
 
@@ -854,7 +862,7 @@ Set-Alias hilight Write-StringHighLight
 # loading custom cmdlets
 #################################################################
 
-"loading custom cmdlets took {0:f0}ms." -f $(Measure-Command {
+"Loading custom cmdlets took {0:f0}ms." -f $(Measure-Command {
     $PSScriptRoot | Join-Path -ChildPath "cmdlets" | Get-ChildItem -Recurse -Include "*.ps1" | ForEach-Object {
         . $_.FullName
     }
