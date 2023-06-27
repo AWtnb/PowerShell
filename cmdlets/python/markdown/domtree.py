@@ -70,3 +70,16 @@ class DomTree:
             t = headers[0].text_content().strip()
             return t
         return ""
+
+    def trim_leading_css_block(self) -> str:
+        headers = 0
+        css = ""
+        for elem in self._root.xpath("pre[@data-label='css']/code | h1 | h2"):
+            if elem.tag in ("h1", "h2"):
+                headers += 1
+                continue
+            if headers < 1 and elem.tag == "code":
+                css = elem.text_content()
+                elem.getparent().drop_tree()
+                break
+        return css

@@ -16,64 +16,12 @@ import mistletoe
 from domtree import DomTree
 from custom_renderer import CustomRenderer
 
+
 class RawMd:
-    def __init__(self, content:str) -> None:
-        self.content = content.strip()
-        self.content_lines = self.content.splitlines()
-
-        initial_cmt_end = self._get_initial_comment_end()
-        if initial_cmt_end > -1:
-            target_lines = self.content_lines[initial_cmt_end+1:]
-        else:
-            target_lines = self.content_lines
-
-        self.main_lines = []
-        for line in target_lines:
-            if len(self.main_lines) > 0 or len(line.strip()) > 0:
-                self.main_lines.append(line)
-
-    def _get_initial_comment_end(self) -> int:
-        lines = self.content_lines
-        if lines[0].strip().startswith("<!-"):
-            end_of_cmt = 0
-            for i, line in enumerate(lines):
-                if line.strip().endswith("-->"):
-                    end_of_cmt = i
-                    break
-            return end_of_cmt
-        return -1
-
-    def get_additional_css(self)  -> str:
-        begin_of_css = -1
-        for i, line in enumerate(self.main_lines):
-            s = line.strip()
-            if s.startswith("```") and s.endswith("css"):
-                begin_of_css = i
-                break
-            else:
-                if s and begin_of_css < 0:
-                    break
-        if 0 <= begin_of_css:
-            end_of_css = [line.strip() for line in self.main_lines].index("```")
-            return "\n".join(self.main_lines[begin_of_css+1:end_of_css])
-        return ""
-
-
-class ParseMd:
 
     def __init__(self, file_path:str) -> None:
         self._file_path = file_path
-        self.raw_content = Path(self._file_path).read_text("utf-8")
-
-        raw_md = RawMd(self.raw_content)
-        self.main_lines = raw_md.main_lines
-        self.additional_css = raw_md.get_additional_css()
-
-    def get_main_content(self) -> str:
-        css_lines = self.additional_css.splitlines()
-        if len(css_lines) > 0:
-            return "\n".join(self.main_lines[len(css_lines)+2:])
-        return "\n".join(self.main_lines)
+        self.content = Path(self._file_path).read_text("utf-8").strip()
 
     def get_timestamp(self) -> str:
         date_fmt = r"%Y-%m-%d"
@@ -87,7 +35,7 @@ class ParseMd:
     def grep_comment(self, pattern:str, capture:int=1) -> list[str]:
         matches = []
         reg = re.compile(pattern)
-        for line in self.raw_content.splitlines():
+        for line in self.content.splitlines():
             if line.startswith("<!--"):
                 m = reg.search(line.rstrip(" ->"))
                 if m:
@@ -95,26 +43,26 @@ class ParseMd:
         return matches
 
 
-class Markup:
+class MdHtml:
 
     def __init__(self, file_path:str) -> None:
 
-        md = ParseMd(file_path)
-        markup = mistletoe.markdown(md.get_main_content(), CustomRenderer)
-
-        self.additional_style = '<style>\n{}\n</style>'.format(md.additional_css)
+        raw_md = RawMd(file_path)
+        markup = mistletoe.markdown(raw_md.content, CustomRenderer)
 
         dom = DomTree(markup)
+        self.additional_style = '<style>\n{}\n</style>'.format(dom.trim_leading_css_block())
+
         dom.adjust_index("//*[contains(@class, 'force-order')]")
         dom.set_heading_id("h2 | h3 | h4 | h5 | h6")
         dom.fix_spacing("h2 | h3 | h4 | h5")
         dom.set_link_target()
-        dom.set_timestamp(md.get_timestamp())
+        dom.set_timestamp(raw_md.get_timestamp())
 
         self.content = dom.get_content()
         self.toc = '<div class="toc">{}</div>'.format(dom.get_toc())
 
-        title_comment = md.grep_comment(r"title: ?(.+)", 1)
+        title_comment = raw_md.grep_comment(r"title: ?(.+)", 1)
         if len(title_comment) > 0:
             self.title = title_comment[0]
         else:
@@ -146,7 +94,7 @@ class HeadElem:
         elem = "<style>\n{}\n</style>".format(css_path.read_text("utf-8"))
         self.lines.append(elem)
 
-    def append_elem(self, markup:str)  -> None:
+    def append_elem(self, markup:str) -> None:
         self.lines.append(markup)
 
     def get_markup(self) -> str:
@@ -159,16 +107,16 @@ def main(file_path:str, no_default_css:bool=False, invoke:bool=False, favicon_un
     if md_path.suffix != ".md":
         return
 
-    html = Markup(str(md_path))
+    md_html = MdHtml(str(md_path))
 
-    head = HeadElem(html.title, favicon_unicode, no_default_css)
+    head = HeadElem(md_html.title, favicon_unicode, no_default_css)
     extra_css_files = list(Path(md_path.parent).glob("*.css"))
     for css_path in extra_css_files:
         print("  + external style sheet: '{}'".format(css_path.name))
         head.append_elem('<!-- from additional style sheet: "{}" -->'.format(css_path.name))
         head.append_style(css_path)
 
-    head.append_elem(html.additional_style)
+    head.append_elem(md_html.additional_style)
 
     full_html = "\n".join([
         '<!DOCTYPE html>',
@@ -177,8 +125,8 @@ def main(file_path:str, no_default_css:bool=False, invoke:bool=False, favicon_un
         '<body>',
         "\n".join([
             '<div class="container">',
-            html.toc,
-            html.content,
+            md_html.toc,
+            md_html.content,
             '</div>']),
         '</body>',
         '</html>'])
