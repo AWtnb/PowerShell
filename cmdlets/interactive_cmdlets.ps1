@@ -43,7 +43,7 @@ class PSAvailable {
     static [string[]]$commands = @(Get-Command -CommandType Alias, Cmdlet, Function).Where({$_.Name -notmatch ":"}).Name
 
     PSAvailable() {
-        $this.profPath = $env:USERPROFILE | Join-Path -ChildPath "\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+        $this.profPath = $global:PROFILE
         $this.files = @(Get-Item -LiteralPath $this.profPath)
         $this.files +=  @($this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets" | Get-ChildItem -File -Filter "*.ps1")
         $this.sources = New-Object System.Collections.ArrayList
