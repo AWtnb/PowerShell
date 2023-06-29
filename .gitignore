@@ -1,5 +1,7 @@
 *.dll
 *.txt
 *.env
-Modules
-Scripts
+Modules/*
+!Modules/.gitkeep
+Scripts/*
+!Scripts/.gitkeep
