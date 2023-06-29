@@ -444,13 +444,6 @@ function Out-FileUtil {
 }
 Set-Alias of Out-FileUtil
 
-function Invoke-KeyhacMaster {
-    $keyhacPath = "C:\Personal\sync\develop\python\keyhac-master"
-    if (Test-Path $keyhacPath) {
-        'code "{0}"' -f $keyhacPath | Invoke-Expression
-    }
-}
-
 function dsk {
     "{0}\desktop" -f $env:USERPROFILE | Set-Location
 }
@@ -601,7 +594,7 @@ function Start-PsStyleRendering {
 # restart keyhac
 function Restart-Keyhac {
     Get-Process | Where-Object {$_.Name -eq "keyhac"} | Stop-Process -Force
-    Start-Process "C:\Personal\tools\keyhac\keyhac.exe"
+    Start-Process "C:\Users\a-watanabe\Sync\portable_app\keyhac\keyhac.exe"
 }
 
 # pip
@@ -786,7 +779,7 @@ class PwshRepo {
 }
 
 function Invoke-Repository {
-    $repoDir = "C:\Personal\pwsh-repo"
+    $repoDir = "C:\Users\{0}\Sync\develop\repo\pwsh" -f $env:USERNAME
     if (Test-Path $repoDir) {
         $repo = [PwshRepo]::new($repoDir)
         $repo.Invoke()
