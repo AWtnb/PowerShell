@@ -1,3 +1,5 @@
 *.dll
 *.txt
 *.env
+Modules
+Scripts
