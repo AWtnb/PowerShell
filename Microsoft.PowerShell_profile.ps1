@@ -745,48 +745,8 @@ function  Convert-IntToCJK {
 # github repo
 ##############################
 
-class PwshRepo {
-    [string]$activeDir
-    [string]$repoDir
-
-    PwshRepo([string]$repoDir) {
-        $this.activeDir = $env:USERPROFILE | Join-Path -ChildPath "Documents\PowerShell"
-        $this.repoDir = $repoDir
-    }
-
-    [System.Object[]]GetUnusedItems() {
-        $activeFiles = $this.activeDir | Get-ChildItem -Recurse
-        $rels = $activeFiles | ForEach-Object {
-            return [System.IO.Path]::GetRelativePath($this.activeDir, $_.Fullname)
-        }
-        return $this.repoDir | Get-ChildItem -Exclude ".git" | Get-ChildItem -Recurse | Where-Object { $_.Name -notin @(".gitignore", "README.md") } | Where-Object {
-            $rel = [System.IO.Path]::GetRelativePath($this.repoDir, $_.Fullname)
-            return $rel -notin $rels
-        }
-    }
-
-
-    [void]Sync() {
-        $this.GetUnusedItems() | Where-Object {$_} | Sort-Object {$_.Fullname.split("\").Length} -Descending | Remove-Item
-        $this.activeDir | Get-ChildItem -Exclude @("Modules", "Scripts") | Copy-Item -Recurse -Destination $this.repoDir -Force
-    }
-
-    [void]Invoke() {
-        $this.Sync()
-        Start-Process code -NoNewWindow -ArgumentList @($this.repoDir)
-    }
-
-}
-
 function Invoke-Repository {
-    $repoDir = "C:\Users\{0}\Sync\develop\repo\pwsh" -f $env:USERNAME
-    if (Test-Path $repoDir) {
-        $repo = [PwshRepo]::new($repoDir)
-        $repo.Invoke()
-    }
-    else {
-        "cannot find path..." | Write-Host -ForegroundColor Magenta
-    }
+    "code {0}" -f $PROFILE | Split-Path -Parent | Invoke-Expression
 }
 Set-Alias repo Invoke-Repository
 
