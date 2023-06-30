@@ -151,20 +151,18 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
 function psMoko {
     param (
         [switch]$all
-        ,[string]$exclude = "_obsolete,node_modules"
     )
     $dataPath = "C:\Personal\launch.yaml"
     if (-not (Test-Path $dataPath)) {
         "cannnot find '{0}'" -f $dataPath | Write-Host -ForegroundColor Red
         return
     }
-    $exePath = "C:\Personal\tools\bin\moko.exe"
     $filerPath = "C:\Users\{0}\Dropbox\portable_apps\tablacus\TE64.exe" -f $env:USERNAME
-    $opt = @("--src", $dataPath, "--filer", $filerPath, "--exclude", $exclude)
+    $opt = @("--src", $dataPath, "--filer", $filerPath, "--exclude=_obsolete,node_modules")
     if ($all) {
         $opt += "--all"
     }
-    & $exePath $opt
+    & "C:\Personal\tools\bin\moko.exe" $opt
     if ($LASTEXITCODE -eq 0) {
         Hide-ConsoleWindow
     }
