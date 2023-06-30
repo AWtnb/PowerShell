@@ -745,10 +745,9 @@ function  Convert-IntToCJK {
 # github repo
 ##############################
 
-function Invoke-Repository {
-    "code {0}" -f $PROFILE | Split-Path -Parent | Invoke-Expression
+function repo {
+    ("code {0}" -f $PROFILE | Split-Path -Parent) | Invoke-Expression
 }
-Set-Alias repo Invoke-Repository
 
 ##############################
 # temp dir
