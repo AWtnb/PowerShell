@@ -145,12 +145,12 @@ function Rename-Insert {
 }
 Set-Alias rIns Rename-Insert
 
-class IndexRenamer {
+class IndexedItem {
     [string]$pre
     [string]$post
     [string]$modified
 
-    IndexRenamer([string]$path, [int]$i, [int]$padding, [string]$altName, [bool]$tail) {
+    IndexedItem([string]$path, [int]$i, [int]$padding, [string]$altName, [bool]$tail) {
         $idx = ($i -as [string]).PadLeft($padding, "0")
         $file = Get-Item -LiteralPath $path
         if ($altName) {
@@ -208,12 +208,14 @@ function Rename-Index {
     $idx = $start - $step
     $proc | ForEach-Object {
         $idx += $step
-        while ($skip.Length -and $idx -in $skip) {
-            $idx += $step
+        if ($skip.Length) {
+            while ($idx -in $skip) {
+                $idx += $step
+            }
         }
 
-        $ir = [IndexRenamer]::new($_.Fullname, $idx, $pad, $altName, $tail)
-        $markup = $ir.GetMarkup($color)
+        $ixi = [IndexedItem]::new($_.Fullname, $idx, $pad, $altName, $tail)
+        $markup = $ixi.GetMarkup($color)
 
         if ($altName) {
             $previewer.Compare($_.Name, $markup, $color, $true) | Write-Host
@@ -226,7 +228,7 @@ function Rename-Index {
         }
 
         if ($execute) {
-            $_ | Rename-Item -NewName $ir.GetText()
+            $_ | Rename-Item -NewName $ixi.GetText()
         }
 
     }
