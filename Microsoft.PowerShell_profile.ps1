@@ -468,12 +468,13 @@ function iit {
     )
     begin {}
     process {
+        $path = (Get-Item $inputLine).FullName
         $tablacus = $env:USERPROFILE | Join-Path -ChildPath "Dropbox\portable_apps\tablacus\TE64.exe"
-        if ((Test-Path $tablacus) -and (Test-Path $inputLine -PathType Container)) {
-            Start-Process $tablacus -ArgumentList $inputLine
+        if ((Test-Path $tablacus) -and (Test-Path $path -PathType Container)) {
+            Start-Process $tablacus -ArgumentList $path
         }
         else {
-            Start-Process $inputLine
+            Start-Process $path
         }
     }
     end {}
