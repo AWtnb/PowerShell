@@ -580,7 +580,7 @@ function Convert-LinesToBookIndexReading {
 }
 
 function uni {
-    & ("C:\Users\{0}\Dropbox\portable_apps\uni\uni.exe" -f $env:USERNAME) $args
+    & ("C:\Users\{0}\Sync\portable_app\uni\uni.exe" -f $env:USERNAME) $args
 }
 
 function Get-LinesDelta {

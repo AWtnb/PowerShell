@@ -319,7 +319,7 @@ function Get-ImageSize {
 ################################
 
 function moul {
-    & ("C:\Users\{0}\Dropbox\portable_apps\moul\moul.exe" -f $Env:USERNAME) $args
+    & ("C:\Users\{0}\Sync\portable_app\moul\moul.exe" -f $Env:USERNAME) $args
 }
 
 function Invoke-ImageMagickWatermarkSignature {
