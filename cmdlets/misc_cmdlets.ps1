@@ -317,14 +317,19 @@ function Get-DuplicateItem {
 Set-Alias dupl Get-DuplicateItem
 
 function Get-UniqueOrderdArray {
-    $stack = New-Object System.Collections.ArrayList
-    foreach ($i in $input) {
-        if ($i -cin $stack) {
-            continue
-        }
-        Write-Output $i
-        $stack.Add($i) > $null
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputLine
+    )
+    begin {
+        $stack = New-Object System.Collections.ArrayList
     }
+    process {
+        if ($inputLine -cnotin $stack) {
+            Write-Output $inputLine
+            $stack.Add($inputLine) > $null
+        }
+    }
+    end {}
 }
 Set-Alias uq Get-UniqueOrderdArray
 
