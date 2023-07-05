@@ -875,22 +875,30 @@ function Find-MissingValuesInSerialNumber {
         }
     }
     end {
+        $ret = New-Object System.Collections.ArrayList
         for ($i = 1; $i -lt $arr.Count; $i++) {
             $prev = $arr[$i - 1]
             $cur = $arr[$i]
             if ($prev.number + 1 -eq $cur.number) { continue }
-            if (-not $asObject) { $prev.line | Write-Host -ForegroundColor DarkGray }
-            for ($n = $prev.number + 1; $n -lt $cur.number; $n++) {
-                if ($asObject) {
-                    [PSCustomObject]@{
-                        "Missing" = $n;
-                    } | Write-Output
-                }
-                else {
-                    $n | Write-Host -ForegroundColor Yellow
-                }
+            $obj = [PSCustomObject]@{
+                "From" = $prev.line;
+                "To" = $cur.line;
+                "Missing" = $(New-Object System.Collections.ArrayList);
             }
-            if (-not $asObject) { $cur.line | Write-Host -ForegroundColor DarkGray }
+            for ($n = $prev.number + 1; $n -lt $cur.number; $n++) {
+                $obj.Missing.Add($n) > $null
+            }
+            $ret.Add($obj) > $null
+        }
+        if ($asObject) {
+            return $ret
+        }
+        $ret | ForEach-Object {
+            $_.From | Write-Host -ForegroundColor DarkGray
+            $_.Missing | ForEach-Object {
+                $_ | Write-Host -ForegroundColor Yellow
+            }
+            $_.To | Write-Host -ForegroundColor DarkGray
         }
     }
 }
