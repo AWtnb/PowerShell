@@ -119,139 +119,13 @@ function Hide-ConsoleWindow {
     }
 }
 
-##############################
-# google ime setting sync
-##############################
-
-Class GoogleImeDb {
-    [string]$name
-    [string]$localDirPath
-    [string]$cloudDirPath
-    [System.IO.FileInfo]$localFile
-    [System.IO.FileInfo]$cloudFile
-    [string]$require
-    [string[]]$missing = @()
-    [string]$lastUpdate
-
-    GoogleImeDb($name) {
-        $this.name = $name
-        $this.localDirPath = "C:\Users\{0}\AppData\LocalLow\Google\Google Japanese Input" -f $env:USERNAME
-        $localPath = $this.localDirPath | Join-Path -ChildPath $this.name
-        if (Test-Path $localPath) {
-            $this.localFile = Get-Item -LiteralPath $localPath
-        }
-        else {
-            $this.missing += $localPath
-        }
-        $this.cloudDirPath = "C:\Users\{0}\Dropbox\develop\app_config\IME_google\db" -f $env:USERNAME
-        $cloudPath = $this.cloudDirPath | Join-Path -ChildPath $this.name
-        if (Test-Path $cloudPath) {
-            $this.cloudFile = Get-Item -LiteralPath $cloudPath
-        }
-        else {
-            $this.missing += $cloudPath
-        }
-        if ($this.missing.Length -gt 0) {
-            $this.require = "FINDFILE"
-            return
-        }
-        $this.lastUpdate = @($this.localFile, $this.cloudFile) | Sort-Object LastWriteTime | Select-Object -Last 1 | Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        if ($this.cloudFile.LastWriteTime -lt $this.localFile.LastWriteTime) {
-            $this.require = "UPLOAD"
-            return
-        }
-        if ($this.localFile.LastWriteTime -lt $this.cloudFile.LastWriteTime) {
-            $this.require = "DOWNLOAD"
-            return
-        }
-        $this.require = "NOTHING"
+function Restart-GoogleIme {
+    Get-Process | Where-Object ProcessName -In @("GoogleIMEJaConverter", "GoogleIMEJaRenderer") | ForEach-Object {
+        $path = $_.Path
+        Stop-Process $_
+        Start-Process $path
     }
-
-    [void] BackupCloud() {
-        $ts = Get-Date -Format "yyyyMMddHHmmssff"
-        $backupDest = $this.cloudDirPath | Join-Path -ChildPath $(".history\{0}_{1}.db" -f $this.cloudFile.Basename, $ts)
-        $this.cloudFile | Copy-Item -Destination $backupDest
-    }
-
-    [void] Sync() {
-        if ($this.require -in @("NOTHING", "FINDFILE")) {
-            return
-        }
-        $origin, $dest = switch ($this.require) {
-            "UPLOAD" {
-                @($this.localFile, $this.cloudFile); break;
-            }
-            "DOWNLOAD" {
-                @($this.cloudFile, $this.localFile); break;
-            }
-        }
-        if ($origin.LastWriteTime -gt $dest.LastWriteTime) {
-            if ($this.require -eq "UPLOAD") {
-                $this.BackupCloud()
-            }
-            $origin | Copy-Item -Destination $dest.Directory.FullName
-            if ($this.require -eq "DOWNLOAD") {
-                Get-Process | Where-Object ProcessName -In @("GoogleIMEJaConverter", "GoogleIMEJaRenderer") | ForEach-Object {
-                    $path = $_.Path
-                    Stop-Process $_
-                    Start-Process $path
-                }
-            }
-        }
-    }
-
-    [string] DecotateByRequirement ([string]$s) {
-        $psColor = $global:PSStyle
-        $ansiSeq = @{
-            "UPLOAD" = $psColor.Foreground.Green;
-            "DOWNLOAD" = $psColor.Foreground.Cyan;
-        }[$this.require]
-        return $ansiSeq + $s + $psColor.Reset
-    }
-
-    static [void] Dialog ([bool]$register) {
-        $opt = ($register)? "--mode=word_register_dialog" : "--mode=dictionary_tool"
-        Start-Process -FilePath "C:\Program Files (x86)\Google\Google Japanese Input\GoogleIMEJaTool.exe" -ArgumentList $opt
-    }
-
-    static [PSCustomObject[]] GetExportedData () {
-        $path = "C:\Users\{0}\Dropbox\develop\app_config\IME_google\convertion_dict\main.txt" -f $env:USERNAME
-        if (Test-Path $path) {
-            return $(Get-Content $path | ConvertFrom-Csv -Delimiter "`t" -Header "Reading","Word","POS")
-        }
-        return @()
-    }
-
-}
-
-function Test-GoogleIme {
-    @("config1.db", "user_dictionary.db") | ForEach-Object {
-        $db = [GoogleImeDb]::New($_)
-        if ($db.require -eq "NOTHING") { return }
-        if ($db.require -eq "FINDFILE") {
-            $db.missing | ForEach-Object {
-                "MISSING: '{0}'!" -f $_ | Write-Host -ForegroundColor Magenta
-            }
-            return
-        }
-
-        "[Google IME] '{0}' is updated on {1} :" -f @($db.name, $db.lastUpdate | ForEach-Object { $db.DecotateByRequirement($_)}) | Write-Host
-
-        $askPrompt = "==> {0}? (y/n)" -f $db.DecotateByRequirement($db.require)
-        if ((Read-Host -Prompt $askPrompt) -eq "y") {
-            $db.Sync()
-            "`u{2705} {0} of '{1}' is successfully finished!`n" -f @($db.require, $db.name |ForEach-Object { $db.DecotateByRequirement($_) }) | Write-Host
-        }
-        else {
-            "`u{2716}" | Write-Host -ForegroundColor Red -NoNewline
-            " skipped {0} of '{1}'.`n" -f $db.require, $db.name | Write-Host
-        }
-    }
-}
-
-Set-PSReadLineKeyHandler -Key "ctrl+F8" -ScriptBlock {
-    [PSConsoleReadLine]::RevertLine()
-    [PSConsoleReadLine]::Insert("[GoogleImeDb]::GetExportedData() | ? Word -match ")
+    "Restarted google ime process!" | Write-Host -ForegroundColor Yellow
 }
 
 ##############################
@@ -412,7 +286,7 @@ function prompt {
         $mf.Rename()
     }
 
-    Test-GoogleIme
+    # Test-GoogleIme
 
     return $p.GetPrompt()
 }
