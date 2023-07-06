@@ -88,16 +88,7 @@ function Set-Keyrate {
 }
 
 Invoke-Command -ScriptBlock {
-    $delay = 210
-    $rate = 16
-    $confPath = $PSScriptRoot | Join-Path -ChildPath "_config.json"
-    if (Test-Path $confPath) {
-        $conf = ($confPath | Get-Item | Get-Content | ConvertFrom-Json)
-        $delay = $conf.keyrate.delay
-        $rate = $conf.keyrate.rate
-    }
-    else {
-        "{0} is missing!" -f $confPath | Write-Host
-    }
+    $delay = 240
+    $rate = 14
     Set-Keyrate -delay $delay -rate $rate
 }
