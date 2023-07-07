@@ -559,9 +559,8 @@ function Copy-ActiveWordDocumentForCleanup {
     $wdRevisionProperty = 3
     $wdRevisionParagraphProperty = 10
     $wdRevisionSectionProperty = 12
-    $noisyRevs = @($wdRevisionProperty, $wdRevisionParagraphProperty, $wdRevisionSectionProperty)
     $doc.Revisions | ForEach-Object {
-        if ($_.Type -in $noisyRevs) {
+        if ($_.Type -in @($wdRevisionProperty, $wdRevisionParagraphProperty, $wdRevisionSectionProperty)) {
             $_.Accept()
         }
     }
@@ -575,7 +574,7 @@ function Copy-ActiveWordDocumentForCleanup {
     Write-Host "Copied current document"
 
     $doc.AcceptAllRevisions()
-    Write-Host "Removed all revisions on this document"
+    Write-Host "Accepted all revisions on this document"
     $doc.DeleteAllComments()
     Write-Host "Removed all comments on this document"
 

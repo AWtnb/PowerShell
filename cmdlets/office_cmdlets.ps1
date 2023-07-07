@@ -16,6 +16,7 @@ function Clear-ComReference {
 function Convert-WordDocument2PDF {
     param (
         [parameter(ValueFromPipeline)]$inputObj
+        ,[switch]$removeComment
     )
     begin {
         $vbConst = [PSCustomObject]@{
@@ -42,6 +43,10 @@ function Convert-WordDocument2PDF {
             "converting '{0}' to PDF..." -f $_.Name | Write-Host
             try {
                 $doc = $word.Documents.Open($_.FullName, $null, $true)
+                if ($removeComment) {
+                    $doc.DeleteAllComments()
+                    "==> removing all comments..." | Write-Host
+                }
                 $outPath = $_.FullName -replace "\.docx?$", ".pdf"
                 $doc.ExportAsFixedFormat($outPath, `
                     $vbConst.wdExportFormatPDF, `
