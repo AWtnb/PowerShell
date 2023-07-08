@@ -200,7 +200,7 @@ function New-ShortCutOnMyDataSources {
 
 function Set-ShortcutFiler {
     param (
-        $filerPath = "$($env:USERPROFILE)\Dropbox\portable_apps\tablacus\TE64.exe"
+        $filerPath = $env:TABLACUS_PATH
     )
     begin {
         $shell  = New-Object -ComObject WScript.Shell

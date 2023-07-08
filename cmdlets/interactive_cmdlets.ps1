@@ -157,8 +157,7 @@ function psMoko {
         "cannnot find '{0}'" -f $dataPath | Write-Host -ForegroundColor Red
         return
     }
-    $filerPath = "C:\Users\{0}\Dropbox\portable_apps\tablacus\TE64.exe" -f $env:USERNAME
-    $opt = @("--src", $dataPath, "--filer", $filerPath, "--exclude=_obsolete,node_modules")
+    $opt = @("--src", $dataPath, "--filer", $env:TABLACUS_PATH, "--exclude=_obsolete,node_modules")
     if ($all) {
         $opt += "--all"
     }

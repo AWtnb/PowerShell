@@ -21,6 +21,8 @@ function Reset-OutputEncodingToSJIS {
     "Output encoding: reset to default (shift_jis)" | Write-Host -ForegroundColor Yellow
 }
 
+$env:TABLACUS_PATH = $env:USERPROFILE | Join-Path -ChildPath "Sync\portable_app\tablacus\TE64.exe"
+
 #################################################################
 # functions arround prompt customization
 #################################################################
@@ -343,9 +345,8 @@ function iit {
     begin {}
     process {
         $path = (Get-Item $inputLine).FullName
-        $tablacus = $env:USERPROFILE | Join-Path -ChildPath "Dropbox\portable_apps\tablacus\TE64.exe"
-        if ((Test-Path $tablacus) -and (Test-Path $path -PathType Container)) {
-            Start-Process $tablacus -ArgumentList $path
+        if ((Test-Path $env:TABLACUS_PATH) -and (Test-Path $path -PathType Container)) {
+            Start-Process $env:TABLACUS_PATH -ArgumentList $path
         }
         else {
             Start-Process $path

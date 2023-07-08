@@ -776,9 +776,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+b,s", "ctrl+b,e", "ctrl+b,c", "ctrl+b,S", "c
 
 # desktop
 Set-PSReadLineKeyHandler -Key "ctrl+d" -BriefDescription "desktop" -LongDescription "Invoke desktop" -ScriptBlock {
-    $tablacus = "{0}\Dropbox\portable_apps\tablacus\TE64.exe" -f $env:USERPROFILE
-    if (Test-Path $tablacus) {
-        Start-Process $tablacus -ArgumentList @("{0}\desktop" -f $env:USERPROFILE)
+    if (Test-Path $env:TABLACUS_PATH) {
+        Start-Process $env:TABLACUS_PATH -ArgumentList @("{0}\desktop" -f $env:USERPROFILE)
     }
     else {
         Start-Process ("{0}\desktop" -f $env:USERPROFILE)
@@ -790,9 +789,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+d" -BriefDescription "desktop" -LongDescript
 Set-PSReadLineKeyHandler -Key "ctrl+S" -BriefDescription "openScanFolder" -LongDescription "openScanFolder" -ScriptBlock {
     $scanDir = "X:\scan"
     if(Test-Path $scanDir) {
-        $tablacus = "{0}\Dropbox\portable_apps\tablacus\TE64.exe" -f $env:USERPROFILE
-        if (Test-Path $tablacus) {
-            Start-Process $tablacus -ArgumentList $scanDir
+        if (Test-Path $env:TABLACUS_PATH) {
+            Start-Process $env:TABLACUS_PATH -ArgumentList $scanDir
         }
         else {
             Start-Process $scanDir
