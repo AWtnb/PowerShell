@@ -16,7 +16,7 @@ function Get-DefinitionOfCommand {
     }
 }
 Set-PSReadLineKeyHandler -Key "alt+f,d" -BriefDescription "fuzzyDefinition" -LongDescription "fuzzyDefinition" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+    [PSBufferState]::new().RevertLine()
     [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> Get-DefinitionOfCommand")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
@@ -134,7 +134,7 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
 }
 
 
-function psMoko {
+function Invoke-MokoLauncher {
     param (
         [switch]$all
     )
@@ -152,15 +152,14 @@ function psMoko {
         Hide-ConsoleWindow
     }
 }
-Set-Alias z psMoko
+Set-Alias moko Invoke-MokoLauncher
+
 Set-PSReadLineKeyHandler -Key "alt+z" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert('<#SKIPHISTORY#> z')
+    Invoke-MokoLauncher
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+z" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert('<#SKIPHISTORY#> z -all')
+    Invoke-MokoLauncher -all
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
