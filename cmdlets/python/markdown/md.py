@@ -32,16 +32,6 @@ class RawMd:
             return "update: {}".format(last_modified)
         return "contents updated: {} / document generated: {}".format(last_modified, today)
 
-    def grep_comment(self, pattern:str, capture:int=1) -> list[str]:
-        matches = []
-        reg = re.compile(pattern)
-        for line in self.content.splitlines():
-            if line.startswith("<!--"):
-                m = reg.search(line.rstrip(" ->"))
-                if m:
-                    matches.append(m.group(capture))
-        return matches
-
 
 class MdHtml:
 
@@ -61,10 +51,11 @@ class MdHtml:
 
         self.content = dom.get_content()
         self.toc = '<div class="toc">{}</div>'.format(dom.get_toc())
+        self.comments = dom.get_comments()
 
-        title_comment = raw_md.grep_comment(r"title: ?(.+)", 1)
+        title_comment = self.grep_comment(r"^title:")
         if len(title_comment) > 0:
-            self.title = title_comment[0]
+            self.title = title_comment[0][6:].strip()
         else:
             top_heading = dom.get_top_heading()
             if top_heading:
@@ -72,6 +63,14 @@ class MdHtml:
             else:
                 self.title = Path(file_path).stem
         self.title = '<title>{}</title>'.format(self.title)
+
+    def grep_comment(self, pattern) -> list[str]:
+        reg = re.compile(pattern)
+        found = []
+        for c in self.comments:
+            if reg.search(c):
+                found.append(c)
+        return found
 
 
 class HeadElem:

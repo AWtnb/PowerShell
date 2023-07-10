@@ -60,6 +60,10 @@ class DomTree:
             toc = decode(ul)
         return toc
 
+    def get_comments(self) -> list[str]:
+        comments = self._root.xpath('//comment()')
+        return [c.text.strip() for c in comments]
+
     def get_content(self) -> str:
         self._root.classes.add("main")
         return decode(self._root)
