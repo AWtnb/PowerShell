@@ -6,25 +6,11 @@ interactive filter
                 encoding: utf8bom
 ============================== #>
 
-function mokof {
-    param(
-        [switch]$ascii
-    )
-    $exePath = "C:\Personal\tools\bin\mokof.exe"
-    if ($ascii) {
-        $input | & $exePath | Write-Output
-    }
-    else {
-        $byte = $input | & $exePath "--bytearr"
-        if ($LASTEXITCODE -eq 0) {
-            [System.Text.Encoding]::UTF8.GetString($byte) | Write-Output
-        }
-    }
-}
+# Both `[System.Console]::OutputEncoding` and `$OutputEncoding` must be UTF-8 to use fzf.exe
 
 
 function Get-DefinitionOfCommand {
-    $cmdletName = @(Get-Command -CommandType Function).Where({-not $_.Source}).Where({$_.Name -notmatch ":"}).Name | mokof -ascii
+    $cmdletName = @(Get-Command -CommandType Function).Where({-not $_.Source}).Where({$_.Name -notmatch ":"}).Name | fzf.exe
     if ($cmdletName) {
         (Get-Command -Name $cmdletName).Definition | bat.exe --% --language=powershell
     }
@@ -124,7 +110,7 @@ class PSAvailable {
 
 
 Set-PSReadLineKeyHandler -Key "alt+f,spacebar","ctrl+shift+spacebar" -BriefDescription "fuzzyfind-command" -LongDescription "search-cmdlets-with-fuzzyfinder" -ScriptBlock {
-    $command = [PSAvailable]::commands | mokof -ascii
+    $command = [PSAvailable]::commands | fzf.exe
     if ($command) {
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$command ")
     }
@@ -138,7 +124,7 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
     $c = [PSAvailable]::new()
     $c.SetData()
     $src = $c.sources
-    $filtered = $src.Name | mokof -ascii
+    $filtered = $src.Name | fzf.exe
     if ($filtered) {
         $selected = $src | Where-Object name -eq $filtered | Select-Object -First 1
         $wd = $c.profPath | Split-Path -Parent
@@ -208,7 +194,7 @@ function Invoke-RDriveDatabase {
         $dirs = @($dirs).Where({$reg.IsMatch($_.name)})
     }
     if ($dirs.count -gt 1) {
-        $filtered = $dirs.name | mokof
+        $filtered = $dirs.name | fzf.exe
         if (-not $filtered) {
             return
         }
