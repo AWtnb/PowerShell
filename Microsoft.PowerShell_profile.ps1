@@ -354,6 +354,7 @@ function iit {
     }
     end {}
 }
+
 function sieve ([switch]$net) {
     $input | Where-Object {return ($net)? ($_ -replace "\s") : $_} | Write-Output
 }
@@ -437,6 +438,15 @@ function cdc {
     }
 }
 
+function lsc {
+    $clip = (Get-Clipboard | Select-Object -First 1) -replace '"'
+    if (Test-Path $clip -PathType Container) {
+        Get-ChildItem -LiteralPath $clip | Write-Output
+    }
+    else {
+        "invalid-path!" | Write-Host -ForegroundColor Magenta
+    }
+}
 
 function flb {
     $input | Format-List | Out-String -Stream | bat.exe --plain

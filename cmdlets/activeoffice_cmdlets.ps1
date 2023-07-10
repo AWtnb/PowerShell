@@ -575,8 +575,10 @@ function Copy-ActiveWordDocumentForCleanup {
 
     $doc.AcceptAllRevisions()
     Write-Host "Accepted all revisions on this document"
-    $doc.DeleteAllComments()
-    Write-Host "Removed all comments on this document"
+    if ($doc.Comments.Count) {
+        $doc.DeleteAllComments()
+        Write-Host "Removed all comments on this document"
+    }
 
 }
 
