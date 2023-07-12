@@ -835,8 +835,8 @@ function Move-ItemToObsDir {
     }
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+o" -BriefDescription "move-to-obsDir" -LongDescription "move-to-obsDir" -ScriptBlock {
-    [PSBufferState]::new().RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Move-ItemToObsDir")
+    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Move-ItemToObsDir #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
