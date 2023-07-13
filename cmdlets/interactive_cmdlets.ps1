@@ -156,11 +156,11 @@ Set-Alias moko Invoke-MokoLauncher
 
 Set-PSReadLineKeyHandler -Key "alt+z" -ScriptBlock {
     Invoke-MokoLauncher
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+z" -ScriptBlock {
     Invoke-MokoLauncher -all
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
 }
 
 function hinagata {
