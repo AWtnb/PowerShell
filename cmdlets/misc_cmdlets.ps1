@@ -791,32 +791,82 @@ function Get-LocalFont {
     }
 }
 
-function Move-ItemToObsDir {
-    $items = @()
-    $cbStr = Get-Clipboard
-    if ($cbStr.Length) {
-        $items = ($cbStr -replace '" "', '"\n"') -split "\n" | ForEach-Object {
-            if ($_.StartsWith('"')) {
-                return $_ -replace '"'
+function Set-FileToClipboard {
+    [Windows.Forms.Clipboard]::SetFileDropList($input)
+}
+
+function Get-ClipboardFile {
+    param([switch]$onlyPath)
+    $paths = [Windows.Forms.Clipboard]::GetFileDropList()
+    if ($onlyPath) {
+        return $paths
+    }
+    return $($paths | Get-Item -LiteralPath -ErrorAction SilentlyContinue)
+}
+
+Class ClipboardPath {
+    [System.Object[]]$paths
+
+    ClipboardPath() {
+        $cb = Get-Clipboard -Raw
+        if ($cb.Length) {
+                $stack = @()
+                ($cb -replace '" "', "`n") -split "`r?`n" | ForEach-Object {
+            if ($_.StartsWith('"') -or $_.EndsWith('"')) {
+                $stack += ($_ -replace '"')
             }
-            return $_ -split " "
-        } | Where-Object { Test-Path $_ } | Get-Item
+            else {
+                    $_ -split " " | ForEach-Object { $stack += $_ }
+                }
+            }
+            $this.paths = $stack | Where-Object { Test-Path $_ }
+        }
+        else {
+            $this.paths = Get-ClipboardFile -onlyPath
+        }
     }
-    else {
-        $items = @([Windows.Forms.Clipboard]::GetFileDropList() | Get-Item)
+
+    [System.Object[]] GetItems() {
+        return $this.paths | ForEach-Object { Get-Item $_ }
     }
+}
+
+function Copy-ItemWithNewBasename {
+    $items = [ClipboardPath]::new().GetItems()
     if ($items.Count -lt 1) {
         return
     }
-    $p = $null
-    foreach ($item in $items) {
-        if ($item.Directory) {$p = $item.Directory; break}
-        if ($item.Parent) {$p = $item.Parent; break}
-    }
-    if (-not $p) {
+    $target = $items | Select-Object -First 1
+    $orgPath = $target.FullName
+    "Copying:" | Write-Host -NoNewline
+    $orgPath | Write-Host -ForegroundColor Blue
+    $newBasename = (Read-Host -Prompt "Enter new basename") -as [string]
+    if ($newBasename.Length -lt 1) {
         return
     }
-    $dest = $p.Fullname | Join-Path -ChildPath "_obsolete"
+    $newName = $newBasename + $target.Extension
+    $dest = $orgPath | Split-Path -Parent | Join-Path -ChildPath $newName
+    try {
+        $target | Copy-Item -Destination $dest -ErrorAction Stop
+        "Copied as '{0}'." -f $newName | Write-Host
+    }
+    catch {
+        "failed to copy as '{0}'." -f $newName | Write-Error
+    }
+}
+Set-PSReadLineKeyHandler -Key "ctrl+alt+v" -BriefDescription "copy-with-new-basename" -LongDescription "copy-with-new-basename" -ScriptBlock {
+    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Copy-ItemWithNewBasename #")
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
+
+
+function Move-ItemToObsDir {
+    $items = [ClipboardPath]::new().GetItems()
+    if ($items.Count -lt 1) {
+        return
+    }
+    $dest =  ($items | Select-Object -First 1).Fullname | Split-Path -Parent | Join-Path -ChildPath "_obsolete"
     if (-not (Test-Path $dest)) {
         New-Item -Path $dest -ItemType Directory > $null
     }

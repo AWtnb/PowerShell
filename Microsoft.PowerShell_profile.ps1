@@ -413,14 +413,6 @@ function c {
     Hide-ConsoleWindow
 }
 
-function Set-FileToClipboard {
-    [Windows.Forms.Clipboard]::SetFileDropList($input)
-}
-
-function Get-ClipboardFile {
-    return $([Windows.Forms.Clipboard]::GetFileDropList() | Get-Item -LiteralPath -ErrorAction SilentlyContinue)
-}
-
 function cds {
     $p = "X:\scan"
     if (Test-Path $p -PathType Container) {
