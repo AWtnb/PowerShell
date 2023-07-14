@@ -637,11 +637,21 @@ function Use-TempDir {
     $tmp = $env:TEMP | Join-Path -ChildPath $([System.Guid]::NewGuid().Guid)
     New-Item -ItemType Directory -Path $tmp | Push-Location
     "working on tempdir: {0}" -f $tmp | Write-Host -ForegroundColor DarkBlue
-    $result = Invoke-Command -ScriptBlock $script
-    Pop-Location
-    $tmp | Remove-Item -Recurse
+    $result = $null
+    try {
+        $result = Invoke-Command -ScriptBlock $script
+    }
+    catch {
+        $_.Exception.ErrorRecord | Write-Error
+        $_.ScriptStackTrace | Write-Host
+    }
+    finally {
+        Pop-Location
+        $tmp | Remove-Item -Recurse
+    }
     return $result
 }
+
 
 ##############################
 # highlight string
