@@ -6,12 +6,21 @@ cmdlets for treating Office software
                 encoding: utf8bom
 ============================== #>
 
+class ComController {
+    ComController() {}
 
-function Clear-ComReference {
-    Get-Variable | Where-Object {$_.Value -is [__ComObject]} | Clear-Variable -Verbose
-    [GC]::Collect()
-    [GC]::WaitForPendingFinalizers()
+    Clear() {
+        Get-Variable | Where-Object {$_.Value -is [__ComObject]} | Clear-Variable -Verbose
+        [GC]::Collect()
+        [GC]::WaitForPendingFinalizers()
+    }
+
+    Run([scriptblock]$scriptBlock) {
+        Invoke-Command -ScriptBlock $scriptBlock
+        $this.Clear()
+    }
 }
+
 
 function Convert-WordDocument2PDF {
     param (
@@ -37,39 +46,41 @@ function Convert-WordDocument2PDF {
         }
     }
     end {
-        $word = New-Object -ComObject Word.Application
-        $word.Visible = $false
-        $docs | ForEach-Object {
-            "converting '{0}' to PDF..." -f $_.Name | Write-Host
-            try {
-                $doc = $word.Documents.Open($_.FullName, $null, $true)
-                if ($removeComment) {
-                    $doc.DeleteAllComments()
-                    "==> removing all comments..." | Write-Host
-                }
-                $outPath = $_.FullName -replace "\.docx?$", ".pdf"
-                $doc.ExportAsFixedFormat($outPath, `
-                    $vbConst.wdExportFormatPDF, `
-                    $vbConst.OpenAfterExport, `
-                    $vbConst.wdExportOptimizeForPrint, `
-                    $vbConst.wdExportAllDocument, `
-                    $vbConst.From, `
-                    $vbConst.To, `
-                    $vbConst.wdExportDocumentWithMarkup)
-                $doc.Comments | ForEach-Object {
-                    if (-not $_.Scope.Text) {
-                        "this comment cannot be displayed on PDF! :`n{0}" -f $_.Range.Text | Write-Host
+        $cc = [ComController]::new()
+        $cc.Run({
+            $word = New-Object -ComObject Word.Application
+            $word.Visible = $false
+            $docs | ForEach-Object {
+                "converting '{0}' to PDF..." -f $_.Name | Write-Host
+                try {
+                    $doc = $word.Documents.Open($_.FullName, $null, $true)
+                    if ($removeComment) {
+                        $doc.DeleteAllComments()
+                        "==> removing all comments..." | Write-Host
                     }
+                    $outPath = $_.FullName -replace "\.docx?$", ".pdf"
+                    $doc.ExportAsFixedFormat($outPath, `
+                        $vbConst.wdExportFormatPDF, `
+                        $vbConst.OpenAfterExport, `
+                        $vbConst.wdExportOptimizeForPrint, `
+                        $vbConst.wdExportAllDocument, `
+                        $vbConst.From, `
+                        $vbConst.To, `
+                        $vbConst.wdExportDocumentWithMarkup)
+                    $doc.Comments | ForEach-Object {
+                        if (-not $_.Scope.Text) {
+                            "this comment cannot be displayed on PDF! :`n{0}" -f $_.Range.Text | Write-Host
+                        }
+                    }
+                    $doc.Close($false)
+                    "==> finished!" | Write-Host
                 }
-                $doc.Close($false)
-                "==> finished!" | Write-Host
+                catch {
+                    "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
+                }
             }
-            catch {
-                "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
-            }
-        }
-        $word.Quit()
-        Clear-ComReference
+            $word.Quit()
+        })
     }
 }
 Set-Alias word2pdf Convert-WordDocument2PDF
@@ -92,22 +103,24 @@ function Convert-Doc2Docx {
         }
     }
     end {
-        $word = New-Object -ComObject Word.Application
-        $word.Visible = $false
-        $docs | ForEach-Object {
-            "saving '{0}' as DOCX..." -f $_.Name | Write-Host
-            try {
-                $doc = $word.Documents.Open($_.FullName, $null, $true)
-                $outPath = $_.FullName -replace "\.doc$", ".docx"
-                $doc.SaveAs2($outPath, $vbConst.wdFormatXMLDocument)
-                $doc.Close($false)
+        $cc = [ComController]::new()
+        $cc.Run({
+            $word = New-Object -ComObject Word.Application
+            $word.Visible = $false
+            $docs | ForEach-Object {
+                "saving '{0}' as DOCX..." -f $_.Name | Write-Host
+                try {
+                    $doc = $word.Documents.Open($_.FullName, $null, $true)
+                    $outPath = $_.FullName -replace "\.doc$", ".docx"
+                    $doc.SaveAs2($outPath, $vbConst.wdFormatXMLDocument)
+                    $doc.Close($false)
+                }
+                catch {
+                    "ERROR: {0}" -f $_.Exception.Message | Write-Error
+                }
             }
-            catch {
-                "ERROR: {0}" -f $_.Exception.Message | Write-Error
-            }
-        }
-        $word.Quit()
-        Clear-ComReference
+            $word.Quit()
+        })
     }
 }
 
@@ -144,42 +157,44 @@ function Convert-PowerpointSlide2PDF {
             ppPrintHandoutHorizontalFirst = 2;
             ppPrintOutputSlides = 1;
         }
-        $slides = @()
+        $files = @()
     }
     process {
         $fileObj = Get-Item -LiteralPath $inputObj
         if ($fileObj.Extension -match "pptx?$") {
-            $slides += $fileObj
+            $files += $fileObj
         }
     }
     end {
-        $powerpoint = New-Object -ComObject PowerPoint.Application
-        $powerpoint.Visible = $true
-        $slides | ForEach-Object {
-            "converting '{0}' to PDF..." -f $_.Name | Write-Host
-            try {
-                $presen = $powerpoint.Presentations.Open($_.FullName, $null, $true)
-                $outPath = $_.FullName -replace "\.pptx$", ".pdf"
-                $max = $presen.Slides.Count
-                $presen.PrintOptions.Ranges.Add(1, $max) > $null
-                $presen.ExportAsFixedFormat(
-                    $outPath,
-                    $vbConst.ppFixedFormatTypePDF,
-                    $vbConst.ppFixedFormatIntentPrint,
-                    $false,
-                    $vbConst.ppPrintHandoutHorizontalFirst,
-                    $vbConst.ppPrintOutputSlides,
-                    $false,
-                    $presen.PrintOptions.Ranges.Item(1)
-                )
-                $presen.Close()
-                "==> finished!" | Write-Host
+        $cc = [ComController]::new()
+        $cc.Run({
+            $powerpoint = New-Object -ComObject PowerPoint.Application
+            $powerpoint.Visible = $true
+            $files | ForEach-Object {
+                "converting '{0}' to PDF..." -f $_.Name | Write-Host
+                try {
+                    $presen = $powerpoint.Presentations.Open($_.FullName, $null, $true)
+                    $outPath = $_.FullName -replace "\.pptx$", ".pdf"
+                    $max = $presen.Slides.Count
+                    $presen.PrintOptions.Ranges.Add(1, $max) > $null
+                    $presen.ExportAsFixedFormat(
+                        $outPath,
+                        $vbConst.ppFixedFormatTypePDF,
+                        $vbConst.ppFixedFormatIntentPrint,
+                        $false,
+                        $vbConst.ppPrintHandoutHorizontalFirst,
+                        $vbConst.ppPrintOutputSlides,
+                        $false,
+                        $presen.PrintOptions.Ranges.Item(1)
+                    )
+                    $presen.Close()
+                    "==> finished!" | Write-Host
+                }
+                catch {
+                    "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
+                }
             }
-            catch {
-                "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
-            }
-        }
-        $powerpoint.Quit()
-        Clear-ComReference
+            $powerpoint.Quit()
+        })
     }
 }
