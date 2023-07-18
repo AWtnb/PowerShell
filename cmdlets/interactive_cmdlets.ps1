@@ -167,7 +167,7 @@ function hinagata {
     $templateDir = "C:\Personal\tools\templates"
     if (Test-Path -Path $templateDir -PathType Container) {
         $names = ($templateDir | Get-ChildItem -Filter "*.txt").Name
-        $selected = $names | mokof -ascii
+        $selected = $names | fzf.exe
         if ($selected) {
             $item = $templateDir | Join-Path -ChildPath $selected | Get-Item
             $item | Get-Content | Set-Clipboard
