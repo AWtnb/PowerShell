@@ -10,7 +10,7 @@ class ComController {
     ComController() {}
 
     Clear() {
-        Get-Variable | Where-Object {$_.Value -is [__ComObject]} | Clear-Variable -Verbose
+        Get-Variable | Where-Object {$_.Value -is [__ComObject]} | Clear-Variable
         [GC]::Collect()
         [GC]::WaitForPendingFinalizers()
     }
