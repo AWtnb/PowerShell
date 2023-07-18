@@ -163,26 +163,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+z" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
 }
 
-function hinagata {
-    $templateDir = "C:\Personal\tools\templates"
-    if (Test-Path -Path $templateDir -PathType Container) {
-        $names = ($templateDir | Get-ChildItem -Filter "*.txt").Name
-        $selected = $names | fzf.exe
-        if ($selected) {
-            $item = $templateDir | Join-Path -ChildPath $selected | Get-Item
-            $item | Get-Content | Set-Clipboard
-            "COPIED: '{0}'" -f $item.Name | Write-Host -ForegroundColor Yellow
-            Start-Process "https://awtnb.github.io/hinagata/"
-        }
-    }
-    else {
-        "Cannot find templates..." | Write-Host -ForegroundColor Magenta
-    }
-}
-
-
-
-
 function Invoke-RDriveDatabase {
     param (
         [string]$name
