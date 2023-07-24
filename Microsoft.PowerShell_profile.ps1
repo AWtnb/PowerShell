@@ -233,26 +233,28 @@ Class Prompter {
             + $this.stopDeco)
     }
 
-    [string] GetParent() {
-        $dir = $pwd.ProviderPath | Split-Path -Parent
-        $prefix = "~\"
-        if (-not $dir -or $dir.EndsWith(":\")) {
-            $prefix = ""
-        }
-        $suffix = "\"
-        if (-not $dir -or $dir.EndsWith("\")) {
-            $suffix = ""
-        }
-        $name = $dir | Split-Path -Leaf
-        return $("#" + $prefix + $name + $suffix)
-    }
-
     [string] GetWd() {
+        $prof = $env:USERPROFILE
+        $wd = $pwd.ProviderPath
+        $parent = $wd | Split-Path -Parent
+        $leaf = $wd | Split-Path -Leaf
+        if ($wd.StartsWith($prof)) {
+            if ($wd.Length -eq $prof.length) {
+                $parent = ""
+                $leaf = "~"
+            }
+            else {
+                $parent = $parent.Replace($prof, "~")
+            }
+        }
+        $connector = ($parent.Length -lt 1 -or $parent.EndsWith("\"))? "" : "\"
         return $($this.subMarkerStart `
-            + $this.GetParent() `
+            + "#" `
+            + $parent `
+            + $connector `
             + $this.accentBg `
             + $this.markedFg `
-            + ($pwd.ProviderPath | Split-Path -Leaf) `
+            + $leaf `
             + $this.stopDeco)
     }
 
@@ -274,10 +276,6 @@ Class Prompter {
 function prompt {
     $p = [Prompter]::New()
     $p.Display()
-
-    if ( -not (Set-ConsoleWindowTitle -title $pwd.ProviderPath) ) {
-        Write-Host "Failed to update window text..." -ForegroundColor Magenta
-    }
 
     if (-not (Reset-ConsoleIME)) {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
