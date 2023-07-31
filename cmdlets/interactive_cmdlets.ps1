@@ -139,10 +139,6 @@ function Invoke-MokoLauncher {
         [switch]$all
     )
     $dataPath = "C:\Personal\launch.yaml"
-    if (-not (Test-Path $dataPath)) {
-        "cannnot find '{0}'" -f $dataPath | Write-Host -ForegroundColor Red
-        return
-    }
     $opt = @("--src", $dataPath, "--filer", $env:TABLACUS_PATH, "--exclude=_obsolete,node_modules")
     if ($all) {
         $opt += "--all"
