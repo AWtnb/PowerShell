@@ -198,3 +198,31 @@ function Convert-PowerpointSlide2PDF {
         })
     }
 }
+
+function Join-PowerpointSlides {
+    param (
+        [string]$outName = "conc"
+        ,[switch]$force
+    )
+    $slides = $input | Where-Object {$_.Extension -eq ".pptx"}
+    if ($slides.Count -lt 1) {
+        return
+    }
+    $first = $slides | Select-Object -First 1
+    $outPath = $first.FullName | Split-Path -Parent | Join-Path -ChildPath "$outName.pptx"
+    if (Test-Path $outPath) {
+        if (-not $force) {
+            "'{0}' already exists." -f $outPath | Write-Error
+            return
+        }
+    }
+    $first | Copy-Item -Destination $outPath
+    $powerpoint = New-Object -ComObject PowerPoint.Application
+    $powerpoint.Visible = $true
+    $presen = $powerpoint.Presentations.Open($outPath)
+    $slides | Select-Object -Skip 1 | ForEach-Object {
+        $idx = $presen.Slides.Count
+        $presen.Slides.InsertFromFile($_.FullName, $idx) > $null
+    }
+
+}
