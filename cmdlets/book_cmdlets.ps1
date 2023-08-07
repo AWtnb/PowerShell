@@ -73,5 +73,6 @@ function yBookPage {
     Hide-ConsoleWindow
 }
 
-
-
+Set-PSReadLineKeyHandler -Key "ctrl+alt+y" -BriefDescription "ybookpage" -LongDescription "ybookpage" -ScriptBlock {
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("yBookPage ")
+}
