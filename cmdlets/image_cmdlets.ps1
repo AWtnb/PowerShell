@@ -86,6 +86,31 @@ function Rename-ExifDate {
     }
 }
 
+function Get-RAFTimestamp {
+    param (
+        [parameter(ValueFromPipeline)]$inputObj
+    )
+    begin {}
+    process {
+        $fileObj = Get-Item -LiteralPath $inputObj
+        if ($fileObj.Extension -ne ".RAF") {
+            return [PSCustomObject]@{
+                Name = $fileObj.Name;
+                Timestamp = "";
+            }
+        }
+        $bytes = Get-Content $fileObj.FullName -AsByteStream -TotalCount (378 + 19) | Select-Object -Last 19
+        $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
+        $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
+        $timestamp = $date.ToString("yyyy_MMdd_HHmmss00")
+        return [PSCustomObject]@{
+            Name = $fileObj.Name;
+            Timestamp = $timestamp;
+        }
+    }
+    end {}
+}
+
 function Get-CR2Timestamp {
     param (
         [parameter(ValueFromPipeline)]$inputObj
@@ -101,9 +126,8 @@ function Get-CR2Timestamp {
         }
         $bytes = Get-Content $fileObj.FullName -AsByteStream -TotalCount (324 + 19) | Select-Object -Last 19
         $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
-        $timestamp = ($decoded -match "^\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}$")?
-            "{0}00" -f ($decoded -replace ":" -replace " ", "_" -replace "^(\d{4})", '$1_') :
-            ""
+        $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
+        $timestamp = $date.ToString("yyyy_MMdd_HHmmss00")
         return [PSCustomObject]@{
             Name = $fileObj.Name;
             Timestamp = $timestamp;
