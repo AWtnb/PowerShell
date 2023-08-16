@@ -141,13 +141,14 @@ class ASTer {
     [System.Management.Automation.Language.Token] GetActiveToken() {
         $i = $this.GetActiveTokenIndex()
         return $this.tokens[$i]
-        }
+    }
 
     [System.Management.Automation.Language.Token] GetPreviousToken() {
         $i = $this.GetActiveTokenIndex()
         $pos = $i - 1
         return $this.tokens[$pos]
     }
+
     [System.Management.Automation.Language.Token] GetNextToken() {
         $i = $this.GetActiveTokenIndex()
         $pos = $i + 1
