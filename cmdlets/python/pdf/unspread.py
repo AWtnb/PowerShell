@@ -24,12 +24,11 @@ class Unspreader:
             self.size_list = [PdfPageBox(p).media.width for p in self.pages]
 
     def split(self, page):
-        if self.vertical:
-            for y_pos in (0, 0.5):
-                yield PageMerge().add(page, viewrect=(0, y_pos, 1, 0.5)).render()
-        else:
-            for x_pos in (0, 0.5):
-                yield PageMerge().add(page, viewrect=(x_pos, 0, 0.5, 1)).render()
+        for i in (0, 0.5):
+            if self.vertical:
+                yield PageMerge().add(page, viewrect=(0, i, 1, 0.5)).render()
+            else:
+                yield PageMerge().add(page, viewrect=(i, 0, 0.5, 1)).render()
 
     def execute(self) -> None:
         writer = PdfWriter(self.out_path)
