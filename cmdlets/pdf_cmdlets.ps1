@@ -288,6 +288,8 @@ function Invoke-PdfUnspreadWithPython {
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$vertical
+        ,[switch]$singleTop
+        ,[switch]$singleLast
     )
     begin {}
     process {
@@ -298,7 +300,13 @@ function Invoke-PdfUnspreadWithPython {
         $py = [PyPdf]::new("unspread.py")
         $params = @($file.FullName)
         if ($vertical) {
-            $params += "vertical"
+            $params += "--vertical"
+        }
+        if ($singleTop) {
+            $params += "--singleTop"
+        }
+        if ($singleLast) {
+            $params += "--singleLast"
         }
         $py.RunCommand($params)
     }
