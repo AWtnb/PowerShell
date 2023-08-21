@@ -235,7 +235,7 @@ function Rename-Index {
 }
 Set-Alias rInd Rename-Index
 
-function Rename-ApplyScriptBlock {
+function Rename-WithScriptBlock {
     <#
         .EXAMPLE
         Get-Childitem *.txt | renB -renameBlock {$_.Name -Replace "hogehoge", "hugahuga"}
@@ -260,14 +260,12 @@ function Rename-ApplyScriptBlock {
         }
     }
 }
-Set-Alias renAS Rename-ApplyScriptBlock
-
 
 function Rename-LightroomFromDropbox {
     param (
         [switch]$execute
     )
-    $input | Rename-ApplyScriptBlock {
+    $input | Rename-WithScriptBlock {
         $fmt = ($_.BaseName -replace "[ \-]","" -replace "写真" -replace "\(","-" -replace "\)")
         $newName = $fmt.substring(0,8) + "-IMG_" + $fmt.substring(8).PadLeft(6, "0") + $_.extension
         return $newName
@@ -314,5 +312,5 @@ function Rename-FromData {
     if (-not $data.Count) {
         return
     }
-    $input | Where-Object {$_.Name -in $hashtable.keys} | Rename-ApplyScriptBlock { $hashtable[$_.Name] } -execute:$execute
+    $input | Where-Object {$_.Name -in $hashtable.keys} | Rename-WithScriptBlock { $hashtable[$_.Name] } -execute:$execute
 }
