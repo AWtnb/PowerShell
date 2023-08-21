@@ -340,8 +340,8 @@ function Invoke-PdfTrimGalleyMarginWithPython {
         [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
-        ,[float]$tombowPercentH = 8.0
-        ,[float]$tombowPercentV = 8.0
+        ,[float]$marginHorizontal = 0.08
+        ,[float]$marginVertical = 0.08
     )
     begin {}
     process {
@@ -350,7 +350,7 @@ function Invoke-PdfTrimGalleyMarginWithPython {
             return
         }
         $py = [PyPdf]::new("trim.py")
-        $py.RunCommand(@($file.Fullname, $tombowPercentH, $tombowPercentV))
+        $py.RunCommand(@($file.Fullname, $marginHorizontal, $marginVertical))
     }
     end {}
 }
