@@ -9,7 +9,7 @@ import argparse
 
 from pdfrw import PdfReader, PdfWriter, PageMerge
 
-from pdfbox import PdfBox
+from package.pdfbox import PdfBox
 
 
 class Unspreader:

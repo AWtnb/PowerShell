@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pdfrw import PdfReader, PdfWriter
 
-from fnwatermark import FileNameWatermark
+from package.fnwatermark import FileNameWatermark
 
 
 def new_watermarkred_pdf(file_path:str, work_dir:str) -> str:

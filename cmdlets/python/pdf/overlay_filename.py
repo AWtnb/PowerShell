@@ -9,8 +9,7 @@ from pathlib import Path
 
 from pdfrw import PdfReader
 
-from fnwatermark import FileNameWatermark
-
+from package.fnwatermark import FileNameWatermark
 
 def add_watermark(file_path:str, start_idx:int=1):
 
