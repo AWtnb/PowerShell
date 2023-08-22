@@ -3,7 +3,7 @@ import sys
 
 from pdfrw import PdfReader, PdfWriter, PageMerge
 
-from pdfpagebox import PdfPageBox
+from pdfbox import PdfBox
 
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import Color
@@ -24,7 +24,7 @@ class FileNameWatermark:
             font_size = 12
             pdfmetrics.registerFont(TTFont("localfont", r"C:\Windows\Fonts\msgothic.ttc"))
             for i, page in enumerate(self.target_pdf.pages):
-                box = PdfPageBox(page)
+                box = PdfBox(page)
                 visible_box = box.visible
                 c.setPageSize(tuple([box.media.width, box.media.height]))
                 watermark_text = "  {}(p.{})".format(self.target_path.stem, i + start_idx)

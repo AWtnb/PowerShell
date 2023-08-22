@@ -6,7 +6,7 @@ class BoxParser:
         self.width = self.top_right_x - self.bottom_left_x
         self.height = self.top_right_y - self.bottom_left_y
 
-class PdfPageBox:
+class PdfBox:
     def __init__(self, page:PdfDict) -> None:
         mbox = page.inheritable.MediaBox
         self.media = BoxParser(mbox)

@@ -9,7 +9,7 @@ import argparse
 
 from pdfrw import PdfReader, PdfWriter, PageMerge
 
-from pdfpagebox import PdfPageBox
+from pdfbox import PdfBox
 
 
 class Unspreader:
@@ -21,9 +21,9 @@ class Unspreader:
         self.last_page_index = len(self.pages) - 1
         self.vertical = vertical
         if vertical:
-            self.size_list = [PdfPageBox(p).media.height for p in self.pages]
+            self.size_list = [PdfBox(p).media.height for p in self.pages]
         else:
-            self.size_list = [PdfPageBox(p).media.width for p in self.pages]
+            self.size_list = [PdfBox(p).media.width for p in self.pages]
         self.max_size = max(self.size_list)
         self.min_size = min(self.size_list)
 
