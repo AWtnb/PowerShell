@@ -1103,6 +1103,17 @@ function Format-ActiveExcelChart {
 }
 
 
+function Invoke-StripeOnActiveExcelSheet {
+    param([string]$color = "#cfcfcf")
+    $e = Get-ActiveExcelApp
+    if (-not $e) { return }
+    for ($i = 1; $i -le $e.Selection.Rows.Count; $i++) {
+        if ($i % 2 -eq 1) {
+            $e.Selection.Rows[$i].Interior.Color = [OfficeColor]::FromColorcode($color)
+        }
+    }
+}
+
 function Remove-PaddingFromActiveWordSelectionTableCells {
     $wd = Get-ActiveWordApp
     if (-not $wd) {
