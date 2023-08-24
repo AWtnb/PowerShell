@@ -1108,7 +1108,7 @@ function Invoke-StripeOnActiveExcelSheet {
     $e = Get-ActiveExcelApp
     if (-not $e) { return }
     for ($i = 1; $i -le $e.Selection.Rows.Count; $i++) {
-        if ($i % 2 -eq 1) {
+        if ($i % 2 -eq 0) {
             $e.Selection.Rows[$i].Interior.Color = [OfficeColor]::FromColorcode($color)
         }
     }
