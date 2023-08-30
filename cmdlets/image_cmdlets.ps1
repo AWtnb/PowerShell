@@ -136,6 +136,29 @@ function Get-CR2Timestamp {
     end {}
 }
 
+function Rename-RAFTimestamp {
+    param (
+        [switch]$execute
+    )
+    $color = ($execute)? "Cyan" : "White"
+    $input | Where-Object Extension -eq ".RAF" | ForEach-Object {
+        $itemName = $_.Name
+        $timestamp = ($_ | Get-RAFTimestamp).Timestamp
+        if ($timestamp) {
+            $newName = "{0}_{1}" -f $timestamp, $itemName
+            try {
+                "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
+                if ($execute) {
+                    $_ | Rename-Item -NewName $newName -ErrorAction Stop
+                }
+            }
+            catch {
+                "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Error
+            }
+        }
+    }
+}
+
 function Rename-CR2Timestamp {
     param (
         [switch]$execute
@@ -159,6 +182,20 @@ function Rename-CR2Timestamp {
     }
 }
 
+
+function xf10Rename {
+    param (
+        [switch]$execute
+    )
+    $input | Where-Object Name -Match "DSCF" | ForEach-Object {
+        if ($_.Extension -eq ".RAF") {
+            $_ | Rename-RAFTimestamp -execute:$execute
+        }
+        elseif ($_.Extension -eq ".jpg") {
+            $_ | Rename-ExifDate -execute:$execute
+        }
+     }
+}
 
 function eosm6Rename {
     param (
