@@ -26,8 +26,6 @@ class PSAvailable {
     [System.IO.FileInfo[]]$files = @()
     [System.Collections.ArrayList]$sources
 
-    static [string[]]$commands = @(Get-Command -CommandType Alias, Cmdlet, Function).Where({$_.Name -notmatch ":"}).Name
-
     PSAvailable() {
         $this.profPath = $global:PROFILE
         $this.files = @(Get-Item -LiteralPath $this.profPath)
@@ -46,8 +44,8 @@ class PSAvailable {
         $this.files | Select-String -Pattern "^function" | ForEach-Object {
             $this.sources.Add(
                 [PSCustomObject]@{
-                    "name" = ($_.line -replace "^function *" -replace "[ \(].*$");
-                    "path" = $_.Path;
+                    "name"    = ($_.line -replace "^function *" -replace "[ \(].*$");
+                    "path"    = $_.Path;
                     "lineNum" = $_.LineNumber;
                 }
             ) > $null
@@ -58,8 +56,8 @@ class PSAvailable {
         $this.files | Select-String -Pattern "^ *class" | ForEach-Object {
             $this.sources.Add(
                 [PSCustomObject]@{
-                    "name" = ($_.line.trim() -replace " *{");
-                    "path" = $_.Path;
+                    "name"    = ($_.line.trim() -replace " *{");
+                    "path"    = $_.Path;
                     "lineNum" = $_.LineNumber;
                 }
             ) >$null
@@ -72,10 +70,10 @@ class PSAvailable {
             $rel = [System.IO.Path]::GetRelativePath(($pyDir | Split-Path -Parent), $_.Fullname)
             $this.sources.Add(
                 [PSCustomObject]@{
-                   "name" = $rel;
-                   "path" = $_.Fullname;
-                   "lineNum" = 1;
-               }
+                    "name"    = $rel;
+                    "path"    = $_.Fullname;
+                    "lineNum" = 1;
+                }
             ) >$null
         }
     }
@@ -84,33 +82,37 @@ class PSAvailable {
         $this.files | ForEach-Object {
             $this.sources.Add(
                 [PSCustomObject]@{
-                   "name" = "PS1:$($_.Basename)";
-                   "path" = $_.Fullname;
-                   "lineNum" = 1;
-               }
+                    "name"    = "PS1:$($_.Basename)";
+                    "path"    = $_.Fullname;
+                    "lineNum" = 1;
+                }
             ) >$null
         }
         $this.sources.Add(
             [PSCustomObject]@{
-               "name" = "mdLess";
-               "path" = ($this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets\python\markdown\markdown.less");
-               "lineNum" = 1;
-           }
+                "name"    = "mdLess";
+                "path"    = ($this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets\python\markdown\markdown.less");
+                "lineNum" = 1;
+            }
         ) >$null
         $this.sources.Add(
             [PSCustomObject]@{
-               "name" = "PS1:PROFILE";
-               "path" = $this.profPath;
-               "lineNum" = 1;
-           }
+                "name"    = "PS1:PROFILE";
+                "path"    = $this.profPath;
+                "lineNum" = 1;
+            }
         ) >$null
+    }
+
+    static [string[]] getCommands() {
+        return @(Get-Command -CommandType Alias, Cmdlet, Function).Where({$_.Name -notmatch ":"}).Name
     }
 
 }
 
 
 Set-PSReadLineKeyHandler -Key "alt+f,spacebar","ctrl+shift+spacebar" -BriefDescription "fuzzyfind-command" -LongDescription "search-cmdlets-with-fuzzyfinder" -ScriptBlock {
-    $command = [PSAvailable]::commands | fzf.exe
+    $command = [PSAvailable]::getCommands() | fzf.exe
     if ($command) {
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$command ")
     }
