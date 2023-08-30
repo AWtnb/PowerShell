@@ -99,7 +99,8 @@ function Get-RAFTimestamp {
                 Timestamp = "";
             }
         }
-        $bytes = Get-Content $fileObj.FullName -AsByteStream -TotalCount (378 + 19) | Select-Object -Last 19
+        $offset = ($fileObj.Name.StartsWith("_DSF")) ? 414 : 378
+        $bytes = Get-Content $fileObj.FullName -AsByteStream -TotalCount ($offset + 19) | Select-Object -Last 19
         $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
         $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
         $timestamp = $date.ToString("yyyy_MMdd_HHmmss00")
@@ -187,7 +188,7 @@ function xf10Rename {
     param (
         [switch]$execute
     )
-    $input | Where-Object Name -Match "DSCF" | ForEach-Object {
+    $input | Where-Object {$_.Name.StartsWith("_DSF") -or $_.Name.StartsWith("DSCF")} | ForEach-Object {
         if ($_.Extension -eq ".RAF") {
             $_ | Rename-RAFTimestamp -execute:$execute
         }
