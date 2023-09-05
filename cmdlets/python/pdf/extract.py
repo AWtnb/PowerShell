@@ -8,8 +8,8 @@ from pathlib import Path
 
 from pdfrw import PdfReader, PdfWriter
 
-def main(file_path:str, p_from:str, p_to:str):
 
+def main(file_path: str, p_from: str, p_to: str):
     range_begin = int(p_from)
     range_end = int(p_to)
 
@@ -35,9 +35,9 @@ def main(file_path:str, p_from:str, p_to:str):
     out_path = pdf_path.with_stem("{}_{:03}-{:03}".format(pdf_path.stem, range_begin, range_end))
 
     writer = PdfWriter(out_path)
-    writer.addpages(pdf.pages[range_begin-1:range_end])
+    writer.addpages(pdf.pages[range_begin - 1 : range_end])
     writer.write()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(*sys.argv[1:4])
