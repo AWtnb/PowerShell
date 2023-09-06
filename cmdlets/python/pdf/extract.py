@@ -23,7 +23,7 @@ def main(file_path: str, p_from: str, p_to: str):
             assert 0 < range_begin, "too small start-page!"
         assert 0 != range_end, "end-page index starts from 1 (or -1)!"
         if range_end < 0:
-            range_end = len(pdf.pages) + range_end
+            range_end = len(pdf.pages) + range_end + 1
             assert 0 < range_end, "too small end-page!"
         assert range_begin <= range_end, "start-page is bigger than end-page!"
         assert range_end <= len(pdf.pages), "too big end-page!"
