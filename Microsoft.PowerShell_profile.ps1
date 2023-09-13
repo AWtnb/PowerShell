@@ -473,7 +473,7 @@ function pipinst {
 # wezterm
 
 function Invoke-WeztermConfig {
-    $path = $env:USERPROFILE | Join-Path -ChildPath "Sync\develop\app_setting\wezterm"
+    $path = $env:USERPROFILE | Join-Path -ChildPath "Sync\develop\repo\wezterm-config"
     if (Test-Path $path) {
         "code {0}" -f $path | Invoke-Expression
     }
