@@ -470,6 +470,17 @@ function pipinst {
     Start-Process -Path python.exe -Wait -ArgumentList @("-m","pip","install","--upgrade",$args[0]) -NoNewWindow
 }
 
+# wezterm
+
+function Invoke-WeztermConfig {
+    $path = $env:USERPROFILE | Join-Path -ChildPath "Sync\develop\app_setting\wezterm"
+    if (Test-Path $path) {
+        "code {0}" -f $path | Invoke-Expression
+    }
+    else {
+        "cannot find path: '{0}'" -f $path | Write-Error
+    }
+}
 
 
 # 7zip
