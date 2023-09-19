@@ -546,6 +546,17 @@ Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "toggleVariable" -LongDe
 }
 
 ##############################
+# redo-last-command
+##############################
+
+Set-PSReadLineKeyHandler -Key "alt+y" -BriefDescription "redoLastCommand" -LongDescription "redoLastCommand" -ScriptBlock {
+    [PSBufferState]::new().RevertLine()
+    $lastCmd = ([PSConsoleReadLine]::GetHistoryItems()|Select-Object -Last 1).CommandLine
+    [PSConsoleReadLine]::Insert($lastCmd)
+    [PSConsoleReadLine]::AcceptLine()
+}
+
+##############################
 # yank-last-argument cutomize
 ##############################
 
