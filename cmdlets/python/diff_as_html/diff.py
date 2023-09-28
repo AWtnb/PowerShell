@@ -106,7 +106,7 @@ def main(from_file: str, to_file: str, out_path: str, css_path: str, skip_unchan
         '<head>',
         '<meta charset="utf-8" />',
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />',
-        '<title>Diff</title>',
+        '<title>diff-result</title>',
         css,
         '</head>',
         decode_elem(pd.get_body()),
