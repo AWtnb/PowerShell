@@ -528,6 +528,10 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
     }))
 }
 
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName WithoutSpaces -Value {
+    return $this -replace "\s", ""
+}
+
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName TrimParen -Value {
     return $this -replace "\(.+?\)|（.+?）", ""
 }
