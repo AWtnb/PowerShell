@@ -528,6 +528,14 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
     }))
 }
 
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName TrimParen -Value {
+    return $this -replace "\(.+?\)|（.+?）", ""
+}
+
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName TrimBrackat -Value {
+    return $this -replace "\[.+?\]|［.+?］", ""
+}
+
 function ConvertTo-SHA256Hash {
     param (
         [parameter(ValueFromPipeline)][string]$str
