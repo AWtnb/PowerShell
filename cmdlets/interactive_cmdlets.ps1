@@ -181,3 +181,21 @@ function Invoke-RDriveDatabase {
         $dirs[0].fullname | Invoke-Item
     }
 }
+
+function hinagata {
+    $d = "C:\Personal\tools\templates"
+    if (-not (Test-Path $d)) {
+        return
+    }
+    $n = Get-ChildItem -Path $d -Name | fzf.exe
+    if (-not $n) {
+        return
+    }
+    $p = $d | Join-Path -ChildPath $n
+    Get-Item -Path $p | Get-Content | Set-Clipboard
+    Start-Process "https://awtnb.github.io/hinagata/"
+}
+Set-PSReadLineKeyHandler -Key "ctrl+alt+h" -ScriptBlock {
+    hinagata
+    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+}
