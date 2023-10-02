@@ -65,3 +65,9 @@ tr.filler td::after {
   content: "\fe19";
   font-size: 0.8em;
 }
+
+@media print {
+  tr:hover {
+    background-color: transparent;
+  }
+}
