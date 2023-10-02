@@ -568,7 +568,15 @@ Set-PSReadLineKeyHandler -Key "alt+a" -BriefDescription "yankLastArgAsVariable" 
     [PSConsoleReadLine]::YankLastArg()
     $a = [ASTer]::new()
     $t = $a.GetActiveToken()
-    if ($t.Kind -ne "Variable") {
+    if ($t.Kind -eq "Variable") {
+        return
+    }
+    $lastCmdLine = ([PSConsoleReadLine]::GetHistoryItems()|Select-Object -Last 1).CommandLine
+    $tokens = $null
+    $errors = $null
+    [Management.Automation.Language.Parser]::ParseInput($lastCmdLine, [ref]$tokens, [ref]$errors)
+    $lastCmd = $tokens | Where-Object { $_.TokenFlags -eq "CommandName" } | Select-Object -Last 1
+    if ($lastCmd -in @("v", "sv", "set-variable")) {
         [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), ("$" + $t.Text))
     }
 }
