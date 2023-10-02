@@ -100,13 +100,14 @@ class PyDiff:
 def main(from_file: str, to_file: str, out_path: str, css_path: str, skip_unchanged: bool) -> None:
     css = "<style>{}</style>".format(Path(css_path).read_text("utf-8"))
     pd = PyDiff(from_file, to_file, skip_unchanged)
+    title = Path(out_path).stem
     html_page = "\n".join([
         '<!DOCTYPE html>',
         '<html lang="ja">',
         '<head>',
         '<meta charset="utf-8" />',
         '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />',
-        '<title>diff-result</title>',
+        '<title>{}</title>'.format(title),
         css,
         '</head>',
         decode_elem(pd.get_body()),
