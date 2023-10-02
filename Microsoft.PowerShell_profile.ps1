@@ -460,7 +460,7 @@ function Start-PsStyleRendering {
 # restart keyhac
 function Restart-Keyhac {
     Get-Process | Where-Object {$_.Name -eq "keyhac"} | Stop-Process -Force
-    Start-Process "C:\Users\a-watanabe\Sync\portable_app\keyhac\keyhac.exe"
+    Start-Process ("C:\Users\{0}\Sync\portable_app\keyhac\keyhac.exe" -f $env:USERNAME)
 }
 
 # pip
