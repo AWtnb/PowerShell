@@ -84,9 +84,13 @@ Set-PSReadLineKeyHandler -Key "alt+d" -BriefDescription "openDraft" -LongDescrip
 Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」（）『』『』［］、，。：；／　"
 @{
     "ctrl+RightArrow" = "ForwardWord";
+    "ctrl+DownArrow" = "ForwardWord";
     "ctrl+LeftArrow" = "BackwardWord";
+    "ctrl+UpArrow" = "BackwardWord";
     "ctrl+shift+RightArrow" = "SelectForwardWord";
+    "ctrl+shift+DownArrow" = "SelectForwardWord";
     "ctrl+shift+LeftArrow" = "SelectBackwardWord";
+    "ctrl+shift+UpArrow" = "SelectBackwardWord";
 }.GetEnumerator() | ForEach-Object {
     Set-PSReadLineKeyHandler -Key $_.Key -Function $_.Value
 }
