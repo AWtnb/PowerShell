@@ -197,6 +197,7 @@ Class Prompter {
     [string]$accentFg
     [string]$accentBg
     [string]$markedFg
+    [string]$warningFg
     [string]$subMarkerStart
     [string]$underlineStart
     [string]$stopDeco
@@ -215,6 +216,7 @@ Class Prompter {
         $this.accentFg = $Global:PSStyle.Foreground.PSObject.Properties[$this.color].Value
         $this.accentBg = $Global:PSStyle.Background.PSObject.Properties[$this.color].Value
         $this.markedFg = $Global:PSStyle.Foreground.Black
+        $this.warningFg = $Global:PSStyle.Foreground.BrightRed
         $this.subMarkerStart = $Global:PSStyle.Background.BrightBlack + $this.markedFg
         $this.underlineStart = $Global:PSStyle.Underline + $Global:PSStyle.Foreground.BrightBlack
         $this.stopDeco = $Global:PSStyle.Reset
@@ -231,6 +233,13 @@ Class Prompter {
             + $this.accentFg `
             + $right `
             + $this.stopDeco)
+    }
+
+    [string] GetRepoInfo() {
+        if (Test-Path ".git" -PathType Container) {
+            return $this.warningFg + "[.git]" + $this.stopDeco
+        }
+        return ""
     }
 
     [string] GetWd() {
@@ -255,18 +264,19 @@ Class Prompter {
             + $this.accentBg `
             + $this.markedFg `
             + $leaf `
-            + $this.stopDeco)
+            + $this.stopDeco`
+            + $this.GetRepoInfo())
     }
 
     [string] GetPrompt() {
         if (($pwd.Path | Split-Path -Leaf) -ne "Desktop") {
-            return $Global:PSStyle.Foreground.BrightRed + "#!!>" + $this.stopDeco
+            return $this.warningFg + "#!!>" + $this.stopDeco
         }
         return "#>"
     }
 
     [void] Display() {
-        $this.Fill() | Write-Host
+        Write-Host
         $this.GetWd() | Write-Host
     }
 
