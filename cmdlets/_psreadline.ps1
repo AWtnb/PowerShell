@@ -390,6 +390,13 @@ Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDe
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
 }
+Set-PSReadLineKeyHandler -Key "ctrl+alt+V" -BriefDescription "setClipStringAsSingleText" -LongDescription "setClipStringAsSingleText" -ScriptBlock {
+    $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() |sv CLIPPING'
+    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::Insert($command)
+    [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
+    [PSConsoleReadLine]::AcceptLine()
+}
 
 # open from clipboard path
 function ccat ([string]$encoding = "utf8") {
