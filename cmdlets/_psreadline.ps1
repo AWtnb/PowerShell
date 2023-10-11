@@ -174,6 +174,11 @@ class ASTer {
         return $this.GetPreviousToken().Kind -eq "Pipe"
     }
 
+    ReplaceActiveToken([string]$newText) {
+        $t = $this.GetActiveToken()
+        [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
+    }
+
 }
 
 
@@ -414,7 +419,13 @@ Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDe
 }
 
 
-Set-PSReadLineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWordCustom" -LongDescription "backwardKillWordCustom" -ScriptBlock {
+    $a = [ASTer]::new()
+    $t = $a.GetActiveToken()
+    if ($t.Kind -eq "Parameter") {
+        $a.ReplaceActiveToken("")
+        return
+    }
     if ([PSBufferState]::IsSelecting()) {
         [PSConsoleReadLine]::BackwardDeleteChar()
     }
@@ -545,17 +556,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
     [PSConsoleReadLine]::Insert($s)
 }
 
-# toggle current token as variable
-Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "toggleVariable" -LongDescription "toggleVariable" -ScriptBlock {
-    $a = [ASTer]::new()
-    $t = $a.GetActiveToken()
-    if ($t.Extent.StartOffset -ge $t.Extent.EndOffset) {
-        return
-    }
-    $newText = ($t.Kind -eq "Variable")? $t.Text.Substring(1) : ("$" + $t.Text)
-    [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
-}
-
 ##############################
 # redo-last-command
 ##############################
@@ -578,13 +578,13 @@ Set-PSReadLineKeyHandler -Key "alt+a" -BriefDescription "yankLastArgAsVariable" 
     if ($t.Kind -eq "Variable") {
         return
     }
-    $lastCmdLine = ([PSConsoleReadLine]::GetHistoryItems()|Select-Object -Last 1).CommandLine
+    $lastCmdLine = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
     $tokens = $null
     $errors = $null
     [Management.Automation.Language.Parser]::ParseInput($lastCmdLine, [ref]$tokens, [ref]$errors)
     $lastCmd = $tokens | Where-Object { $_.TokenFlags -eq "CommandName" } | Select-Object -Last 1
     if ($lastCmd -in @("v", "sv", "set-variable")) {
-        [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), ("$" + $t.Text))
+        $a.ReplaceActiveToken(("$" + $t.Text))
     }
 }
 
