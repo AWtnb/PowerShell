@@ -67,18 +67,19 @@ public static void SetState(IntPtr hwnd, bool state) {
 '@ }
 
 function Reset-ConsoleIME {
+    [OutputType([System.Boolean])]
     $hostProc = Get-HostProcess
     if (-not $hostProc) {
-        return 0
+        return $false
     }
     try {
         if ([Pwsh.IME]::GetState($hostProc.MainWindowHandle)) {
             [Pwsh.IME]::SetState($hostProc.MainWindowHandle, $false)
         }
-        return 1
+        return $true
     }
     catch {
-        return 0
+        return $false
     }
 }
 
