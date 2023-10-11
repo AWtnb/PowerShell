@@ -38,6 +38,10 @@ Set-PSReadLineOption -colors @{
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
+# search
+Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearch
+Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearchBackward
+
 # history
 Set-PSReadLineKeyHandler -Key "ctrl+r" -Function ReverseSearchHistory
 Set-PSReadLineKeyHandler -Key "ctrl+R" -Function ForwardSearchHistory
