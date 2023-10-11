@@ -270,10 +270,11 @@ Class Prompter {
     }
 
     [string] GetPrompt() {
+        $prompt = "# "
         if (($pwd.Path | Split-Path -Leaf) -ne "Desktop") {
-            return $this.warningFg + "#!!>" + $this.stopDeco
+            return $this.warningFg + $prompt + $this.stopDeco
         }
-        return "#>"
+        return $prompt
     }
 
     [void] Display() {
