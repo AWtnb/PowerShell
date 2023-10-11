@@ -436,6 +436,7 @@ function Invoke-PdfSplitPagesWithPython {
     }
     end {}
 }
+Set-Alias pdfSplitPagesPy Invoke-PdfSplitPagesWithPython
 
 function Invoke-PdfTextExtractWithPython {
     param (
