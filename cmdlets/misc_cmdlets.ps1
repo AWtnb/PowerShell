@@ -455,35 +455,47 @@ function Invoke-DiffAsHtml {
 }
 
 function Invoke-RecycleBin {
-    <#
-        .EXAMPLE
-        ls | ? Name -match "hoge" | Invoke-RecycleBin
-    #>
-    $target = New-Object System.Collections.ArrayList
-    $input | Where-Object {$_.GetType().Name -in @("DirectoryInfo", "FileInfo")} | ForEach-Object {$target.Add($_) > $null}
-    if (-not $target) {
-        Start-Process shell:RecycleBinFolder
-        return
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+    )
+    begin {
+        $target = @()
     }
-    $counter = 0
-    $target | ForEach-Object {
-        $fullPath = $_.Fullname
-        $fName = $_.Name
-        try {
-            $fullPath | Resolve-Path -Relative | Write-Host -ForegroundColor DarkBlue
-            if ($_.GetType().Name -eq "DirectoryInfo") {
-                [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($fullPath, "OnlyErrorDialogs", "SendToRecycleBin")
-            }
-            elseif ($_.GetType().Name -eq "FileInfo") {
-                [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($fullPath, "OnlyErrorDialogs", "SendToRecycleBin")
-            }
-            $counter += 1
+    process {
+        if (-not $inputObj) {
+            return
         }
-        catch {
-            "ERROR: failed to move '{0}' to recyclebin!" -f $fName | Write-Error
+        if (Test-Path $inputObj) {
+            $target += (Get-Item -LiteralPath $inputObj).FullName
         }
     }
-    "Recycled {0} items." -f $counter | Write-Host -ForegroundColor Cyan
+    end {
+        if ($target.Length -lt 1) {
+            Start-Process shell:RecycleBinFolder
+            return
+        }
+        $errCounter = 0
+        $target | ForEach-Object {
+            $fullPath = $_
+            $name = $fullPath | Split-Path -Leaf
+            try {
+                $fullPath | Resolve-Path -Relative | Write-Host -ForegroundColor DarkBlue
+                if (Test-Path $fullPath -PathType Container) {
+                    [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($fullPath, "OnlyErrorDialogs", "SendToRecycleBin")
+                    return
+                }
+                if (Test-Path $fullPath -PathType Leaf) {
+                    [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile($fullPath, "OnlyErrorDialogs", "SendToRecycleBin")
+                    return
+                }
+            }
+            catch {
+                $errCounter += 1
+                "ERROR: failed to move '{0}' to recyclebin!" -f $name | Write-Error
+            }
+        }
+        "Recycled {0} items." -f ($target.Length - $errCounter) | Write-Host -ForegroundColor Cyan
+    }
 }
 Set-Alias gomi Invoke-RecycleBin
 
