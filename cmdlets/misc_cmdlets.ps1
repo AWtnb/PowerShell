@@ -474,12 +474,13 @@ function Invoke-RecycleBin {
             Start-Process shell:RecycleBinFolder
             return
         }
-        $errCounter = 0
+        $counter = 0
         $target | ForEach-Object {
             $fullPath = $_
+            $counter += 1
             $name = $fullPath | Split-Path -Leaf
+            "- Recycling {0} of {1}: '{2}'" -f $counter, $target.Length, ($fullPath | Resolve-Path -Relative) | Write-Host -ForegroundColor DarkBlue
             try {
-                $fullPath | Resolve-Path -Relative | Write-Host -ForegroundColor DarkBlue
                 if (Test-Path $fullPath -PathType Container) {
                     [Microsoft.VisualBasic.FileIO.FileSystem]::DeleteDirectory($fullPath, "OnlyErrorDialogs", "SendToRecycleBin")
                     return
@@ -494,7 +495,6 @@ function Invoke-RecycleBin {
                 "ERROR: failed to move '{0}' to recyclebin!" -f $name | Write-Error
             }
         }
-        "Recycled {0} items." -f ($target.Length - $errCounter) | Write-Host -ForegroundColor Cyan
     }
 }
 Set-Alias gomi Invoke-RecycleBin
