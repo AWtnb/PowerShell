@@ -487,15 +487,13 @@ Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-inden
     [PSConsoleReadLine]::Insert("`n" + $filler)
 }
 
-# ctrl+shift+]
-Set-PSReadLineKeyHandler -Key "ctrl+shift+Oem6" -BriefDescription "dupl-down" -LongDescription "duplicate-currentline-down" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+j" -BriefDescription "dupl-down" -LongDescription "duplicate-currentline-down" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $curLine = $bs.CursorLine.Text
     $curLineStart = $bs.CursorLine.StartPos
     [PSConsoleReadLine]::Replace($curLineStart, $curLine.Length, $curLine+"`n"+$curLine)
 }
-# ctrl+shift+[
-Set-PSReadLineKeyHandler -Key "ctrl+shift+Oem4" -BriefDescription "dupl-up" -LongDescription "duplicate-currentline-up" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+k" -BriefDescription "dupl-up" -LongDescription "duplicate-currentline-up" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $curLine = $bs.CursorLine.Text
     $curLineStart = $bs.CursorLine.StartPos
