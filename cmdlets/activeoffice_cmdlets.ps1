@@ -261,7 +261,7 @@ function Invoke-GrepOnActiveWordDocument {
     }
 
     if ($grep.Matches.Count -gt 0) {
-        "total match: {0}" -f $grep.Matches.Count | Write-Host -ForegroundColor Cyan
+        "total match: {0} in '{1}'" -f $grep.Matches.Count, $adoc.Document.Name | Write-Host -ForegroundColor Cyan
     }
 }
 Set-Alias grad Invoke-GrepOnActiveWordDocument
