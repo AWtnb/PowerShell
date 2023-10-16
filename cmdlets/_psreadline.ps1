@@ -431,7 +431,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDe
 Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWordCustom" -LongDescription "backwardKillWordCustom" -ScriptBlock {
     $a = [ASTer]::new()
     $t = $a.GetActiveToken()
-    if ($t.Kind -eq "Parameter") {
+    if ($t.Kind -in @("Parameter", "StringExpandable", "StringLiteral")) {
         $a.ReplaceActiveToken("")
         return
     }
@@ -439,6 +439,9 @@ Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWo
         [PSConsoleReadLine]::BackwardDeleteChar()
     }
     [PSConsoleReadLine]::BackwardKillWord()
+    if ([ASTer]::new().GetActiveToken().Text -eq "-") {
+        [PSConsoleReadLine]::BackwardDeleteChar()
+    }
 }
 Set-PSReadLineKeyHandler -Key "ctrl+delete" -ScriptBlock {
     if ([PSBufferState]::IsSelecting()) {
