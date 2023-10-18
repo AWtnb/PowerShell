@@ -785,6 +785,12 @@ Set-PSReadLineKeyHandler -Key "alt+b" -BriefDescription "bat-plain" -LongDescrip
     [PSConsoleReadLine]::Insert($prefix + "oss|bat -p")
 }
 
+Set-PSReadLineKeyHandler -Key "ctrl+alt+b" -BriefDescription "review-last-result-with-bat" -LongDescription "review-last-result-with-bat" -ScriptBlock {
+    $lastCmd = ([PSConsoleReadLine]::GetHistoryItems()|Select-Object -Last 1).CommandLine
+    $newCmd = "<#SKIPHISTORY#>" + $lastCmd + "| oss|bat -p"
+    [PSConsoleReadLine]::Insert($newCmd)
+}
+
 Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object" -LongDescription "insert-Select-Object" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
