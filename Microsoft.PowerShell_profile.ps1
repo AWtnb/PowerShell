@@ -710,11 +710,10 @@ function Write-StringHighLight {
         [string]$pattern
         ,[switch]$case
         ,[ValidateSet("Black","Red","Green","Yellow","Blue","Magenta","Cyan","White","BrightBlack","BrightRed","BrightGreen","BrightYellow","BrightBlue","BrightMagenta","BrightCyan","BrightWhite")][string]$color = "Yellow"
-        ,[switch]$continuous
     )
     $hi = [PsHighlight]::new($pattern, $color, $case)
     foreach ($line in $input) {
-        $hi.Markup($line) | Write-Host -NoNewline:$continuous
+        $hi.Markup($line) | Write-Output
     }
 }
 Set-Alias hilight Write-StringHighLight
