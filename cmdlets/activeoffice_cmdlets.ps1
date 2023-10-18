@@ -236,16 +236,17 @@ function Get-MatchPatternOnActiveWordDocument {
 
 function Invoke-GrepOnActiveWordDocument {
     <#
-        .SYNOPSIS
-        現在開かれているアクティブなWord文書に対するGrep
         .PARAMETER pattern
-        検索語
+        regexp
         .PARAMETER case
-        指定時は大文字小文字を区別
+        case-seinsitivity
+        .PARAMETER asObject
+        return as PSCustomObject
     #>
     param (
         [parameter(Mandatory)]$pattern
         ,[switch]$case
+        ,[switch]$asObject
     )
 
     $adoc = [ActiveDocument]::new()
@@ -255,6 +256,9 @@ function Invoke-GrepOnActiveWordDocument {
     }
 
     $grep = $paragraphs | Select-String -Pattern $pattern -AllMatches -CaseSensitive:$case
+    if ($asObject) {
+        return $grep
+    }
     foreach ($g in $grep) {
         "{0:d4}:" -f $g.LineNumber | Write-Host -ForegroundColor Blue -NoNewline
         $g.Line | hilight -pattern $pattern -case:$case
