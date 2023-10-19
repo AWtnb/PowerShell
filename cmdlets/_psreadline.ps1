@@ -178,6 +178,11 @@ class ASTer {
         return $this.GetPreviousToken().Kind -eq "Pipe"
     }
 
+    ReplaceTokenByIndex([int]$index, [string]$newText) {
+        $t = $this.tokens[$index]
+        [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
+    }
+
     ReplaceActiveToken([string]$newText) {
         $t = $this.GetActiveToken()
         [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
@@ -429,18 +434,24 @@ Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDe
 
 
 Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWordCustom" -LongDescription "backwardKillWordCustom" -ScriptBlock {
-    $a = [ASTer]::new()
-    $t = $a.GetActiveToken()
-    if ($t.Kind -in @("Parameter", "StringExpandable", "StringLiteral")) {
-        $a.ReplaceActiveToken("")
-        return
-    }
     if ([PSBufferState]::IsSelecting()) {
         [PSConsoleReadLine]::BackwardDeleteChar()
+        return
     }
-    [PSConsoleReadLine]::BackwardKillWord()
-    if ([ASTer]::new().GetActiveToken().Text -eq "-") {
-        [PSConsoleReadLine]::BackwardDeleteChar()
+
+    $a = [ASTer]::new()
+    $t = $a.GetActiveToken()
+    $i = $a.GetActiveTokenIndex()
+    if($i -eq 0) {
+        [PSConsoleReadLine]::BackwardKillWord()
+        return
+    }
+
+    if ($a.IsStartOfToken() -or $t.Kind -eq "EndOfInput") {
+        $a.ReplaceTokenByIndex($i - 1, "")
+    }
+    else {
+        $a.ReplaceActiveToken("")
     }
 }
 Set-PSReadLineKeyHandler -Key "ctrl+delete" -ScriptBlock {
