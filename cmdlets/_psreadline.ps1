@@ -440,13 +440,13 @@ Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWo
     }
 
     $a = [ASTer]::new()
-    $t = $a.GetActiveToken()
     $i = $a.GetActiveTokenIndex()
     if($i -eq 0) {
         [PSConsoleReadLine]::BackwardKillWord()
         return
     }
 
+    $t = $a.GetActiveToken()
     if ($a.IsStartOfToken() -or $t.Kind -eq "EndOfInput") {
         $a.ReplaceTokenByIndex($i - 1, "")
     }
