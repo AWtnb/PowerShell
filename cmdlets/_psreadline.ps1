@@ -191,6 +191,19 @@ class ASTer {
 }
 
 
+Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debutActiveToken" -LongDescription "debutActiveToken" -ScriptBlock {
+    $a = [Aster]::new()
+    $t = $a.GetActiveToken()
+    $o = [PSCustomObject]@{
+        "Kind" = $t.Kind;
+        "Text" = $t.Text;
+    }
+    [PSConsoleReadLine]::ClearScreen()
+    [System.Console]::WriteLine()
+    [System.Console]::WriteLine($o)
+    [PSConsoleReadLine]::SetCursorPosition($a.cursor)
+}
+
 Set-PSReadlineKeyHandler -Key "ctrl+alt+k" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
     $a = [ASTer]::new()
     $lastPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $a.cursor} | Select-Object -Last 1
