@@ -49,6 +49,7 @@ def main(input_file_path: str, output_file_path: str, ignore_paren: bool = False
             for t in tknzr.tokenize(pl.line, tokenizer.Tokenizer.SplitMode.C):
                 pl.tokens.append({
                     "surface": t.surface(),
+                    "dict_form": t.dictionary_form(),
                     "pos": t.part_of_speech()[0],
                     "reading": t.reading_form(),
                 })
