@@ -354,7 +354,7 @@ function iit {
     )
     begin {}
     process {
-        $path = (Get-Item $inputLine).FullName
+        $path = ($inputLine.length)? (Get-Item $inputLine).FullName : (Get-Location).Path
         if ((Test-Path $env:TABLACUS_PATH) -and (Test-Path $path -PathType Container)) {
             Start-Process $env:TABLACUS_PATH -ArgumentList $path
         }
