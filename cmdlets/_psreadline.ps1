@@ -101,8 +101,8 @@ Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」
 
 # https://github.com/pecigonzalo/Oh-My-Posh/blob/master/plugins/psreadline/psreadline.ps1
 class ASTer {
-    $ast
-    $tokens
+    [System.Management.Automation.Language.Ast[]]$ast
+    [System.Management.Automation.Language.Token[]]$tokens
     $errors
     $cursor
     ASTer() {
@@ -460,11 +460,13 @@ Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWo
     }
 
     $t = $a.GetActiveToken()
-    if ($a.IsStartOfToken() -or $t.Kind -eq "EndOfInput") {
-        $a.ReplaceTokenByIndex($i - 1, "")
+    $s = $t.Extent.StartOffset
+    $len = $a.cursor - $s
+    if ($len -lt 1) {
+        [PSConsoleReadLine]::BackwardDeleteChar()
     }
     else {
-        $a.ReplaceActiveToken("")
+        [PSConsoleReadLine]::Replace($s, $len, "")
     }
 }
 Set-PSReadLineKeyHandler -Key "ctrl+delete" -ScriptBlock {
