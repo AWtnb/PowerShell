@@ -950,3 +950,16 @@ function Find-MissingValuesInSerialNumber {
         }
     }
 }
+
+function Get-ClipboardFontInfo {
+    $cb = [System.Windows.Clipboard]::GetData([System.Windows.Forms.DataFormats]::Rtf)
+    if (-not $cb) {
+        return
+    }
+    $rtb = [System.Windows.Forms.RichTextBox]::new()
+    $font = $null
+    $rtb.Rtf = $cb
+    $font = $rtb.SelectionFont
+    Remove-Variable rtb -ErrorAction SilentlyContinue
+    return $font
+}
