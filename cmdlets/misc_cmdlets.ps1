@@ -965,12 +965,14 @@ function Get-ClipboardFontInfo {
     $font = $null
     $font = $rtb.SelectionFont
     $font | Add-Member -MemberType NoteProperty -Name "SelectedText" -Value $rtb.Text
+    $font | Add-Member -MemberType NoteProperty -Name "TargetCharacter" -Value $rtb.Text.Substring(0, 1)
     Remove-Variable rtb -ErrorAction SilentlyContinue
     if ($detail) {
         return $font
     }
     return [PSCustomObject]@{
         "SelectedText" = $font.SelectedText;
+        "TargetCharacter" = $font.TargetCharacter;
         "OriginalFontName" = $font.OriginalFontName;
         "Size" = $font.SizeInPoints;
     }
