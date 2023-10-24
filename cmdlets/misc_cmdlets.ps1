@@ -952,6 +952,9 @@ function Find-MissingValuesInSerialNumber {
 }
 
 function Get-ClipboardFontInfo {
+    param (
+        [switch]$detail
+    )
     $cb = [System.Windows.Clipboard]::GetData([System.Windows.Forms.DataFormats]::Rtf)
     if (-not $cb) {
         return
@@ -960,6 +963,15 @@ function Get-ClipboardFontInfo {
     $font = $null
     $rtb.Rtf = $cb
     $font = $rtb.SelectionFont
+    $font | Add-Member -MemberType NoteProperty -Name "SelectedText" -Value $rtb.Text
     Remove-Variable rtb -ErrorAction SilentlyContinue
-    return $font
+    if ($detail) {
+        return $font
+    }
+    return [PSCustomObject]@{
+        "SelectedText" = $font.SelectedText;
+        "OriginalFontName" = $font.OriginalFontName;
+        "Size" = $font.SizeInPoints;
+        "Style" = $font.Style;
+    }
 }
