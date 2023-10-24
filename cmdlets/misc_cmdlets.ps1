@@ -975,6 +975,7 @@ function Get-ClipboardFontInfo {
         "TargetCharacter" = $font.TargetCharacter;
         "OriginalFontName" = $font.OriginalFontName;
         "Size" = $font.SizeInPoints;
-        "LineHeight" = $font.Height;
+        "Height" = $font.Height;
     }
 }
+Set-Alias gcbf Get-ClipboardFontInfo
