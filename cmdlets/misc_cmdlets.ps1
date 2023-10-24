@@ -957,11 +957,12 @@ function Get-ClipboardFontInfo {
     )
     $cb = [System.Windows.Clipboard]::GetData([System.Windows.Forms.DataFormats]::Rtf)
     if (-not $cb) {
+        "No Rich Text Data..." | Write-Host
         return
     }
     $rtb = [System.Windows.Forms.RichTextBox]::new()
-    $font = $null
     $rtb.Rtf = $cb
+    $font = $null
     $font = $rtb.SelectionFont
     $font | Add-Member -MemberType NoteProperty -Name "SelectedText" -Value $rtb.Text
     Remove-Variable rtb -ErrorAction SilentlyContinue
@@ -972,6 +973,5 @@ function Get-ClipboardFontInfo {
         "SelectedText" = $font.SelectedText;
         "OriginalFontName" = $font.OriginalFontName;
         "Size" = $font.SizeInPoints;
-        "Style" = $font.Style;
     }
 }
