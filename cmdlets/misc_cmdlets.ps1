@@ -963,19 +963,23 @@ function Get-ClipboardFontInfo {
     $rtb = [System.Windows.Forms.RichTextBox]::new()
     $rtb.Rtf = $cb
     $font = $null
-    $font = $rtb.SelectionFont
-    $font | Add-Member -MemberType NoteProperty -Name "SelectedText" -Value $rtb.Text
-    $font | Add-Member -MemberType NoteProperty -Name "TargetCharacter" -Value $rtb.Text.Substring(0, 1)
-    Remove-Variable rtb -ErrorAction SilentlyContinue
-    if ($detail) {
-        return $font
+    for ($i = 0; $i -lt $rtb.Text.length; $i++) {
+        $rtb.Select($i, 1)
+        $font = $rtb.SelectionFont
+        if ($detail) {
+            $font | Add-Member -MemberType NoteProperty -Name "Text" -Value $rtb.SelectedText
+            $font | Write-Output
+        }
+        else {
+            [PSCustomObject]@{
+            "Text" = $rtb.SelectedText;
+            "OriginalFontName" = $font.OriginalFontName;
+            "Size" = $font.SizeInPoints;
+            "Style" = $font.Style;
+            } | Write-Output
+        }
+        $font | Clear-Variable -ErrorAction SilentlyContinue
     }
-    return [PSCustomObject]@{
-        "SelectedText" = $font.SelectedText;
-        "TargetCharacter" = $font.TargetCharacter;
-        "OriginalFontName" = $font.OriginalFontName;
-        "Size" = $font.SizeInPoints;
-        "Style" = $font.Style;
-    }
+    $rtb | Clear-Variable -ErrorAction SilentlyContinue
 }
 Set-Alias gcbf Get-ClipboardFontInfo
