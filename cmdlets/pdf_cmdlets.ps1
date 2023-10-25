@@ -438,6 +438,26 @@ function Invoke-PdfSplitPagesWithPython {
 }
 Set-Alias pdfSplitPagesPy Invoke-PdfSplitPagesWithPython
 
+function Invoke-PdfCompressWithPython {
+    param (
+        [parameter(ValueFromPipeline)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
+    )
+    begin {
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("compress.py")
+        $py.RunCommand(@($file.FullName))
+    }
+    end {}
+}
+Set-Alias pdfCompressPy Invoke-PdfCompressWithPython
+
 function Invoke-PdfTextExtractWithPython {
     param (
         [parameter(ValueFromPipeline)]
