@@ -1,5 +1,5 @@
 """
-pdfrw で PDF からページ範囲を指定して抜き出す
+extract pdf page with pdfrw.
 encoding: utf8
 """
 

@@ -1,5 +1,5 @@
 """
-pdfrw でB4ゲラの余白を取り除く
+trim margin of B4 size pdf with pdfrw.
 encoding: utf8
 """
 

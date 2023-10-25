@@ -1,5 +1,5 @@
 """
-pdfrw で PDF にファイル名の透かしを入れる
+insert watermark of filename with pdfrw.
 encoding: utf8
 """
 

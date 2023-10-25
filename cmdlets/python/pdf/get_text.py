@@ -1,5 +1,5 @@
 """
-pymupdf で PDF からテキスト抽出
+extract text from pdf with pymupdf.
 encoding: utf8
 """
 

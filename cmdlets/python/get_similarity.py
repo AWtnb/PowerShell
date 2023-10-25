@@ -1,5 +1,5 @@
 """
-類似した行を取得する
+get similality of lines.
 
 encoding: utf8
 """

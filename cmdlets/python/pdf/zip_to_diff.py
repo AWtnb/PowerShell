@@ -1,5 +1,5 @@
 """
-2つの PDF を互い違いに結合する。各ページにファイル名を透かしとして入れる
+Combine two PDFs alternately and insert watermark of filename.
 encoding: utf8
 """
 

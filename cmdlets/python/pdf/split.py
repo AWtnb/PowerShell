@@ -1,5 +1,5 @@
 """
-pdfrw で PDF をページごとに分割する
+split pages of pdf with pdfrw.
 encoding: utf8
 """
 

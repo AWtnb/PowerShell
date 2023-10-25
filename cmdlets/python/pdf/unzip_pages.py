@@ -1,5 +1,5 @@
 """
-pdfrw で PDF の奇数／偶数ページを抽出する
+extract only even / odd pages of pdf with pdfrw.
 encoding: utf8
 """
 

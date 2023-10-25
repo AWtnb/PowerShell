@@ -1,5 +1,5 @@
 """
-PyPDF2 で PDF を圧縮する
+Compress pdf with PyPDF2.
 encoding: utf8
 """
 

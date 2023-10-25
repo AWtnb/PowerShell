@@ -1,5 +1,5 @@
 """
-pdfrw でB4ゲラ中央に配置された単ページを半ページサイズに切り出す
+Cut out a single page centered on B4 to half page size using pdfrw.
 encoding: utf8
 """
 

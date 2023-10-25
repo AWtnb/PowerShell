@@ -1,5 +1,5 @@
 """
-pdfrw で PDF を結合する
+concaternate pdf with pdfrw.
 encoding: utf8
 """
 

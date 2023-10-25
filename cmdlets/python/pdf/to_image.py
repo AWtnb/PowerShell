@@ -1,5 +1,5 @@
 """
-PyMuPDF で PDF を画像に変換する
+convert pdf to image file with PyMuPDF.
 encoding: utf8
 """
 

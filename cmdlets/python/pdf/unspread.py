@@ -1,5 +1,5 @@
 """
-pdfrw で見開きの PDF を単ページに分割する
+split spreaded pdf pages to single pages with pdfrw.
 encoding: utf8
 """
 

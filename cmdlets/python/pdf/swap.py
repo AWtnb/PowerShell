@@ -1,5 +1,5 @@
 """
-pdfrw で PDF の指定ページを別ファイルに差し替える
+swap pages of pdf with pdfrw.
 encoding: utf8
 """
 

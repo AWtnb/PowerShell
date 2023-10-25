@@ -1,5 +1,5 @@
 """
-pdfrw で PDF 同士を重ねる
+overlay pdfs with pdfrw.
 encoding: utf8
 """
 

@@ -1,8 +1,7 @@
 """
-sudachiPy で形態素解析して JSON 形式でファイルに出力する
+tokenize Japanese with sudachiPy and export to JSON.
 
-ビルドに rust を使用するようになったので、初回の pip install 時に rust がインストールされている必要がある。
-エラーメッセージで案内される https://rustup.rs/ をインストールして本体を再起動してから実行すれば解決する（はず）。
+- require: rusup (https://rustup.rs/) for initial build.
 
 encoding: utf8
 """

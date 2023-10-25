@@ -1,5 +1,5 @@
 """
-2つの PDF を互い違いに結合する
+Combine two PDFs alternately
 encoding: utf8
 """
 

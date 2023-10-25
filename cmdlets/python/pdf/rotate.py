@@ -1,5 +1,5 @@
 """
-pdfrw で PDF を回転させる
+rotate pdf with pdfrw.
 encoding: utf8
 """
 

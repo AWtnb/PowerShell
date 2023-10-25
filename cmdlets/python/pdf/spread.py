@@ -1,5 +1,5 @@
 """
-pdfrw で単ページ PDF を見開きにする
+spread pair of pdf pages with pdfrw.
 encoding: utf8
 """
 
