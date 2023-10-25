@@ -26,7 +26,7 @@ td {
 }
 td[nowrap] {
   white-space: pre-line !important;
-  word-break: break-word;
+  word-break: break-all;
   width: 300px;
 }
 td.diff_header {
