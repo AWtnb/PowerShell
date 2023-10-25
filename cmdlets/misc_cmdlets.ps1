@@ -955,7 +955,7 @@ function Get-ClipboardFontInfo {
     param (
         [switch]$detail
     )
-    $cb = [System.Windows.Clipboard]::GetData([System.Windows.Forms.DataFormats]::Rtf)
+    $cb = [System.Windows.Forms.Clipboard]::GetData([System.Windows.Forms.DataFormats]::Rtf)
     if (-not $cb) {
         "No Rich Text Data..." | Write-Host
         return
