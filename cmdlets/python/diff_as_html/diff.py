@@ -56,6 +56,7 @@ class PyDiff:
             for i, table_cell in enumerate(table_row.xpath("td")):
                 if i in (0, 3):
                     continue
+                table_cell.attrib.pop("nowrap", None)
                 tr.append(table_cell)
             if tr.xpath("//span"):
                 tr.classes.add("changed")
