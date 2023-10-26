@@ -1,5 +1,4 @@
 import argparse
-import re
 from pathlib import Path
 
 import diff_match_patch
@@ -8,12 +7,17 @@ import lxml.html
 
 class PyDiff:
     def __init__(self, from_file: str, to_file: str) -> None:
-        from_content = Path(from_file).read_text("utf-8")
-        to_content = Path(to_file).read_text("utf-8")
+        from_path = Path(from_file)
+        to_path = Path(to_file)
+        from_content = from_path.read_text("utf-8")
+        to_content = to_path.read_text("utf-8")
 
         dmp = diff_match_patch.diff_match_patch()
         diffs = dmp.diff_main(from_content, to_content)
         dmp.diff_cleanupSemantic(diffs)
+        self._heading = "<h1>'{}'→'{}'</h1>".format(
+            from_path.name, to_path.name
+        )
         self._diff_html = dmp.diff_prettyHtml(diffs)
 
     def _compress_markup(self) -> str:
@@ -22,6 +26,8 @@ class PyDiff:
         root.classes.add("diff-container")
         for elem in list(diff_html):
             if elem.tag != "span":
+                if elem.tag == "del":
+                    elem.attrib["inert"] = "true"
                 root.append(elem)
             else:
                 text_list = [t for t in elem.xpath("text()")]
@@ -41,10 +47,10 @@ class PyDiff:
 
     def get_markup(self, compress: bool = False) -> str:
         if compress:
-            return self._compress_markup()
+            return self._heading + self._compress_markup()
         diff_html = lxml.html.fromstring(self._diff_html)
         diff_html.classes.add("diff-container")
-        return lxml.html.tostring(diff_html, encoding="unicode")
+        return self._heading + lxml.html.tostring(diff_html, encoding="unicode")
 
 
 def main(
