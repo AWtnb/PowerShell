@@ -30,11 +30,13 @@ class PyDiff:
                 else:
                     filler = lxml.html.Element("span")
                     filler.classes.add("filler")
-                    new_span = lxml.html.Element("span")
-                    new_span.text = text_list[0]
-                    new_span.append(filler)
-                    new_span.tail = text_list[-1]
-                    root.append(new_span)
+                    compressed_prefix = lxml.html.Element("span")
+                    compressed_prefix.text = text_list[0]
+                    compressed_prefix.append(filler)
+                    root.append(compressed_prefix)
+                    compressed_suffix = lxml.html.Element("span")
+                    compressed_suffix.text = text_list[-1]
+                    root.append(compressed_suffix)
         return lxml.html.tostring(root, encoding="unicode")
 
     def get_markup(self, compress: bool = False) -> str:
