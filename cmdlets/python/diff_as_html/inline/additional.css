@@ -1,0 +1,6 @@
+span.filler::before {
+  margin: 20px;
+  display: block;
+  content: "\fe19";
+  color: gray;
+}

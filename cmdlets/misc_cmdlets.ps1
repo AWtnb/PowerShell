@@ -440,13 +440,15 @@ function Invoke-DiffAsHtml {
         [parameter(Mandatory)][string]$from
         ,[parameter(Mandatory)][string]$to
         ,[string]$outName = "out"
+        ,[switch]$inline
         ,[switch]$compress
     )
     $outName = ($outName.EndsWith(".html"))? $outName : $outName + ".html"
     $fromPath = Resolve-Path -Path $from
     $toPath = Resolve-Path -Path $to
     $outPath = $pwd.Path | Join-Path -ChildPath $outName
-    $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\diff_as_html\diff.py"
+    $childPath = ($inline)? "python\diff_as_html\inline\diff.py" : "python\diff_as_html\diff.py"
+    $pyCodePath = $PSScriptRoot | Join-Path -ChildPath $childPath
     $cmd = 'python -B "{0}" "{1}" "{2}" "{3}"' -f $pyCodePath, $fromPath, $toPath, $outPath
     if ($compress) {
         $cmd += " --compress"
