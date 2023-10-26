@@ -50,6 +50,9 @@ class PyDiff:
             return self._heading + self._compress_markup()
         diff_html = lxml.html.fromstring(self._diff_html)
         diff_html.classes.add("diff-container")
+        for elem in list(diff_html):
+            if elem.tag == "del":
+                elem.attrib["inert"] = "true"
         return self._heading + lxml.html.tostring(diff_html, encoding="unicode")
 
 
