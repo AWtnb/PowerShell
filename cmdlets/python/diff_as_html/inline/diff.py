@@ -35,7 +35,7 @@ class PyDiff:
         root.classes.add("diff-container")
         for elem in list(self._diff_tree):
             if elem.tag != "span":
-                    root.append(elem)
+                root.append(elem)
             else:
                 text_list = [t for t in elem.xpath("text()")]
                 if len(text_list) < 3:
@@ -59,9 +59,15 @@ class PyDiff:
 
 
 def main(
-    from_file: str, to_file: str, out_path: str, css_path: str, compress: bool
+    from_file: str,
+    to_file: str,
+    out_path: str,
+    css_path: str,
+    js_path: str,
+    compress: bool,
 ) -> None:
     css = "<style>{}</style>".format(Path(css_path).read_text("utf-8"))
+    js = "<script>{}</script>".format(Path(js_path).read_text("utf-8"))
     pd = PyDiff(from_file, to_file)
     title = Path(out_path).stem
     page_markup = "\n".join(
@@ -76,6 +82,7 @@ def main(
             "</head>",
             "<body>",
             '<div class="main">{}</div>'.format(pd.get_markup(compress)),
+            js,
             "</body>",
             "</html>",
         ]
@@ -92,4 +99,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     css_path = Path(__file__).with_name("additional.css")
-    main(args.fromFile, args.toFile, args.outFile, css_path, args.compress)
+    js_path = Path(__file__).with_name("event.js")
+    main(
+        args.fromFile,
+        args.toFile,
+        args.outFile,
+        css_path,
+        js_path,
+        args.compress,
+    )
