@@ -88,7 +88,7 @@ function Set-Keyrate {
 }
 
 Invoke-Command -ScriptBlock {
-    $delay = 240
+    $delay = 200
     $rate = 16
     Set-Keyrate -delay $delay -rate $rate
 }
