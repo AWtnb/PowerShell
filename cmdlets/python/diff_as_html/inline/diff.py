@@ -26,6 +26,7 @@ class PyDiff:
         root.classes.add("diff-container")
         for elem in list(diff_html):
             if elem.tag != "span":
+                elem.attrib.pop("style", None)
                 if elem.tag == "del":
                     elem.attrib["inert"] = "true"
                 root.append(elem)
