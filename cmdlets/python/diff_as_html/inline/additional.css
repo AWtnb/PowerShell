@@ -24,3 +24,7 @@ del {
   border: 1px solid #05374b;
   color: #929292;
 }
+
+.compress {
+  display: none;
+}

@@ -1,7 +1,11 @@
-
-const setVisibility = (query, display) => {
+const compressElem = (query) => {
   Array.from(document.querySelectorAll(query)).forEach((elem) => {
-    elem.style.display = display;
+    elem.classList.add("compress")
+  });
+};
+const recoverElem = (query) => {
+  Array.from(document.querySelectorAll(query)).forEach((elem) => {
+    elem.classList.remove("compress")
   });
 };
 
@@ -10,18 +14,18 @@ document.addEventListener(
   function (e) {
     const pressed = (e.ctrlKey ? "C-" : "") + (e.altKey ? "A-" : "") + (e.shiftKey ? "S-" : "") + e.key.toLowerCase();
     if (pressed == "f") {
-      setVisibility("ins", "none")
-      setVisibility("del", "inline")
+      compressElem("ins")
+      recoverElem("del")
       return;
     }
     if (pressed == "t") {
-      setVisibility("del", "none")
-      setVisibility("ins", "inline")
+      compressElem("del")
+      recoverElem("ins")
       return;
     }
     if (pressed == "r") {
-      setVisibility("del", "inline")
-      setVisibility("ins", "inline")
+      recoverElem("del")
+      recoverElem("ins")
       return;
     }
   },
