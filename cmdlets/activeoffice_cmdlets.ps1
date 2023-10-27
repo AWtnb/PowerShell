@@ -271,6 +271,15 @@ function Invoke-GrepOnActiveWordDocument {
 Set-Alias grad Invoke-GrepOnActiveWordDocument
 
 
+function Get-ActiveWordDocumentFinalTextContent {
+    $word = Get-ActiveWordApp
+    if (-not $word) {
+        return
+    }
+    $word.ActiveDocument.AcceptAllRevisions()
+    $word.Selection.WholeStory()
+    Get-ActiveWordDocumentParagraphs | Write-Output
+}
 
 function Copy-ActiveWordDocument {
     $word = Get-ActiveWordApp
