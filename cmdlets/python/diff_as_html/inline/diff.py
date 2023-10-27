@@ -34,15 +34,13 @@ class PyDiff:
                 if len(text_list) < 3:
                     root.append(elem)
                 else:
+                    compressed = lxml.html.Element("span")
+                    compressed.text = text_list[0]
                     filler = lxml.html.Element("span")
                     filler.classes.add("filler")
-                    compressed_prefix = lxml.html.Element("span")
-                    compressed_prefix.text = text_list[0]
-                    compressed_prefix.append(filler)
-                    root.append(compressed_prefix)
-                    compressed_suffix = lxml.html.Element("span")
-                    compressed_suffix.text = text_list[-1]
-                    root.append(compressed_suffix)
+                    filler.tail = text_list[-1]
+                    compressed.append(filler)
+                    root.append(compressed)
         return lxml.html.tostring(root, encoding="unicode")
 
     def get_markup(self, compress: bool = False) -> str:
