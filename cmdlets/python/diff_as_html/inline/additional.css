@@ -35,3 +35,9 @@ del {
   height: calc(1em + 2px);
   box-sizing: border-box;
 }
+
+br {
+  display: block;
+  content: "";
+  margin: 0.5em 0;
+}
