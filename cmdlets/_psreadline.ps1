@@ -596,7 +596,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
 # redo-last-command
 ##############################
 
-Set-PSReadLineKeyHandler -Key "alt+y" -BriefDescription "redoLastCommand" -LongDescription "redoLastCommand" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDescription "redoLastCommand" -ScriptBlock {
     [PSBufferState]::new().RevertLine()
     $lastCmd = ([PSConsoleReadLine]::GetHistoryItems()|Select-Object -Last 1).CommandLine
     [PSConsoleReadLine]::Insert($lastCmd)
