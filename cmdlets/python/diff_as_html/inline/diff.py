@@ -18,18 +18,24 @@ class PyDiff:
         self._heading = "<h1>'{}'→'{}'</h1>".format(
             from_path.name, to_path.name
         )
-        self._diff_html = dmp.diff_prettyHtml(diffs)
 
-    def _compress_markup(self) -> str:
-        diff_html = lxml.html.fromstring(self._diff_html)
-        root = lxml.html.Element("div")
-        root.classes.add("diff-container")
-        for elem in list(diff_html):
+        diff_html = dmp.diff_prettyHtml(diffs)
+        diff_tree = lxml.html.fromstring(diff_html)
+        diff_tree.classes.add("diff-container")
+        for elem in list(diff_tree):
             if elem.tag != "span":
                 elem.attrib.pop("style", None)
                 if elem.tag == "del":
                     elem.attrib["inert"] = "true"
-                root.append(elem)
+
+        self._diff_tree = diff_tree
+
+    def _compress_markup(self) -> lxml.html.Element:
+        root = lxml.html.Element("div")
+        root.classes.add("diff-container")
+        for elem in list(self._diff_tree):
+            if elem.tag != "span":
+                    root.append(elem)
             else:
                 text_list = [t for t in elem.xpath("text()")]
                 if len(text_list) < 3:
@@ -42,17 +48,14 @@ class PyDiff:
                     filler.tail = text_list[-1]
                     compressed.append(filler)
                     root.append(compressed)
-        return lxml.html.tostring(root, encoding="unicode")
+        return root
 
     def get_markup(self, compress: bool = False) -> str:
         if compress:
-            return self._heading + self._compress_markup()
-        diff_html = lxml.html.fromstring(self._diff_html)
-        diff_html.classes.add("diff-container")
-        for elem in list(diff_html):
-            if elem.tag == "del":
-                elem.attrib["inert"] = "true"
-        return self._heading + lxml.html.tostring(diff_html, encoding="unicode")
+            elem = self._compress_markup()
+        else:
+            elem = self._diff_tree
+        return self._heading + lxml.html.tostring(elem, encoding="unicode")
 
 
 def main(
