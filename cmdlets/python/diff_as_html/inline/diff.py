@@ -42,11 +42,16 @@ class PyDiff:
                     root.append(elem)
                 else:
                     compressed = lxml.html.Element("span")
+                    compressed.classes.add("compressed-lines")
                     compressed.text = text_list[0]
                     filler = lxml.html.Element("span")
                     filler.classes.add("filler")
                     filler.tail = text_list[-1]
                     compressed.append(filler)
+                    if text_list[-1] == "\u00B6":
+                        br_tag = lxml.html.Element("br")
+                        n_children = len(list(compressed.xpath("*")))
+                        compressed.insert(n_children, br_tag)
                     root.append(compressed)
         return root
 
