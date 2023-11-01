@@ -1,4 +1,4 @@
-
+﻿
 <# ==============================
 
 PSReadLine Configuration
@@ -73,7 +73,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+n" -Function AcceptNextSuggestionWord
 Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "ctrl+k,4", "ctrl+k,5", "ctrl+k,6", "ctrl+k,7", "ctrl+k,8", "ctrl+k,9" -ScriptBlock {
     param($key, $arg)
     $str = '{' + $key.KeyChar + '}'
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert($str)
+    [PSConsoleReadLine]::Insert($str)
 }
 
 
