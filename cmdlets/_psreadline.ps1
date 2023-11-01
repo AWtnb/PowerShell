@@ -239,6 +239,16 @@ Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescr
     }
 }
 
+Set-PSReadLineKeyHandler -Key "alt+n" -BriefDescription "complete-next-param" -LongDescription "complete-next-param" -ScriptBlock {
+    $a = [ASTer]::new()
+    $t = $a.GetActiveToken()
+    if ($t.Kind -eq "EndOfInput" -or $a.IsEndOfToken()) {
+        $s = ($a.IsEndOfToken())? " -" : "-"
+        [PSConsoleReadLine]::Insert($s)
+        [PSConsoleReadLine]::MenuComplete()
+    }
+}
+
 Set-PSReadLineKeyHandler -Key "ctrl+k,l" -BriefDescription "insert-pipe-to-head" -LongDescription "insert-pipe-to-head" -ScriptBlock {
     $a = [ASTer]::new()
     $activeCmd = $a.GetActiveAst("CommandAst")
