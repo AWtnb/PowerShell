@@ -14,7 +14,7 @@ $progressPreference = "silentlyContinue"
 
 
 [System.Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("utf-8")
-"Output encoding: UTF8" | Write-Host -ForegroundColor Yellow
+"Output encoding: {0}" -f [System.Console]::OutputEncoding.EncodingName | Write-Host -ForegroundColor Yellow
 
 function Reset-OutputEncodingToSJIS {
     [System.Console]::OutputEncoding = [System.Text.Encoding]::GetEncoding("shift_jis")
