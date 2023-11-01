@@ -11,6 +11,7 @@ span.filler::before {
   font-family: "HackGen";
   font-size: 16px;
   line-height: 1.25;
+  word-break: break-all;
 }
 
 ins {
