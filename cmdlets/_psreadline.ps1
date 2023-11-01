@@ -1,4 +1,4 @@
-﻿
+
 <# ==============================
 
 PSReadLine Configuration
@@ -12,7 +12,7 @@ using namespace Microsoft.PowerShell
 # you can search keychar with `[Console]::ReadKey()`
 
 Set-PSReadlineOption -HistoryNoDuplicates `
-    -PredictionViewStyle ListView `
+    -PredictionViewStyle InlineView `
     -PredictionSource History `
     -BellStyle None `
     -ContinuationPrompt ($Global:PSStyle.Foreground.BrightBlack + "#>" + $Global:PSStyle.Reset) `
@@ -33,7 +33,7 @@ Set-PSReadLineOption -colors @{
     "Number" = $Global:PSStyle.Foreground.BrightCyan;
     "String" = $Global:PSStyle.Foreground.BrightBlue;
     "Variable" = $Global:PSStyle.Foreground.BrightGreen;
-    "InlinePrediction" = $Global:PSStyle.Foreground.Blue;
+    "InlinePrediction" = "`e[38;5;067m";
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
@@ -64,6 +64,9 @@ Set-PSReadLineKeyHandler -Key "alt+i" -BriefDescription "insert-invoke" -LongDes
 Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(star)" -LongDescription "insertAsterisk(star)" -ScriptBlock {
     [PSConsoleReadLine]::Insert("*")
 }
+
+# accept suggestion
+Set-PSReadLineKeyHandler -Key "ctrl+n" -Function AcceptNextSuggestionWord
 
 
 # format string
