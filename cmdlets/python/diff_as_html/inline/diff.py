@@ -13,6 +13,7 @@ class PyDiff:
         to_content = to_path.read_text("utf-8")
 
         dmp = diff_match_patch.diff_match_patch()
+        dmp.Diff_Timeout = 25 # slowly, take it easy...
         diffs = dmp.diff_main(from_content, to_content)
         dmp.diff_cleanupSemantic(diffs)
         self._heading = "<h1>'{}'→'{}'</h1>".format(
