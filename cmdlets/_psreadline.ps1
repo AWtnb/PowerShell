@@ -42,10 +42,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearch
 Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearchBackward
 
-# history
-Set-PSReadLineKeyHandler -Key "ctrl+r" -Function ReverseSearchHistory
-Set-PSReadLineKeyHandler -Key "ctrl+R" -Function ForwardSearchHistory
-
 # Shell cursor jump
 Set-PSReadLineKeyHandler -Key "alt+j" -Function "ShellForwardWord"
 Set-PSReadLineKeyHandler -Key "alt+k" -Function "ShellBackwardWord"
@@ -64,6 +60,19 @@ Set-PSReadLineKeyHandler -Key "alt+i" -BriefDescription "insert-invoke" -LongDes
 Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(star)" -LongDescription "insertAsterisk(star)" -ScriptBlock {
     [PSConsoleReadLine]::Insert("*")
 }
+
+# history
+Set-PSReadLineKeyHandler -Key "ctrl+r" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
+    $c = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 100).CommandLine | fzf.exe
+    if ($c) {
+        [PSBufferState]::new().RevertLine()
+        [PSConsoleReadLine]::Insert($c)
+    }
+    else {
+        [PSConsoleReadLine]::InvokePrompt()
+    }
+}
+
 
 # accept suggestion
 Set-PSReadLineKeyHandler -Key "ctrl+n" -Function AcceptNextSuggestionWord
