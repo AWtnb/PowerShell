@@ -153,12 +153,14 @@ function Invoke-MokoLauncher {
 Set-Alias moko Invoke-MokoLauncher
 
 Set-PSReadLineKeyHandler -Key "alt+z" -ScriptBlock {
-    Invoke-MokoLauncher
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>moko")
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+z" -ScriptBlock {
-    Invoke-MokoLauncher -all
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>moko -all")
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
 function Invoke-RDriveDatabase {
