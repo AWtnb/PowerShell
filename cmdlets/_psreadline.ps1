@@ -12,10 +12,10 @@ using namespace Microsoft.PowerShell
 # you can search keychar with `[Console]::ReadKey()`
 
 Set-PSReadlineOption -HistoryNoDuplicates `
-    -PredictionViewStyle InlineView `
+    -PredictionViewStyle ListView `
     -PredictionSource History `
     -BellStyle None `
-    -ContinuationPrompt ($Global:PSStyle.Foreground.BrightBlack + "#>" + $Global:PSStyle.Reset) `
+    -ContinuationPrompt ($Global:PSStyle.Foreground.BrightBlack + "# " + $Global:PSStyle.Reset) `
     -AddToHistoryHandler {
         param ($command)
         switch -regex ($command) {
