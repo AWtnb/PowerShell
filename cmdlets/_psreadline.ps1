@@ -63,9 +63,11 @@ Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(
 
 # history
 Set-PSReadLineKeyHandler -Key "ctrl+r" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
-    $c = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 100).CommandLine | fzf.exe
+    $bs = [PSBufferState]::new()
+    $line = $bs.CursorLine.Text
+    $c = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 100).CommandLine | fzf.exe --query=$line
     if ($c) {
-        [PSBufferState]::new().RevertLine()
+        $bs.RevertLine()
         [PSConsoleReadLine]::Insert($c)
     }
     else {
