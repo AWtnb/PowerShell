@@ -29,13 +29,13 @@ function Convert-WordDocument2PDF {
     )
     begin {
         $vbConst = [PSCustomObject]@{
-            wdExportFormatPDF = 17;
-            wdExportOptimizeForPrint = 0;
-            wdExportAllDocument = 0;
+            wdExportFormatPDF          = 17;
+            wdExportOptimizeForPrint   = 0;
+            wdExportAllDocument        = 0;
             wdExportDocumentWithMarkup = 7;
-            OpenAfterExport = $false;
-            From = $null;
-            To = $null;
+            OpenAfterExport            = $false;
+            From                       = $null;
+            To                         = $null;
         }
         $docs = @()
     }
@@ -48,39 +48,39 @@ function Convert-WordDocument2PDF {
     end {
         $cc = [ComController]::new()
         $cc.Run({
-            $word = New-Object -ComObject Word.Application
-            $word.Visible = $false
-            $docs | ForEach-Object {
-                "converting '{0}' to PDF..." -f $_.Name | Write-Host
-                try {
-                    $doc = $word.Documents.Open($_.FullName, $null, $true)
-                    if ($removeComment) {
-                        $doc.DeleteAllComments()
-                        "==> removing all comments..." | Write-Host
-                    }
-                    $outPath = $_.FullName -replace "\.docx?$", ".pdf"
-                    $doc.ExportAsFixedFormat($outPath, `
-                        $vbConst.wdExportFormatPDF, `
-                        $vbConst.OpenAfterExport, `
-                        $vbConst.wdExportOptimizeForPrint, `
-                        $vbConst.wdExportAllDocument, `
-                        $vbConst.From, `
-                        $vbConst.To, `
-                        $vbConst.wdExportDocumentWithMarkup)
-                    $doc.Comments | ForEach-Object {
-                        if (-not $_.Scope.Text) {
-                            "this comment cannot be displayed on PDF! :`n{0}" -f $_.Range.Text | Write-Host
+                $word = New-Object -ComObject Word.Application
+                $word.Visible = $false
+                $docs | ForEach-Object {
+                    "converting '{0}' to PDF..." -f $_.Name | Write-Host
+                    try {
+                        $doc = $word.Documents.Open($_.FullName, $null, $true)
+                        if ($removeComment) {
+                            $doc.DeleteAllComments()
+                            "==> removing all comments..." | Write-Host
                         }
+                        $outPath = $_.FullName -replace "\.docx?$", ".pdf"
+                        $doc.ExportAsFixedFormat($outPath, `
+                                $vbConst.wdExportFormatPDF, `
+                                $vbConst.OpenAfterExport, `
+                                $vbConst.wdExportOptimizeForPrint, `
+                                $vbConst.wdExportAllDocument, `
+                                $vbConst.From, `
+                                $vbConst.To, `
+                                $vbConst.wdExportDocumentWithMarkup)
+                        $doc.Comments | ForEach-Object {
+                            if (-not $_.Scope.Text) {
+                                "this comment cannot be displayed on PDF! :`n{0}" -f $_.Range.Text | Write-Host
+                            }
+                        }
+                        $doc.Close($false)
+                        "==> finished!" | Write-Host
                     }
-                    $doc.Close($false)
-                    "==> finished!" | Write-Host
+                    catch {
+                        "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
+                    }
                 }
-                catch {
-                    "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
-                }
-            }
-            $word.Quit()
-        })
+                $word.Quit()
+            })
     }
 }
 Set-Alias word2pdf Convert-WordDocument2PDF
@@ -105,22 +105,22 @@ function Convert-Doc2Docx {
     end {
         $cc = [ComController]::new()
         $cc.Run({
-            $word = New-Object -ComObject Word.Application
-            $word.Visible = $false
-            $docs | ForEach-Object {
-                "saving '{0}' as DOCX..." -f $_.Name | Write-Host
-                try {
-                    $doc = $word.Documents.Open($_.FullName, $null, $true)
-                    $outPath = $_.FullName -replace "\.doc$", ".docx"
-                    $doc.SaveAs2($outPath, $vbConst.wdFormatXMLDocument)
-                    $doc.Close($false)
+                $word = New-Object -ComObject Word.Application
+                $word.Visible = $false
+                $docs | ForEach-Object {
+                    "saving '{0}' as DOCX..." -f $_.Name | Write-Host
+                    try {
+                        $doc = $word.Documents.Open($_.FullName, $null, $true)
+                        $outPath = $_.FullName -replace "\.doc$", ".docx"
+                        $doc.SaveAs2($outPath, $vbConst.wdFormatXMLDocument)
+                        $doc.Close($false)
+                    }
+                    catch {
+                        "ERROR: {0}" -f $_.Exception.Message | Write-Error
+                    }
                 }
-                catch {
-                    "ERROR: {0}" -f $_.Exception.Message | Write-Error
-                }
-            }
-            $word.Quit()
-        })
+                $word.Quit()
+            })
     }
 }
 
@@ -138,7 +138,7 @@ function Get-OfficeLastSaveTime {
             $parse = $dir.parseName($fileObj.Name)
             $ts = $dir.GetDetailsOf($parse, 154) -replace "[^ \d:/]"
             [PSCustomObject]@{
-                "Name" = $fileObj.Name;
+                "Name"         = $fileObj.Name;
                 "LastSaveTime" = (Get-Date $ts);
             } | Write-Output
         }
@@ -152,10 +152,10 @@ function Convert-PowerpointSlide2PDF {
     )
     begin {
         $vbConst = [PSCustomObject]@{
-            ppFixedFormatTypePDF = 2;
-            ppFixedFormatIntentPrint = 2;
+            ppFixedFormatTypePDF          = 2;
+            ppFixedFormatIntentPrint      = 2;
             ppPrintHandoutHorizontalFirst = 2;
-            ppPrintOutputSlides = 1;
+            ppPrintOutputSlides           = 1;
         }
         $files = @()
     }
@@ -168,34 +168,34 @@ function Convert-PowerpointSlide2PDF {
     end {
         $cc = [ComController]::new()
         $cc.Run({
-            $powerpoint = New-Object -ComObject PowerPoint.Application
-            $powerpoint.Visible = $true
-            $files | ForEach-Object {
-                "converting '{0}' to PDF..." -f $_.Name | Write-Host
-                try {
-                    $presen = $powerpoint.Presentations.Open($_.FullName, $null, $true)
-                    $outPath = $_.FullName -replace "\.pptx$", ".pdf"
-                    $max = $presen.Slides.Count
-                    $presen.PrintOptions.Ranges.Add(1, $max) > $null
-                    $presen.ExportAsFixedFormat(
-                        $outPath,
-                        $vbConst.ppFixedFormatTypePDF,
-                        $vbConst.ppFixedFormatIntentPrint,
-                        $false,
-                        $vbConst.ppPrintHandoutHorizontalFirst,
-                        $vbConst.ppPrintOutputSlides,
-                        $false,
-                        $presen.PrintOptions.Ranges.Item(1)
-                    )
-                    $presen.Close()
-                    "==> finished!" | Write-Host
+                $powerpoint = New-Object -ComObject PowerPoint.Application
+                $powerpoint.Visible = $true
+                $files | ForEach-Object {
+                    "converting '{0}' to PDF..." -f $_.Name | Write-Host
+                    try {
+                        $presen = $powerpoint.Presentations.Open($_.FullName, $null, $true)
+                        $outPath = $_.FullName -replace "\.pptx$", ".pdf"
+                        $max = $presen.Slides.Count
+                        $presen.PrintOptions.Ranges.Add(1, $max) > $null
+                        $presen.ExportAsFixedFormat(
+                            $outPath,
+                            $vbConst.ppFixedFormatTypePDF,
+                            $vbConst.ppFixedFormatIntentPrint,
+                            $false,
+                            $vbConst.ppPrintHandoutHorizontalFirst,
+                            $vbConst.ppPrintOutputSlides,
+                            $false,
+                            $presen.PrintOptions.Ranges.Item(1)
+                        )
+                        $presen.Close()
+                        "==> finished!" | Write-Host
+                    }
+                    catch {
+                        "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
+                    }
                 }
-                catch {
-                    "ERROR: {0}" -f $_.Exception.Message | Write-Host -ForegroundColor Magenta
-                }
-            }
-            $powerpoint.Quit()
-        })
+                $powerpoint.Quit()
+            })
     }
 }
 
