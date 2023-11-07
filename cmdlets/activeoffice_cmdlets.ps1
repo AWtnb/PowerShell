@@ -179,9 +179,10 @@ class ActiveDocument {
 
     [string[]] GetParagraphs() {
         $array = New-Object System.Collections.ArrayList
+        $regControlChar = [regex]"[`u{00}-`u{001f}]"
         if ($this.Document) {
             foreach ($p in $this.Document.Paragraphs) {
-                $array.Add([ActiveDocument]::RemoveControlChar($p.Range.Text)) > $null
+                $array.Add($regControlChar.Replace($p.Range.Text, "")) > $null
             }
         }
         return $array
@@ -201,11 +202,6 @@ class ActiveDocument {
             }
         }
         return $array
-    }
-
-    static [string] RemoveControlChar([string] $s) {
-        $reg = [regex]"[`u{00}-`u{001f}]"
-        return $reg.Replace($s, "")
     }
 }
 
