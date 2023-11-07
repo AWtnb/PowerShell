@@ -15,8 +15,8 @@ cmdlets for active office
 #
 # thanks: https://qiita.com/SilkyFowl/items/e57f1fb165cf2ea33092
 
-if (-not ('Pwsh.Marshal' -as [type]))
-{Add-Type -Namespace "Pwsh" -Name "Marshal" -MemberDefinition @'
+if (-not ('Pwsh.Marshal' -as [type])) {
+    Add-Type -Namespace "Pwsh" -Name "Marshal" -MemberDefinition @'
 
 internal const String OLEAUT32 = "oleaut32.dll";
 internal const String OLE32 = "ole32.dll";
@@ -48,7 +48,8 @@ private static extern void CLSIDFromProgID([MarshalAs(UnmanagedType.LPWStr)] Str
 [DllImport(OLEAUT32, PreserveSig = false)]
 private static extern void GetActiveObject(ref Guid rclsid, IntPtr reserved, [MarshalAs(UnmanagedType.Interface)] out Object ppunk);
 
-'@ }
+'@ 
+}
 
 function Get-ActiveOffice {
     param (
@@ -194,11 +195,11 @@ class ActiveDocument {
             foreach ($cmt in $this.Document.comments) {
                 $t = $cmt.Scope.Text
                 $array.Add([PSCustomObject]@{
-                    "Target" = ((($t -as [string]).trim())? $t : "");
-                    "Lines" = @($cmt.Range.Paragraphs | ForEach-Object {$_.Range.Text});
-                    "Author" = $cmt.Author;
-                    "Date" = $cmt.Date
-                }) > $null
+                        "Target" = ((($t -as [string]).trim())? $t : "");
+                        "Lines"  = @($cmt.Range.Paragraphs | ForEach-Object {$_.Range.Text});
+                        "Author" = $cmt.Author;
+                        "Date"   = $cmt.Date
+                    }) > $null
             }
         }
         return $array
@@ -366,7 +367,7 @@ function Get-NotationTextOnActiveWordDocument {
 
     $doc.FootNotes | ForEach-Object {
         [PSCustomObject]@{
-            "Id" = $_.Index;
+            "Id"   = $_.Index;
             "Note" = $_.Range.Text;
         } | Write-Output
     }
@@ -450,8 +451,8 @@ function Invoke-AcceptFormatRevisionOnActiveWordDocument {
 
     @{
         "ReviewShowInsertionsAndDeletions" = $false;
-        "ReviewShowComments" = $false;
-        "ReviewShowFormatting" = $true;
+        "ReviewShowComments"               = $false;
+        "ReviewShowFormatting"             = $true;
     }.GetEnumerator() | ForEach-Object {
         if ($wd.CommandBars.GetPressedMso($_.Key) -ne $_.Value) {
             try {
@@ -484,7 +485,7 @@ function Get-ActiveWordDocumentInsertedText {
     $doc = Get-ActiveWordDocument
     if (-not $doc) { return }
     $wdConst = @{
-        1 = "Insert";
+        1  = "Insert";
         15 = "Moved";
     }
     $doc.Revisions | ForEach-Object {
@@ -531,11 +532,11 @@ function Get-ActiveWordDocumentInformation {
         $actualMaximum = $actualChars * $linesSetup * $nPage
         [PSCustomObject]@{
             "FontSize(most frequently used)" = $mainFontSize;
-            "Lines(defined by page-setup)" = $linesSetup;
-            "Chars(defined by page-setup)" = $charsSetup;
-            "Chars(actually on paper)" = $actualChars;
-            "Pages" = $nPage;
-            "MaxChars(actually on paper)" = $actualMaximum;
+            "Lines(defined by page-setup)"   = $linesSetup;
+            "Chars(defined by page-setup)"   = $charsSetup;
+            "Chars(actually on paper)"       = $actualChars;
+            "Pages"                          = $nPage;
+            "MaxChars(actually on paper)"    = $actualMaximum;
         } | Write-Output
 
         "`n字詰め:{0} 行取り:{1} ページ:{2}" -f $actualChars, $linesSetup, $nPage | Write-Host -ForegroundColor Green
@@ -909,13 +910,13 @@ function Get-EmbeddedDataOnActiveWordDocument {
         $vals = $chart.SeriesCollection($_).Values
         $data = 1..$xVals.Count | ForEach-Object {
             return [PSCustomObject]@{
-                "X" = $xVals.get($_);
+                "X"     = $xVals.get($_);
                 "Value" = $vals.get($_);
             }
         }
         return [PSCustomObject]@{
             "Label" = $label;
-            "Data" = $data;
+            "Data"  = $data;
         }
     }
 
