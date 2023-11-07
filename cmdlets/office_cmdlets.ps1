@@ -7,17 +7,17 @@ cmdlets for treating Office software
 ============================== #>
 
 class ComController {
-    ComController() {}
-
-    Clear() {
+    [scriptblock]$clearBlock = {
         Get-Variable | Where-Object {$_.Value -is [__ComObject]} | Clear-Variable
         [GC]::Collect()
         [GC]::WaitForPendingFinalizers()
     }
 
+    ComController() {}
+
     Run([scriptblock]$scriptBlock) {
         Invoke-Command -ScriptBlock $scriptBlock
-        $this.Clear()
+        Invoke-Command -ScriptBlock $this.clearBlock
     }
 }
 
