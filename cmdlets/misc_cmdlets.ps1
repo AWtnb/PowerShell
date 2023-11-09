@@ -868,11 +868,6 @@ function Copy-ItemWithNewBasename {
         "failed to copy as '{0}'." -f $newName | Write-Error
     }
 }
-Set-PSReadLineKeyHandler -Key "ctrl+alt+v" -BriefDescription "copy-with-new-basename" -LongDescription "copy-with-new-basename" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Copy-ItemWithNewBasename #")
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-}
 
 
 function Move-ItemToObsDir {
