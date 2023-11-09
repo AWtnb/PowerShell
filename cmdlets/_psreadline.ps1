@@ -61,6 +61,22 @@ Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(
     [PSConsoleReadLine]::Insert("*")
 }
 
+# custom-cd
+Set-PSReadLineKeyHandler -Key "ctrl+K,d","ctrl+K,s","ctrl+K,c" -ScriptBlock {
+    param($key, $arg)
+    $dir = switch ($key.KeyChar) {
+        <#case#> "d" { "{0}\desktop" -f $env:USERPROFILE ; break }
+        <#case#> "s" { "X:\scan" ; break }
+        <#case#> "c" { (Get-Clipboard | Select-Object -First 1).Replace('"', "") ; break }
+    }
+    if (-not (Test-Path $dir -PathType Container)) {
+        return
+    }
+    $p = "<#SKIPHISTORY#>cd '{0}'" -f $dir
+    [PSConsoleReadLine]::Insert($p)
+    [PSConsoleReadLine]::AcceptLine()
+}
+
 # history
 Set-PSReadLineKeyHandler -Key "ctrl+r" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
     $bs = [PSBufferState]::new()
