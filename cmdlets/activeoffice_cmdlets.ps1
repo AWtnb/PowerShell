@@ -273,8 +273,9 @@ function Get-ActiveWordDocumentFinalTextContent {
     if (-not $word) {
         return
     }
-    $word.ActiveDocument.AcceptAllRevisions()
-    $word.Selection.WholeStory()
+    if ($word.ActiveDocument.Revisions.Count) {
+        $word.ActiveDocument.AcceptAllRevisions()
+    }
     Get-ActiveWordDocumentParagraphs | Write-Output
 }
 
