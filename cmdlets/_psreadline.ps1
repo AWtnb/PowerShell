@@ -457,17 +457,17 @@ Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDe
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
 }
+Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "setClipStringWithHistory" -LongDescription "setClipStringWithHistory" -ScriptBlock {
+    $command = '(gcb -Raw).Replace("`r","").Trim() -split "`n"|'
+    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::Insert($command)
+}
 Set-PSReadLineKeyHandler -Key "ctrl+alt+V" -BriefDescription "setClipStringAsSingleText" -LongDescription "setClipStringAsSingleText" -ScriptBlock {
-    $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() |sv CLIPPING'
+    $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() |sv CLIPPING # ==> copied as single line'
     [PSBufferState]::new().RevertLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
-}
-Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "setClipStringWithHistory" -LongDescription "setClipStringWithHistory" -ScriptBlock {
-    $command = '(gcb -Raw).Replace("`r","").Trim() -split "`n"'
-    [PSBufferState]::new().RevertLine()
-    [PSConsoleReadLine]::Insert($command)
 }
 
 # open from clipboard path
