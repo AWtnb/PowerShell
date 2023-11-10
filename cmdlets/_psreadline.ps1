@@ -727,14 +727,12 @@ Set-PSReadLineKeyHandler -Key "alt+w","alt+(" -BriefDescription "WrapLineByParen
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,t" -BriefDescription "cast-as-type" -LongDescription "cast-as-type" -ScriptBlock {
-    $bs = [PSBufferState]::new()
-    $line = $bs.CommandLine
-    if (-not $bs.SelectionLength -gt 0) {
-        return
-    }
-    $repl = "({0} -as [])" -f $line.SubString($bs.selectionStart, $bs.selectionLength)
-    [PSConsoleReadLine]::Replace($bs.selectionStart, $bs.selectionLength, $repl)
-    [PSConsoleReadLine]::SetCursorPosition($bs.selectionStart + $bs.selectionLength + 7)
+    $cmd = '|%{$_ -as []}'
+    $a = [ASTer]::new()
+    $activeCmd = $a.GetActiveAst("CommandAst")
+    [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.EndOffset)
+    [PSConsoleReadLine]::Insert($cmd)
+    [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.EndOffset + $cmd.Length - 2)
 }
 
 ##############################
