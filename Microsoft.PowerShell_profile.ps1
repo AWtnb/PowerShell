@@ -565,6 +565,11 @@ function ConvertTo-SHA256Hash {
 
 @("System.Double", "System.Int32") | ForEach-Object {
 
+    Update-TypeData -TypeName $_ -Force -MemberType ScriptMethod -MemberName "ToPaddedStr" -Value {
+        param([int]$pad=2)
+        return $("{0:d$($pad)}" -f [int]$this)
+    }
+
     Update-TypeData -TypeName $_ -Force -MemberType ScriptMethod -MemberName "ToHex" -Value {
         return $([System.Convert]::ToString($this,16))
     }
