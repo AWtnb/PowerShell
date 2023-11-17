@@ -237,8 +237,17 @@ Class Prompter {
     }
 
     [string] GetRepoInfo() {
-        if (Test-Path ".git" -PathType Container) {
-            return $this.warningFg + "[.git]" + $this.stopDeco
+        $trial = 100
+        $p = (Get-Location).Path
+        while ($p) {
+            $trial += -1
+            if ($trial -lt 0) {
+                return ""
+            }
+            if ($p | Join-Path -ChildPath ".git" | Test-Path -PathType Container) {
+                return $this.warningFg + "[.git]" + $this.stopDeco
+            }
+            $p = $p | Split-Path -Parent
         }
         return ""
     }
