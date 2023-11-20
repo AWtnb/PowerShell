@@ -17,22 +17,22 @@ Set-PSReadlineOption -HistoryNoDuplicates `
     -BellStyle None `
     -ContinuationPrompt ($Global:PSStyle.Foreground.BrightBlack + "# " + $Global:PSStyle.Reset) `
     -AddToHistoryHandler {
-        param ($command)
-        switch -regex ($command) {
-            "SKIPHISTORY" {return $false}
-            "^dsk$" {return $false}
-            " -execute" {return $false}
-            " -force" {return $false}
-        }
-        return $true
+    param ($command)
+    switch -regex ($command) {
+        "SKIPHISTORY" {return $false}
+        "^dsk$" {return $false}
+        " -execute" {return $false}
+        " -force" {return $false}
     }
+    return $true
+}
 
 Set-PSReadLineOption -colors @{
-    "Command" = $Global:PSStyle.Foreground.BrightYellow;
-    "Comment" = $Global:PSStyle.Foreground.BrightBlack;
-    "Number" = $Global:PSStyle.Foreground.BrightCyan;
-    "String" = $Global:PSStyle.Foreground.BrightBlue;
-    "Variable" = $Global:PSStyle.Foreground.BrightGreen;
+    "Command"          = $Global:PSStyle.Foreground.BrightYellow;
+    "Comment"          = $Global:PSStyle.Foreground.BrightBlack;
+    "Number"           = $Global:PSStyle.Foreground.BrightCyan;
+    "String"           = $Global:PSStyle.Foreground.BrightBlue;
+    "Variable"         = $Global:PSStyle.Foreground.BrightGreen;
     "InlinePrediction" = "`e[38;5;067m";
 }
 
@@ -117,14 +117,14 @@ Set-PSReadLineKeyHandler -Key "alt+d" -BriefDescription "openDraft" -LongDescrip
 # cursor jump
 Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」（）『』『』［］、，。：；／　"
 @{
-    "ctrl+RightArrow" = "ForwardWord";
-    "ctrl+DownArrow" = "ForwardWord";
-    "ctrl+LeftArrow" = "BackwardWord";
-    "ctrl+UpArrow" = "BackwardWord";
+    "ctrl+RightArrow"       = "ForwardWord";
+    "ctrl+DownArrow"        = "ForwardWord";
+    "ctrl+LeftArrow"        = "BackwardWord";
+    "ctrl+UpArrow"          = "BackwardWord";
     "ctrl+shift+RightArrow" = "SelectForwardWord";
-    "ctrl+shift+DownArrow" = "SelectForwardWord";
-    "ctrl+shift+LeftArrow" = "SelectBackwardWord";
-    "ctrl+shift+UpArrow" = "SelectBackwardWord";
+    "ctrl+shift+DownArrow"  = "SelectForwardWord";
+    "ctrl+shift+LeftArrow"  = "SelectBackwardWord";
+    "ctrl+shift+UpArrow"    = "SelectBackwardWord";
 }.GetEnumerator() | ForEach-Object {
     Set-PSReadLineKeyHandler -Key $_.Key -Function $_.Value
 }
@@ -146,8 +146,8 @@ class ASTer {
 
     [System.Management.Automation.Language.Ast[]] Listup([string]$name) {
         return $this.ast.FindAll({
-            return $args[0].GetType().Name.EndsWith($name)
-        }, $true)
+                return $args[0].GetType().Name.EndsWith($name)
+            }, $true)
     }
 
     [System.Management.Automation.Language.Ast] GetActiveAst([string]$name) {
@@ -349,7 +349,7 @@ class PSBufferState {
         [PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$pos)
         return [PSCustomObject]@{
             "line" = $line;
-            "pos" = $pos;
+            "pos"  = $pos;
         }
     }
 
@@ -555,7 +555,7 @@ Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-inden
         return
     }
     if ($line[$pos - 1] -eq "{") {
-            [PSConsoleReadLine]::Insert("`n" + "  " + $filler)
+        [PSConsoleReadLine]::Insert("`n" + "  " + $filler)
         return
     }
     [PSConsoleReadLine]::Insert("`n" + $filler)
@@ -638,7 +638,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
 
 Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDescription "redoLastCommand" -ScriptBlock {
     [PSBufferState]::new().RevertLine()
-    $lastCmd = ([PSConsoleReadLine]::GetHistoryItems()|Select-Object -Last 1).CommandLine
+    $lastCmd = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
     [PSConsoleReadLine]::Insert($lastCmd)
     [PSConsoleReadLine]::AcceptLine()
 }
@@ -727,12 +727,14 @@ Set-PSReadLineKeyHandler -Key "alt+w","alt+(" -BriefDescription "WrapLineByParen
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,t" -BriefDescription "cast-as-type" -LongDescription "cast-as-type" -ScriptBlock {
-    $cmd = '|%{$_ -as []}'
-    $a = [ASTer]::new()
-    $activeCmd = $a.GetActiveAst("CommandAst")
-    [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.EndOffset)
-    [PSConsoleReadLine]::Insert($cmd)
-    [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.EndOffset + $cmd.Length - 2)
+    $bs = [PSBufferState]::new()
+    $line = $bs.CommandLine
+    if (-not $bs.SelectionLength -gt 0) {
+        return
+    }
+    $repl = "({0} -as [])" -f $line.SubString($bs.selectionStart, $bs.selectionLength)
+    [PSConsoleReadLine]::Replace($bs.selectionStart, $bs.selectionLength, $repl)
+    [PSConsoleReadLine]::SetCursorPosition($bs.selectionStart + $bs.selectionLength + 7)
 }
 
 ##############################
@@ -851,7 +853,7 @@ Set-PSReadLineKeyHandler -Key "alt+b" -BriefDescription "bat-plain" -LongDescrip
 
 Set-PSReadLineKeyHandler -Key "ctrl+alt+b" -BriefDescription "review-last-result-with-bat" -LongDescription "review-last-result-with-bat" -ScriptBlock {
     [PSBufferState]::new().RevertLine()
-    $lastCmd = ([PSConsoleReadLine]::GetHistoryItems()|Select-Object -Last 1).CommandLine
+    $lastCmd = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
     $newCmd = "<#SKIPHISTORY#>" + $lastCmd + "| oss |bat -p"
     [PSConsoleReadLine]::Insert($newCmd)
 }
