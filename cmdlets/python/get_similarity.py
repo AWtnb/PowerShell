@@ -5,7 +5,6 @@ encoding: utf8
 """
 
 import sys
-import re
 import itertools
 from difflib import SequenceMatcher
 from pathlib import Path
@@ -74,42 +73,52 @@ class NoiseMapping:
         self._mapping = _mapper.get_mapping()
 
     def cleanup(self, s: str) -> str:
-        return s.translate(str.maketrans(self._mapping))
-
-
-NOISE_MAPPIING = NoiseMapping(" ")
-
-
-class LinesMatcher:
-    def __init__(self, pair: list[str]) -> None:
         stack = []
-        for line in pair[:2]:
-            cleaned = NOISE_MAPPIING.cleanup(line)
-            stack.append(re.sub(r"\s+", " ", cleaned))
-        self._pair = stack
+        clean = s.translate(str.maketrans(self._mapping))
+        for w in clean.split(" "):
+            if len(w):
+                stack.append(w)
+        return " ".join(stack)
+
+
+class LinesPair:
+    def __init__(self, pair_a: str, pair_b: str) -> None:
+        self._pair_a = pair_a
+        self._pair_b = pair_b
 
     def _has_common_prefix(self) -> bool:
-        return self._pair[0].split(" ")[0] == self._pair[1].split(" ")[0]
+        return self._pair_a.split(" ")[0] == self._pair_b.split(" ")[0]
 
     def compare(self) -> dict | None:
         if self._has_common_prefix():
-            comp = SequenceMatcher(None, *self._pair)
+            comp = SequenceMatcher(None, self._pair_a, self._pair_b)
             return {
                 "prox": comp.ratio(),
-                "a": self._pair[0],
-                "b": self._pair[1],
+                "a": self._pair_a,
+                "b": self._pair_b,
             }
         return None
 
 
+class LinesMatcher:
+    def __init__(self, lines: list[str]) -> None:
+        noise = NoiseMapping(" ")
+        cleand = [noise.cleanup(line) for line in lines]
+        self._lines = cleand
+
+    def compare(self) -> list:
+        stack = []
+        for pair in itertools.combinations(self._lines, 2):
+            p = LinesPair(*pair)
+            result = p.compare()
+            if result:
+                stack.append(result)
+        return stack
+
+
 def main(input_file_path: str, output_file_path: str):
     lines = Path(input_file_path).read_text("utf-8").splitlines()
-    out = []
-    for pair in itertools.combinations(lines, 2):
-        m = LinesMatcher(pair)
-        result = m.compare()
-        if result:
-            out.append(result)
+    out = LinesMatcher(lines).compare()
     Path(output_file_path).write_text(str(out), "utf-8")
 
 
