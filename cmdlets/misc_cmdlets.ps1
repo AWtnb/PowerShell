@@ -962,14 +962,18 @@ function Get-ClipboardFontInfo {
     $font = $null
     for ($i = 0; $i -lt $rtb.Text.length; $i++) {
         $rtb.Select($i, 1)
+        $t = $rtb.SelectedText
+        $u = [Convert]::ToInt32($t -as [char]).ToString("X4")
         $font = $rtb.SelectionFont
         if ($detail) {
-            $font | Add-Member -MemberType NoteProperty -Name "Text" -Value $rtb.SelectedText
+            $font | Add-Member -MemberType NoteProperty -Name "Text" -Value $t
+            $font | Add-Member -MemberType NoteProperty -Name "Codepoint" -Value $u
             $font | Write-Output
         }
         else {
             [PSCustomObject]@{
-            "Text" = $rtb.SelectedText;
+            "Text" = $t;
+            "Codepoint" = $u;
             "OriginalFontName" = $font.OriginalFontName;
             "Size" = $font.SizeInPoints;
             "Style" = $font.Style;
