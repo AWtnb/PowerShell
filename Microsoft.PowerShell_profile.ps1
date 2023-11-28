@@ -539,6 +539,11 @@ Update-TypeData -TypeName "System.Object" -Force -MemberType ScriptMethod -Membe
     return $($this.PsObject.Members | Where-Object MemberType -eq noteproperty | Select-Object Name, Value)
 }
 
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName ExactlyEquals -Value {
+    param([string]$s)
+    return [string]::Equals($this, $s, [System.StringComparison]::Ordinal)
+}
+
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName ToSha256 -Value {
     $bs = [System.Text.Encoding]::UTF8.GetBytes($this)
     $sha = New-Object System.Security.Cryptography.SHA256CryptoServiceProvider
