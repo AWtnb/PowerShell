@@ -539,9 +539,13 @@ Update-TypeData -TypeName "System.Object" -Force -MemberType ScriptMethod -Membe
     return $($this.PsObject.Members | Where-Object MemberType -eq noteproperty | Select-Object Name, Value)
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName ExactlyEquals -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName CaseSensitiveEquals -Value {
     param([string]$s)
     return [string]::Equals($this, $s, [System.StringComparison]::Ordinal)
+}
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName CaseInSensitiveEquals -Value {
+    param([string]$s)
+    return [string]::Equals($this, $s, [System.StringComparison]::OrdinalIgnoreCase)
 }
 
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName ToSha256 -Value {
