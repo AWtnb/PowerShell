@@ -307,8 +307,6 @@ function prompt {
         $mf.Rename()
     }
 
-    # Test-GoogleIme
-
     return $p.GetPrompt()
 }
 
