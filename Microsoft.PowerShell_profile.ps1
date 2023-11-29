@@ -309,6 +309,7 @@ function prompt {
 
     return $p.GetPrompt()
 }
+Import-Module ZLocation
 
 #################################################################
 # variable / alias / function
