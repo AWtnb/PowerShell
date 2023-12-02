@@ -1,4 +1,4 @@
-﻿
+
 <# ==============================
 
 cmdlets for renaming file or folder
@@ -26,7 +26,7 @@ class BasenameReplaceEntry {
     }
 
     [bool] isRenamable() {
-        return ($this._orgBaseName + $this._extension) -cne $this._newName
+        return -not (($this._orgBaseName + $this._extension) -ceq $this._newName)
     }
 
     [string] getFullname() {
