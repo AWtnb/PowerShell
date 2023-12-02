@@ -6,6 +6,140 @@ cmdlets for renaming file or folder
                 encoding: utf8bom
 ============================== #>
 
+class BasenameReplaceEntry {
+    [regex]$_reg
+    [string]$execColor = "Green"
+    [string]$_fullName
+    [string]$_orgBaseName
+    [string]$_extension
+    [string]$_relDirName
+    [string]$_newName
+    BasenameReplaceEntry([string]$fullName, [string]$curDir, [string]$from, [string]$to, [switch]$case) {
+        $regOpt = ($case)? [System.Text.RegularExpressions.RegexOptions]::None : [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
+        $this._reg = [regex]::new($from, $regOpt)
+        $this._fullName = $fullName
+        $item = Get-Item $this._fullName
+        $this._orgBaseName = $item.BaseName
+        $this._extension = $item.Extension
+        $this._relDirName = [System.IO.Path]::GetRelativePath($curDir, ($this._fullName | Split-Path -Parent))
+        $this._newName = $this._reg.Replace($this._orgBaseName, $to) + $this._extension
+    }
+
+    [bool] isRenamable() {
+        return ($this._orgBaseName + $this._extension) -cne $this._newName
+    }
+
+    [string] getFullname() {
+        return $this._fullName
+    }
+
+    [string] getNewName() {
+        return $this._newName
+    }
+
+    [string] _getMarkerdNewName() {
+        return $global:PSStyle.Foreground.PSObject.Properties[$this.execColor].Value + $this._newName + $global:PSStyle.Reset
+    }
+
+    [string] _getMatchesMarkerdOrgName([bool]$execute) {
+        $col = ($execute)? $this.execColor : "White"
+        $ansi = $global:PSStyle.Background.PSObject.Properties[$col].Value + $global:PSStyle.Foreground.Black
+        return $this._reg.Replace($this._orgBaseName, {
+                param([System.Text.RegularExpressions.Match]$m)
+                return $ansi + $m.Value + $global:PSStyle.Reset
+            }) + $this._extension
+    }
+
+    [string] _getDimmedRelDir() {
+        return $global:PSStyle.Foreground.BrightBlack + $this._relDirName + "\" + $global:PSStyle.Reset
+    }
+
+    [int] getIndentDepth() {
+        $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
+        return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
+    }
+
+    [string] getFullMarkerdText([bool]$org, [bool]$execute) {
+        if ($org) {
+            return $this._getDimmedRelDir() + $this._getMatchesMarkerdOrgName($execute)
+        }
+        return $this._getDimmedRelDir() + $this._getMarkerdNewName()
+    }
+
+}
+
+class BasenameReplacer {
+    [int]$bufferWidth = 0
+    [BasenameReplaceEntry[]]$entries = @()
+    BasenameReplaceDiffer() {}
+
+    [void] setEntry([BasenameReplaceEntry]$ent) {
+        $this.entries += $ent
+        $w = $ent.getIndentDepth()
+        if ($this.bufferWidth -lt $w) {
+            $this.bufferWidth = $w
+        }
+    }
+
+    [string] getFiller([int]$indent, [bool]$arrow) {
+        $rightPadding = $this.bufferWidth - $indent
+        if ($rightPadding -lt 0) {
+            $rightPadding = 0
+        }
+        $filler = ($arrow)? (" {0}=> " -f ("=" * $rightPadding)) : (" " * $rightPadding)
+        return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
+    }
+
+    run([bool]$execute) {
+        $this.entries | ForEach-Object {
+            $left = $_.getFullMarkerdText($true, $execute)
+            $indent = $_.getIndentDepth()
+            $filler = $this.getFiller($indent, $true)
+            $right = $_.getFullMarkerdText($false, $execute)
+            $left + $filler + $right | Write-Host
+            if (-not $execute) {
+                return
+            }
+            $item = Get-Item -LiteralPath $_.getFullname()
+            $newName = $_.getNewName()
+            try {
+                $item | Rename-Item -NewName $newName -ErrorAction Stop
+            }
+            catch {
+                "same file '{0}' already exists!" -f $newName | Write-Host -ForegroundColor Magenta
+            }
+        }
+    }
+
+}
+
+function Rename-ReplaceBasename {
+    <#
+        .EXAMPLE
+        ls *.txt | repn "foo" "baa" -execute
+    #>
+    [OutputType([System.Void])]
+    param (
+        [string]$from
+        ,[string]$to
+        ,[switch]$case
+        ,[switch]$execute
+    )
+
+    $replacer = [BasenameReplacer]::new()
+    $cur = (Get-Location).Path
+    $input | Where-Object {Test-Path $_} | ForEach-Object {
+        $ent = [BasenameReplaceEntry]::new($_.Fullname, $cur, $from, $to, $case)
+        if ($ent.isRenamable()) {
+            $replacer.setEntry($ent)
+        }
+    }
+    $replacer.run($execute)
+}
+Set-Alias repBN Rename-ReplaceBasename
+
+
+
 Class RenamePreview {
     [int]$bufferWidth
     [System.Text.Encoding]$sjis
@@ -32,45 +166,6 @@ Class RenamePreview {
 
 }
 
-function Rename-ReplaceBasename {
-    <#
-        .EXAMPLE
-        ls *.txt | repn "foo" "baa" -execute
-    #>
-    [OutputType([System.Void])]
-    param (
-        [string]$from
-        ,[string]$to
-        ,[switch]$case
-        ,[switch]$execute
-    )
-
-    $reg = ($case)? [regex]::new($from) : [regex]::new($from, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
-
-    $procTarget = $input | Where-Object {$reg.IsMatch($_.Basename)}
-    if ($procTarget.Count -lt 1) {
-        return
-    }
-
-    $color = ($execute)? "Cyan" : "White"
-    $hi = [PsHighlight]::new($from, $color, $case)
-    $previewer = [RenamePreview]::new($procTarget.Name)
-
-    $procTarget | ForEach-Object {
-        $newName = $reg.Replace($_.Basename, $to) + $_.Extension
-        $markup = $hi.Markup($_.Basename) + $_.Extension
-        $previewer.Compare($markup, $newName, $color, $true) | Write-Host
-        if ($execute) {
-            try {
-                $_ | Rename-Item -NewName $newName -ErrorAction Stop
-            }
-            catch {
-                "same file '{0}' already exists!" -f $newName | Write-Host -ForegroundColor Magenta
-            }
-        }
-    }
-}
-Set-Alias repBN Rename-ReplaceBasename
 
 class InsertRenamer {
     [string]$pre
