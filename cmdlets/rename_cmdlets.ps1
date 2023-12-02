@@ -54,7 +54,7 @@ class BasenameReplaceEntry {
         return $global:PSStyle.Foreground.BrightBlack + $this._relDirName + "\" + $global:PSStyle.Reset
     }
 
-    [int] getIndentDepth() {
+    [int] getLeftSideByteLen() {
         $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
         return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
     }
@@ -69,23 +69,20 @@ class BasenameReplaceEntry {
 }
 
 class BasenameReplacer {
-    [int]$bufferWidth = 0
+    [int]$_leftBufferWidth = 0
     [BasenameReplaceEntry[]]$entries = @()
     BasenameReplaceDiffer() {}
 
     [void] setEntry([BasenameReplaceEntry]$ent) {
         $this.entries += $ent
-        $w = $ent.getIndentDepth()
-        if ($this.bufferWidth -lt $w) {
-            $this.bufferWidth = $w
+        $w = $ent.getLeftSideByteLen()
+        if ($this._leftBufferWidth -lt $w) {
+            $this._leftBufferWidth = $w
         }
     }
 
     [string] getFiller([int]$indent) {
-        $rightPadding = $this.bufferWidth - $indent
-        if ($rightPadding -lt 0) {
-            $rightPadding = 0
-        }
+        $rightPadding = [Math]::Max($this._leftBufferWidth - $indent, 0)
         $filler = " {0}=> " -f ("=" * $rightPadding)
         return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
     }
@@ -93,7 +90,7 @@ class BasenameReplacer {
     run([bool]$execute) {
         $this.entries | ForEach-Object {
             $left = $_.getFullMarkerdText($true, $execute)
-            $indent = $_.getIndentDepth()
+            $indent = $_.getLeftSideByteLen()
             $filler = $this.getFiller($indent)
             $right = $_.getFullMarkerdText($false, $execute)
             $left + $filler + $right | Write-Host
