@@ -87,7 +87,7 @@ class BasenameReplacer {
         return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
     }
 
-    run([bool]$execute) {
+    [void] run([bool]$execute) {
         $this.entries | ForEach-Object {
             $left = $_.getFullMarkerdText($true, $execute)
             $indent = $_.getLeftSideByteLen()
