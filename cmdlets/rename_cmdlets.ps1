@@ -81,12 +81,12 @@ class BasenameReplacer {
         }
     }
 
-    [string] getFiller([int]$indent, [bool]$arrow) {
+    [string] getFiller([int]$indent) {
         $rightPadding = $this.bufferWidth - $indent
         if ($rightPadding -lt 0) {
             $rightPadding = 0
         }
-        $filler = ($arrow)? (" {0}=> " -f ("=" * $rightPadding)) : (" " * $rightPadding)
+        $filler = " {0}=> " -f ("=" * $rightPadding)
         return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
     }
 
@@ -94,7 +94,7 @@ class BasenameReplacer {
         $this.entries | ForEach-Object {
             $left = $_.getFullMarkerdText($true, $execute)
             $indent = $_.getIndentDepth()
-            $filler = $this.getFiller($indent, $true)
+            $filler = $this.getFiller($indent)
             $right = $_.getFullMarkerdText($false, $execute)
             $left + $filler + $right | Write-Host
             if (-not $execute) {
