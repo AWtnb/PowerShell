@@ -212,8 +212,6 @@ class InsertRenameEntry {
 }
 
 
-
-
 class InsertRenamer {
     [int]$_leftBufferWidth = 0
     [InsertRenameEntry[]]$entries = @()
@@ -277,45 +275,154 @@ function Rename-Insert {
 }
 Set-Alias rIns Rename-Insert
 
-class IndexedItem {
-    [string]$pre
-    [string]$post
-    [string]$modified
 
-    IndexedItem([string]$path, [int]$i, [int]$padding, [string]$altName, [bool]$tail) {
-        $idx = ($i -as [string]).PadLeft($padding, "0")
-        $file = Get-Item -LiteralPath $path
-        if ($altName) {
-            $this.pre = ""
-            $this.post = $file.Extension
+class IndexRenameEntry {
+    [string]$_idx
+    [string]$_pre
+    [string]$_highlight
+    [string]$_suf
+    [string]$_fullName
+    [string]$_orgBaseName
+    [string]$_extension
+    [string]$_relDirName
+    IndexRenameEntry([string]$fullName, [string]$curDir, [string]$altName, [int]$idx, [int]$pad, [bool]$tail) {
+        $this._idx = ($idx -as [string]).PadLeft($pad, "0")
+        $this._fullName = $fullName
+        $item = Get-Item $this._fullName
+        $this._orgBaseName = $item.BaseName
+        $this._extension = $item.Extension
+        $this._relDirName = [System.IO.Path]::GetRelativePath($curDir, ($this._fullName | Split-Path -Parent))
+        if ($altName.Length -gt 0) {
+            $this._pre = ""
+            $this._suf = $this._extension
             if ($tail) {
-                $this.modified = $altName + $idx
+                $this._highlight = $altName + $this._idx
                 return
             }
-            $this.modified = $idx + $altName
+            $this._highlight = $this._idx + $altName
             return
         }
         if ($tail) {
-            $this.pre = $file.BaseName
-            $this.modified = "_" + $idx
-            $this.post = $file.Extension
+            $this._pre = $this._orgBaseName
+            $this._highlight = "_" + $this._idx
+            $this._suf = $this._extension
             return
         }
-        $this.pre = ""
-        $this.modified = $idx + "_"
-        $this.post = $file.Name
+        $this._pre = ""
+        $this._highlight = $this._idx + "_"
+        $this._suf = $this._orgBaseName + $this._extension
     }
 
-    [string] GetText() {
-        return $this.pre + $this.modified + $this.post
+    [string] getFullName() {
+        return $this._fullName
     }
 
-    [string] GetMarkup($color) {
-        return $this.pre + $Global:PSStyle.Foreground.Black + $Global:PSStyle.Background.PSObject.Properties[$color].Value + $this.modified + $Global:PSStyle.Reset + $this.post;
+    [string] getNewName() {
+        return $this._pre + $this._highlight + $this._suf
+    }
+
+    [bool] isRenamable() {
+        return -not (($this._orgBaseName + $this._extension) -ceq $this.getNewName())
+    }
+
+    [string] _getMarkerdNewName([bool]$execute) {
+        $color = ($execute)? "Green" : "White"
+        return $this._pre + `
+            $Global:PSStyle.Foreground.Black + `
+            $Global:PSStyle.Background.PSObject.Properties[$color].Value + `
+            $this._highlight + `
+            $Global:PSStyle.Reset + `
+            $this._suf
+    }
+
+    [string] _getDimmedRelDir() {
+        return $global:PSStyle.Foreground.BrightBlack + $this._relDirName + "\" + $global:PSStyle.Reset
+    }
+
+    [int] getLeftSideByteLen() {
+        $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
+        return $sj.GetByteCount($this._relDirName + $this._pre)
+    }
+
+    [string] getFullMarkerdText([bool]$execute) {
+        return $this._getDimmedRelDir() + $this._getMarkerdNewName($execute)
     }
 
 }
 
+class IndexRenamer {
+    [int]$_leftBufferWidth = 0
+    [IndexRenameEntry[]]$entries = @()
+    IndexRenamer() {}
+
+    [void] setEntry([IndexRenameEntry]$ent) {
+        $this.entries += $ent
+        $w = $ent.getLeftSideByteLen()
+        if ($this._leftBufferWidth -lt $w) {
+            $this._leftBufferWidth = $w
+        }
+    }
+
+    [string] getFiller([int]$leftSideLen) {
+        $padding = [Math]::Max($this._leftBufferWidth - $leftSideLen, 0)
+        return " " * $padding
+    }
+
+    [void] run($execute) {
+        $this.entries | ForEach-Object {
+            $indent = $_.getLeftSideByteLen()
+            $filler = $this.getFiller($indent)
+            $filler + $_.getFullMarkerdText($execute) | Write-Host
+            if (-not $execute) {
+                return
+            }
+            $item = Get-Item -LiteralPath $_.getFullname()
+            $newName = $_.getNewName()
+            try {
+                $item | Rename-Item -NewName $newName -ErrorAction Stop
+            }
+            catch {
+                "failed to rename as '{0}'!" -f $newName | Write-Host -ForegroundColor Magenta
+            }
+        }
+    }
+
+}
+
+function Rename-Index {
+    <#
+        .EXAMPLE
+        ls * | Rename-Index
+    #>
+    [OutputType([System.Void])]
+    param (
+        [string]$altName
+        ,[int]$start = 1
+        ,[int]$pad = 2
+        ,[int]$step = 1
+        ,[int[]]$skips
+        ,[switch]$tail
+        ,[switch]$execute
+    )
+
+    $renamer = [IndexRenamer]::new()
+    $cur = (Get-Location).Path
+    $i = $start
+    $input | Where-Object {Test-Path $_} | ForEach-Object {
+        $ent = [IndexRenameEntry]::new($_.Fullname, $cur, $altName, $i, $pad, $tail)
+        if ($ent.isRenamable()) {
+            $renamer.setEntry($ent)
+            $i += $step
+            if ($skips.Length) {
+                while ($i -in $skips) {
+                    $i += $step
+                }
+            }
+        }
+    }
+    $renamer.run($execute)
+}
+Set-Alias rInd Rename-Index
 
 Class RenamePreview {
     [int]$bufferWidth
@@ -342,56 +449,6 @@ Class RenamePreview {
     }
 
 }
-
-function Rename-Index {
-    <#
-        .EXAMPLE
-        ls * | Rename-Index
-    #>
-    [OutputType([System.Void])]
-    param (
-        [string]$altName
-        ,[int]$start = 1
-        ,[int]$pad = 2
-        ,[int]$step = 1
-        ,[int[]]$skip
-        ,[switch]$tail
-        ,[switch]$execute
-    )
-
-    $proc = $input | Where-Object {$_.GetType().Name -in @("FileInfo", "DirectoryInfo")}
-    $previewer = [RenamePreview]::new($proc.Name)
-    $color = ($execute)? "Green" : "White"
-
-    $idx = $start - $step
-    $proc | ForEach-Object {
-        $idx += $step
-        if ($skip.Length) {
-            while ($idx -in $skip) {
-                $idx += $step
-            }
-        }
-
-        $ixi = [IndexedItem]::new($_.Fullname, $idx, $pad, $altName, $tail)
-        $markup = $ixi.GetMarkup($color)
-
-        if ($altName) {
-            $previewer.Compare($_.Name, $markup, $color, $true) | Write-Host
-        }
-        else {
-            if ($tail) {
-                $previewer.Fill($_.Name, $false) | Write-Host -NoNewline
-            }
-            $markup | Write-Host
-        }
-
-        if ($execute) {
-            $_ | Rename-Item -NewName $ixi.GetText()
-        }
-
-    }
-}
-Set-Alias rInd Rename-Index
 
 function Rename-WithScriptBlock {
     <#
