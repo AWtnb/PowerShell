@@ -1,4 +1,4 @@
-﻿
+
 <# ==============================
 
 cmdlets for renaming file or folder
@@ -71,7 +71,7 @@ class BasenameReplaceEntry {
 class BasenameReplacer {
     [int]$_leftBufferWidth = 0
     [BasenameReplaceEntry[]]$entries = @()
-    BasenameReplaceDiffer() {}
+    BasenameReplacer() {}
 
     [void] setEntry([BasenameReplaceEntry]$ent) {
         $this.entries += $ent
