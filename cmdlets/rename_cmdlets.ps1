@@ -125,7 +125,7 @@ function Rename-ReplaceBasename {
 
     $replacer = [BasenameReplacer]::new()
     $cur = (Get-Location).Path
-    $input | Where-Object {Test-Path $_} | ForEach-Object {
+    $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
         $ent = [BasenameReplaceEntry]::new($_.Fullname, $cur, $from, $to, $case)
         if ($ent.isRenamable()) {
             $replacer.setEntry($ent)
@@ -265,7 +265,7 @@ function Rename-Insert {
 
     $renamer = [InsertRenamer]::new()
     $cur = (Get-Location).Path
-    $input | Where-Object {Test-Path $_} | ForEach-Object {
+    $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
         $ent = [InsertRenameEntry]::new($_.Fullname, $cur, $insert, $position)
         if ($ent.isRenamable()) {
             $renamer.setEntry($ent)
@@ -408,7 +408,7 @@ function Rename-Index {
     $renamer = [IndexRenamer]::new()
     $cur = (Get-Location).Path
     $i = $start
-    $input | Where-Object {Test-Path $_} | ForEach-Object {
+    $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
         $ent = [IndexRenameEntry]::new($_.Fullname, $cur, $altName, $i, $pad, $tail)
         if ($ent.isRenamable()) {
             $renamer.setEntry($ent)
