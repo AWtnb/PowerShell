@@ -1,4 +1,4 @@
-
+﻿
 <# ==============================
 
 cmdlets for renaming file or folder
@@ -424,33 +424,93 @@ function Rename-Index {
 }
 Set-Alias rInd Rename-Index
 
-Class RenamePreview {
-    [int]$bufferWidth
-    [System.Text.Encoding]$sjis
-
-    RenamePreview($targets) {
-        $this.sjis = [System.Text.Encoding]::GetEncoding("Shift_JIS")
-        $this.bufferWidth = $targets | ForEach-Object {$this.sjis.GetByteCount($_)} | Sort-Object | Select-Object -Last 1
+class NameReplaceEntry {
+    [string]$_newName
+    [string]$_fullName
+    [string]$_orgBaseName
+    [string]$_extension
+    [string]$_relDirName
+    NameReplaceEntry([string]$fullName, [string]$curDir, [string]$newName) {
+        $this._newName = $newName
+        $this._fullName = $fullName
+        $item = Get-Item $this._fullName
+        $this._orgBaseName = $item.BaseName
+        $this._extension = $item.Extension
+        $this._relDirName = [System.IO.Path]::GetRelativePath($curDir, ($this._fullName | Split-Path -Parent))
     }
 
-    [string] Fill([string]$subStr, [bool]$arrow) {
-        $trimLen = 0
-        [regex]::new("`e\[.+?m").Matches($subStr).ForEach({ $trimLen += $_.Length })
-        $fillerWidth = $this.bufferWidth - ($this.sjis.GetByteCount($subStr) - $trimLen)
-        if ($fillerWidth -lt 0) {
-            $fillerWidth = 0
-        }
-        $filler = ($arrow)? (" {0}=> " -f ("=" * $fillerWidth)) : (" " * $fillerWidth)
-        return $Global:PSStyle.Foreground.BrightBlack + $filler + $Global:PSStyle.Reset
+    [bool] isRenamable() {
+        return -not (($this._orgBaseName + $this._extension) -ceq $this._newName)
     }
 
-    [string] Compare([string]$before, [string]$after, [string]$color, [bool]$arrow) {
-        return $before + $this.Fill($before, $arrow) + $Global:PSStyle.Foreground.PSObject.Properties[$color].Value + $after + $Global:PSStyle.Reset
+    [string] getFullname() {
+        return $this._fullName
     }
 
+    [string] getNewName() {
+        return $this._newName
+    }
+
+    [string] _getDimmedRelDir() {
+        return $global:PSStyle.Foreground.BrightBlack + $this._relDirName + "\" + $global:PSStyle.Reset
+    }
+
+    [int] getLeftSideByteLen() {
+        $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
+        return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
+    }
+
+    [string] getFullMarkerdText([bool]$org, [bool]$execute) {
+        $color = ($org)? "White" : "Green"
+        $ansi = $global:PSStyle.Foreground.PSObject.Properties[$color].Value
+        $n = ($org)? ($this._orgBaseName + $this._extension) : $this._newName
+        return $this._getDimmedRelDir() + $ansi + $n + $global:PSStyle.Reset
+    }
 }
 
-function Rename-WithScriptBlock {
+class NameReplacer {
+    [int]$_leftBufferWidth = 0
+    [NameReplaceEntry[]]$entries = @()
+    NameReplacer() {}
+
+    [void] setEntry([NameReplaceEntry]$ent) {
+        $this.entries += $ent
+        $w = $ent.getLeftSideByteLen()
+        if ($this._leftBufferWidth -lt $w) {
+            $this._leftBufferWidth = $w
+        }
+    }
+
+    [string] getFiller([int]$indent) {
+        $rightPadding = [Math]::Max($this._leftBufferWidth - $indent, 0)
+        $filler = " {0}=> " -f ("=" * $rightPadding)
+        return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
+    }
+
+    [void] run([bool]$execute) {
+        $this.entries | ForEach-Object {
+            $left = $_.getFullMarkerdText($true, $execute)
+            $indent = $_.getLeftSideByteLen()
+            $filler = $this.getFiller($indent)
+            $right = $_.getFullMarkerdText($false, $execute)
+            $left + $filler + $right | Write-Host
+            if (-not $execute) {
+                return
+            }
+            $item = Get-Item -LiteralPath $_.getFullname()
+            $newName = $_.getNewName()
+            try {
+                $item | Rename-Item -NewName $newName -ErrorAction Stop
+            }
+            catch {
+                "failed to rename as '{0}'!" -f $newName | Write-Host -ForegroundColor Magenta
+            }
+        }
+    }
+}
+
+
+function Rename-ApplyScriptBlock {
     <#
         .EXAMPLE
         Get-Childitem *.txt | renB -renameBlock {$_.Name -Replace "hogehoge", "hugahuga"}
@@ -462,18 +522,17 @@ function Rename-WithScriptBlock {
         [scriptblock]$renameBlock
         ,[switch]$execute
     )
-    $procTarget = $input | Where-Object {$_.GetType().Name -in @("FileInfo", "DirectoryInfo")}
 
-    $previewer = [RenamePreview]::new($procTarget.Name)
-    $color = ($execute)? "Green" : "White"
-
-    $procTarget | ForEach-Object {
+    $replacer = [NameReplacer]::new()
+    $cur = (Get-Location).Path
+    $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
         $newName = & $renameBlock
-        $previewer.Compare($_.Name, $newName, $color, $true) | Write-Host
-        if ($execute) {
-            $_ | Rename-Item -NewName $newName
+        $ent = [NameReplaceEntry]::new($_.Fullname, $cur, $newName)
+        if ($ent.isRenamable()) {
+            $replacer.setEntry($ent)
         }
     }
+    $replacer.run($execute)
 }
 
 function Rename-LightroomFromDropbox {
