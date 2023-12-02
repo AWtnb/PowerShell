@@ -546,31 +546,6 @@ function Rename-LightroomFromDropbox {
     } -execute:$execute
 }
 
-
-function Rename-Format {
-    <#
-        .EXAMPLE
-        Get-Childitem *.txt | Rename-Format "01_{0}_test"
-    #>
-    [OutputType([System.Void])]
-    param (
-        [string]$format = "{0}"
-        ,[switch]$execute
-    )
-    $procTarget = $input | Where-Object {$_.GetType().Name -in @("FileInfo", "DirectoryInfo")}
-    $previewer = [RenamePreview]::new($procTarget.Name)
-    $color = ($execute)? "Green" : "White"
-
-    $procTarget | ForEach-Object {
-        $newName = ($format -f $_.Basename) + $_.Extension
-        $previewer.Compare($_.Name, $newName, $color, $true) | Write-Host
-        if ($execute) {
-            $_ | Rename-Item -NewName $newName
-        }
-    }
-}
-Set-Alias renFmt Rename-Format
-
 function Rename-FromData {
     [OutputType([System.Void])]
     param (
