@@ -1,4 +1,4 @@
-
+﻿
 <# ==============================
 
 cmdlets for renaming file or folder
@@ -136,72 +136,120 @@ function Rename-ReplaceBasename {
 Set-Alias repBN Rename-ReplaceBasename
 
 
-
-Class RenamePreview {
-    [int]$bufferWidth
-    [System.Text.Encoding]$sjis
-
-    RenamePreview($targets) {
-        $this.sjis = [System.Text.Encoding]::GetEncoding("Shift_JIS")
-        $this.bufferWidth = $targets | ForEach-Object {$this.sjis.GetByteCount($_)} | Sort-Object | Select-Object -Last 1
-    }
-
-    [string] Fill([string]$subStr, [bool]$arrow) {
-        $trimLen = 0
-        [regex]::new("`e\[.+?m").Matches($subStr).ForEach({ $trimLen += $_.Length })
-        $fillerWidth = $this.bufferWidth - ($this.sjis.GetByteCount($subStr) - $trimLen)
-        if ($fillerWidth -lt 0) {
-            $fillerWidth = 0
+class InsertRenameEntry {
+    [int]$_pos
+    [string]$_pre
+    [string]$_suf
+    [string]$_insert
+    [string]$_fullName
+    [string]$_orgBaseName
+    [string]$_extension
+    [string]$_relDirName
+    InsertRenameEntry([string]$fullName, [string]$curDir, [string]$insert, [int]$pos) {
+        $this._pos = $pos
+        $this._fullName = $fullName
+        $item = Get-Item $this._fullName
+        $this._orgBaseName = $item.BaseName
+        $this._extension = $item.Extension
+        $this._relDirName = [System.IO.Path]::GetRelativePath($curDir, ($this._fullName | Split-Path -Parent))
+        if ([Math]::Abs($this._pos) -gt $item.BaseName.Length + 1) {
+            $this._pre = $item.Basename
+            $this._insert = ""
+            $this._suf = ""
+            return
         }
-        $filler = ($arrow)? (" {0}=> " -f ("=" * $fillerWidth)) : (" " * $fillerWidth)
-        return $Global:PSStyle.Foreground.BrightBlack + $filler + $Global:PSStyle.Reset
+        $this._insert = $insert
+        if ($this._pos -eq 0) {
+            $this._pre = ""
+            $this._suf = $item.Basename
+            return
+        }
+        if ($this._pos -lt 0) {
+            $this._pre = ($item.BaseName).substring(0, ($item.BaseName).length + $this._pos + 1)
+            $this._suf = ($item.BaseName).substring(   ($item.BaseName).length + $this._pos + 1)
+            return
+        }
+        $this._pre = ($item.BaseName).substring(0, $this._pos)
+        $this._suf = ($item.BaseName).substring($this._pos)
     }
 
-    [string] Compare([string]$before, [string]$after, [string]$color, [bool]$arrow) {
-        return $before + $this.Fill($before, $arrow) + $Global:PSStyle.Foreground.PSObject.Properties[$color].Value + $after + $Global:PSStyle.Reset
+    [string] getFullName() {
+        return $this._fullName
+    }
+
+    [string] getNewName() {
+        return $this._pre + $this._insert + $this._suf + $this._extension
+    }
+
+    [bool] isRenamable() {
+        return -not (($this._orgBaseName + $this._extension) -ceq $this.getNewName())
+    }
+
+    [string] _getMarkerdNewName([bool]$execute) {
+        $color = ($execute)? "Green" : "White"
+        return $this._pre + `
+            $Global:PSStyle.Foreground.Black + `
+            $Global:PSStyle.Background.PSObject.Properties[$color].Value + `
+            $this._insert + `
+            $Global:PSStyle.Reset + `
+            $this._suf + `
+            $this._extension
+    }
+
+    [string] _getDimmedRelDir() {
+        return $global:PSStyle.Foreground.BrightBlack + $this._relDirName + "\" + $global:PSStyle.Reset
+    }
+
+    [int] getLeftSideByteLen() {
+        $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
+        return $sj.GetByteCount($this._relDirName + $this._pre)
+    }
+
+    [string] getFullMarkerdText([bool]$execute) {
+        return $this._getDimmedRelDir() + $this._getMarkerdNewName($execute)
     }
 
 }
 
 
+
+
 class InsertRenamer {
-    [string]$pre
-    [string]$post
-    [string]$extension
-    [string]$insert
+    [int]$_leftBufferWidth = 0
+    [InsertRenameEntry[]]$entries = @()
+    InsertRenamer() {}
 
-    InsertRenamer([string]$path, [int]$pos, [string]$insert) {
-        $file = Get-Item -LiteralPath $path
-        $this.extension = $file.Extension
-        if ([Math]::Abs($pos) -gt $file.BaseName.Length + 1) {
-            $this.pre = $file.Basename
-            $this.post = ""
-            $this.insert = ""
-            return
+    [void] setEntry([InsertRenameEntry]$ent) {
+        $this.entries += $ent
+        $w = $ent.getLeftSideByteLen()
+        if ($this._leftBufferWidth -lt $w) {
+            $this._leftBufferWidth = $w
         }
-        $this.insert = $insert
-        if ($pos -eq 0) {
-            $this.pre = ""
-            $this.post = $file.Basename
-            return
-        }
-        if ($pos -gt 0) {
-            $this.pre = ($file.BaseName).substring(0, $pos)
-            $this.post = ($file.BaseName).substring($pos)
-            return
-        }
-        $this.pre = ($file.BaseName).substring(0, ($file.BaseName).length + $pos + 1)
-        $this.post = ($file.BaseName).substring(   ($file.BaseName).length + $pos + 1)
     }
 
-    [string] GetText() {
-        return $this.pre + $this.insert + $this.post + $this.extension
+    [string] getFiller([int]$leftSideLen) {
+        $padding = [Math]::Max($this._leftBufferWidth - $leftSideLen, 0)
+        return " " * $padding
     }
 
-    [string] GetMarkup([string]$color) {
-        return $this.pre + $Global:PSStyle.Foreground.Black + $Global:PSStyle.Background.PSObject.Properties[$color].Value + $this.insert + $Global:PSStyle.Reset + $this.post + $this.extension
+    [void] run($execute) {
+        $this.entries | ForEach-Object {
+            $indent = $_.getLeftSideByteLen()
+            $filler = $this.getFiller($indent)
+            $filler + $_.getFullMarkerdText($execute) | Write-Host
+            if (-not $execute) {
+                return
+            }
+            $item = Get-Item -LiteralPath $_.getFullname()
+            $newName = $_.getNewName()
+            try {
+                $item | Rename-Item -NewName $newName -ErrorAction Stop
+            }
+            catch {
+                "failed to rename as '{0}'!" -f $newName | Write-Host -ForegroundColor Magenta
+            }
+        }
     }
-
 }
 
 
@@ -217,23 +265,15 @@ function Rename-Insert {
         ,[switch]$execute
     )
 
-    $procTarget = $input | Where-Object {$_.GetType().Name -in @("FileInfo", "DirectoryInfo")}
-    if (-not $procTarget) {
-        return
-    }
-    $previewer = [RenamePreview]::new($procTarget.Name)
-    $color = ($execute)? "Green" : "White"
-
-    $procTarget | ForEach-Object {
-        $rn = [InsertRenamer]::new($_.fullname, $position, $insert)
-        if ($position -lt 0) {
-            $previewer.Fill($_.Name, $false) | Write-Host -NoNewline
-        }
-        $rn.GetMarkup($color) | Write-Host
-        if ($execute) {
-            $_ | Rename-Item -NewName $rn.GetText()
+    $renamer = [InsertRenamer]::new()
+    $cur = (Get-Location).Path
+    $input | Where-Object {Test-Path $_} | ForEach-Object {
+        $ent = [InsertRenameEntry]::new($_.Fullname, $cur, $insert, $position)
+        if ($ent.isRenamable()) {
+            $renamer.setEntry($ent)
         }
     }
+    $renamer.run($execute)
 }
 Set-Alias rIns Rename-Insert
 
@@ -276,6 +316,32 @@ class IndexedItem {
 
 }
 
+
+Class RenamePreview {
+    [int]$bufferWidth
+    [System.Text.Encoding]$sjis
+
+    RenamePreview($targets) {
+        $this.sjis = [System.Text.Encoding]::GetEncoding("Shift_JIS")
+        $this.bufferWidth = $targets | ForEach-Object {$this.sjis.GetByteCount($_)} | Sort-Object | Select-Object -Last 1
+    }
+
+    [string] Fill([string]$subStr, [bool]$arrow) {
+        $trimLen = 0
+        [regex]::new("`e\[.+?m").Matches($subStr).ForEach({ $trimLen += $_.Length })
+        $fillerWidth = $this.bufferWidth - ($this.sjis.GetByteCount($subStr) - $trimLen)
+        if ($fillerWidth -lt 0) {
+            $fillerWidth = 0
+        }
+        $filler = ($arrow)? (" {0}=> " -f ("=" * $fillerWidth)) : (" " * $fillerWidth)
+        return $Global:PSStyle.Foreground.BrightBlack + $filler + $Global:PSStyle.Reset
+    }
+
+    [string] Compare([string]$before, [string]$after, [string]$color, [bool]$arrow) {
+        return $before + $this.Fill($before, $arrow) + $Global:PSStyle.Foreground.PSObject.Properties[$color].Value + $after + $Global:PSStyle.Reset
+    }
+
+}
 
 function Rename-Index {
     <#
