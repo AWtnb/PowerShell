@@ -8,7 +8,7 @@ cmdlets for renaming file or folder
 
 class BasenameReplaceEntry {
     [regex]$_reg
-    [string]$execColor = "Green"
+    [string]$_execColor = "Green"
     [string]$_fullName
     [string]$_orgBaseName
     [string]$_extension
@@ -38,11 +38,11 @@ class BasenameReplaceEntry {
     }
 
     [string] _getMarkerdNewName() {
-        return $global:PSStyle.Foreground.PSObject.Properties[$this.execColor].Value + $this._newName + $global:PSStyle.Reset
+        return $global:PSStyle.Foreground.PSObject.Properties[$this._execColor].Value + $this._newName + $global:PSStyle.Reset
     }
 
     [string] _getMatchesMarkerdOrgName([bool]$execute) {
-        $col = ($execute)? $this.execColor : "White"
+        $col = ($execute)? $this._execColor : "White"
         $ansi = $global:PSStyle.Background.PSObject.Properties[$col].Value + $global:PSStyle.Foreground.Black
         return $this._reg.Replace($this._orgBaseName, {
                 param([System.Text.RegularExpressions.Match]$m)
