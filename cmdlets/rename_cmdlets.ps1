@@ -461,10 +461,12 @@ class NameReplaceEntry {
     }
 
     [string] getFullMarkerdText([bool]$org, [bool]$execute) {
-        $color = ($org)? "White" : "Green"
+        if ($org) {
+            return $this._getDimmedRelDir() + $this._orgBaseName + $this._extension
+        }
+        $color = ($execute)?  "Green" : "White"
         $ansi = $global:PSStyle.Foreground.PSObject.Properties[$color].Value
-        $n = ($org)? ($this._orgBaseName + $this._extension) : $this._newName
-        return $this._getDimmedRelDir() + $ansi + $n + $global:PSStyle.Reset
+        return $this._getDimmedRelDir() + $ansi + $this._newName + $global:PSStyle.Reset
     }
 }
 
@@ -481,17 +483,19 @@ class NameReplacer {
         }
     }
 
-    [string] getFiller([int]$indent) {
+    [string] getFiller([int]$indent, [bool]$execute) {
+        $color = ($execute)? "Yellow" : "Cyan"
+        $ansi = $global:PSStyle.Foreground.PSObject.Properties[$color].Value
         $rightPadding = [Math]::Max($this._leftBufferWidth - $indent, 0)
         $filler = " {0}=> " -f ("=" * $rightPadding)
-        return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
+        return $ansi + $filler + $Global:PSStyle.Reset
     }
 
     [void] run([bool]$execute) {
         $this.entries | ForEach-Object {
             $left = $_.getFullMarkerdText($true, $execute)
             $indent = $_.getLeftSideByteLen()
-            $filler = $this.getFiller($indent)
+            $filler = $this.getFiller($indent, $execute)
             $right = $_.getFullMarkerdText($false, $execute)
             $left + $filler + $right | Write-Host
             if (-not $execute) {
