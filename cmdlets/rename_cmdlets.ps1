@@ -539,7 +539,7 @@ function Rename-LightroomFromDropbox {
     param (
         [switch]$execute
     )
-    $input | Rename-WithScriptBlock {
+    $input | Rename-ApplyScriptBlock {
         $fmt = ($_.BaseName -replace "[ \-]","" -replace "写真" -replace "\(","-" -replace "\)")
         $newName = $fmt.substring(0,8) + "-IMG_" + $fmt.substring(8).PadLeft(6, "0") + $_.extension
         return $newName
@@ -561,5 +561,5 @@ function Rename-FromData {
     if (-not $data.Count) {
         return
     }
-    $input | Where-Object {$_.Name -in $hashtable.keys} | Rename-WithScriptBlock { $hashtable[$_.Name] } -execute:$execute
+    $input | Where-Object {$_.Name -in $hashtable.keys} | Rename-ApplyScriptBlock { $hashtable[$_.Name] } -execute:$execute
 }
