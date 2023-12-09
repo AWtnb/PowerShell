@@ -484,7 +484,7 @@ class NameReplacer {
     }
 
     [string] getFiller([int]$indent, [bool]$execute) {
-        $color = ($execute)? "Yellow" : "Cyan"
+        $color = ($execute)? "Cyan" : "Black"
         $ansi = $global:PSStyle.Foreground.PSObject.Properties[$color].Value
         $rightPadding = [Math]::Max($this._leftBufferWidth - $indent, 0)
         $filler = " {0}=> " -f ("=" * $rightPadding)
