@@ -521,16 +521,16 @@ class PSStringDiff {
     PSStringDiff([string]$fromStr, [string]$toStr) {
         $froms = $fromStr.GetEnumerator().ForEach({$_ -as [string]})
         $tos = $toStr.GetEnumerator().ForEach({$_ -as [string]})
-        $this._deltas = Compare-Object -ReferenceObject $tos -DifferenceObject $froms -IncludeEqual -CaseSensitive -SyncWindow 0
+        $this._deltas = Compare-Object -ReferenceObject $froms -DifferenceObject $tos -IncludeEqual -CaseSensitive -SyncWindow 0
     }
 
     [string] _markup([int]$idx) {
         $d = $this._deltas[$idx]
         $t = $d.InputObject
-        if ($d.SideIndicator -eq "<=") {
+        if ($d.SideIndicator -eq "=>") {
             return $this._decoAdd + $t + $this._decoReset
         }
-        if ($d.SideIndicator -eq "=>") {
+        if ($d.SideIndicator -eq "<=") {
             return $this._decoDel + $t + $this._decoReset
         }
         return $t
