@@ -513,6 +513,39 @@ class NameReplacer {
     }
 }
 
+class PSStringDiff {
+    [string]$_decoReset = $global:PSStyle.Reset
+    [string]$_decoAdd = $global:PSStyle.Background.BrightBlue + $global:PSStyle.Foreground.Black
+    [string]$_decoDel = $global:PSStyle.Background.BrightRed + $global:PSStyle.Strikethrough + $global:PSStyle.Foreground.Black
+    [PSObject[]]$_deltas
+    PSStringDiff([string]$fromStr, [string]$toStr) {
+        $froms = $fromStr.GetEnumerator().ForEach({$_ -as [string]})
+        $tos = $toStr.GetEnumerator().ForEach({$_ -as [string]})
+        $this._deltas = Compare-Object -ReferenceObject $tos -DifferenceObject $froms -IncludeEqual -CaseSensitive -SyncWindow 0
+    }
+
+    [string] _markup([int]$idx) {
+        $d = $this._deltas[$idx]
+        $t = $d.InputObject
+        if ($d.SideIndicator -eq "<=") {
+            return $this._decoAdd + $t + $this._decoReset
+        }
+        if ($d.SideIndicator -eq "=>") {
+            return $this._decoDel + $t + $this._decoReset
+        }
+        return $t
+    }
+
+    [string] execute() {
+        $builder = [System.Text.StringBuilder]::new()
+        for ($i = 0; $i -lt $this._deltas.Count; $i++) {
+            $s = $this._markup($i)
+            $builder.Append($s) > $null
+        }
+        return $builder.ToString()
+    }
+}
+
 
 function Rename-ApplyScriptBlock {
     <#
