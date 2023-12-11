@@ -256,9 +256,16 @@ function Invoke-GrepOnActiveWordDocument {
     if ($asObject) {
         return $grep
     }
+
+    $reg = ($case)? [regex]::new($pattern) : [regex]::new($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    $stopDeco = $global:PSStyle.Reset
     foreach ($g in $grep) {
-        "{0:d4}:" -f $g.LineNumber | Write-Host -ForegroundColor Blue -NoNewline
-        $g.Line | hilight -pattern $pattern -case:$case
+        $lineNum = "{0:d4}:" -f $g.LineNumber
+        $markup = $reg.Replace($g.Line, {
+            param([System.Text.RegularExpressions.Match]$m)
+            return $global:PSStyle.Background.BrightBlue + $global:PSStyle.Foreground.Black + $m.Value + $stopDeco
+        })
+        $global:PSStyle.Foreground.Blue + $lineNum + $stopDeco + $markup | Write-Output
     }
 
     if ($grep.Matches.Count -gt 0) {
@@ -407,14 +414,20 @@ function Invoke-GrepOnActiveWordDocumentComment {
     if ($adoc.GetComments().Count -lt 1) {
         return
     }
-    # $reg = ($case)? [regex]$pattern : [regex]"(?i)$pattern"
+
     $reg = ($case)? [regex]::new($pattern) : [regex]::new($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    $stopDeco = $global:PSStyle.Reset
     $adoc.GetComments() | ForEach-Object {
         $author = $_.Author
         $_.Lines | ForEach-Object {
-            if ($reg.IsMatch($_)) {
-                "{0}:" -f $author | Write-Host -ForegroundColor Blue
-                $_ | hilight -pattern $pattern -case:$case
+            $line = $_
+            if ($reg.IsMatch($line)) {
+                $a = "{0}:" -f $author
+                $markup = $reg.Replace($line, {
+                    param([System.Text.RegularExpressions.Match]$m)
+                    return $global:PSStyle.Background.BrightBlue + $global:PSStyle.Foreground.Black + $m.Value + $stopDeco
+                })
+                $global:PSStyle.Foreground.Blue + $a + $stopDeco + $markup | Write-Output
             }
         }
     }
