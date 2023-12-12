@@ -18,12 +18,18 @@ def main(
     if swap_start < 0:
         try:
             swap_start = len(base_pdf.pages) + swap_start + 1
-            assert 0 < swap_start, "invalid index!"
+            assert 0 < swap_start, "invalid start index: {}".format(swap_start)
         except AssertionError as err:
             print(err, file=sys.stderr)
             return
 
     swap_end = swap_start + swap_len - 1
+
+    try:
+        assert swap_end <= len(base_pdf.pages), "invalid end index: {}".format(swap_end)
+    except AssertionError as err:
+        print(err, file=sys.stderr)
+        return
 
     bp = Path(base_path)
     out_path = bp.with_stem(
