@@ -364,13 +364,14 @@ function Invoke-PdfSwapWithPython {
         $inputObj
         ,[string]$newPdf
         ,[int]$swapStartPage = 1
+        ,[int]$swapPageLength = 1
     )
     begin {}
     process {
         $file = Get-Item -LiteralPath $inputObj
         if ($file.Extension -eq ".pdf") {
             $py = [PyPdf]::new("swap.py")
-            $py.RunCommand(@($file.Fullname, (Get-Item -LiteralPath $newPdf).FullName, $swapStartPage))
+            $py.RunCommand(@($file.Fullname, (Get-Item -LiteralPath $newPdf).FullName, $swapStartPage, $swapPageLength))
         }
     }
     end {}
