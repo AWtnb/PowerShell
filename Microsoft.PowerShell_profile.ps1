@@ -419,18 +419,18 @@ function reverse {
     }
 }
 
+function Invoke-Taskswitcher ([int]$waitMsec = 150) {
+    Start-Sleep -Milliseconds $waitMsec
+    [System.Windows.Forms.SendKeys]::SendWait("^%{Tab}")
+}
 function Invoke-Taskview ([int]$waitMsec = 150) {
-    Invoke-Command -ScriptBlock {
-        Start-Sleep -Milliseconds $waitMsec
-        [System.Windows.Forms.SendKeys]::SendWait("^%{Tab}")
-    }
-    # Start-Process Explorer.exe -ArgumentList @("shell:::{3080F90E-D7AD-11D9-BD98-0000947B0257}")
+    Start-Sleep -Milliseconds $waitMsec
+    Start-Process Explorer.exe -ArgumentList @("shell:::{3080F90E-D7AD-11D9-BD98-0000947B0257}")
 }
 
 function c {
     @($input).ForEach({$_ -as [string]}) | Set-Clipboard
-    Invoke-Taskview -waitMsec 300
-    # Hide-ConsoleWindow
+    [System.Windows.Forms.SendKeys]::SendWait("%{ESC}")
 }
 
 function cds {
