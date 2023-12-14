@@ -135,6 +135,21 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
     [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 }
 
+function Invoke-DayPicker {
+    param (
+        [int]$y = 0
+        ,[int]$m = 0
+        ,[int]$d = 0
+        ,[int]$span = 30
+    )
+    $opt = @("--year", $y, "--month", $m, "--day", $d, "--span", $span)
+    & "C:\Personal\tools\bin\fuzzy-daypick.exe" $opt | Write-Output
+}
+Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
+    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPicker | scb")
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
 
 function Invoke-MokoLauncher {
     param (
