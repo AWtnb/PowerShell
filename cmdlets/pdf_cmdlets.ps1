@@ -109,6 +109,7 @@ function Invoke-PdfFilenameWatermarkWithPython {
 function pyGenSearchPdf {
     param (
         [string]$outName = "search_"
+        ,[int]$start = 1
     )
     $files = $input | Where-Object {$_.Extension -eq ".pdf"}
     $orgDir = $pwd.ProviderPath
@@ -118,7 +119,7 @@ function pyGenSearchPdf {
         Get-ChildItem "*.pdf" | Invoke-PdfUnspreadWithPython
         Get-ChildItem "*.pdf" | Where-Object { $_.BaseName -notmatch "unspread$" } | Remove-Item
         Get-ChildItem "*_unspread.pdf" | Rename-Item -NewName { ($_.BaseName -replace "_unspread$") + $_.Extension }
-        Get-ChildItem "*.pdf" | Invoke-PdfFilenameWatermarkWithPython -countThrough
+        Get-ChildItem "*.pdf" | Invoke-PdfFilenameWatermarkWithPython -countThrough -startIdx $start
         Get-ChildItem "wm*.pdf" | Invoke-PdfConcWithPython -outName $outName
         Get-ChildItem | Where-Object { $_.BaseName -eq $outName } | Move-Item -Destination $orgDir
     }
