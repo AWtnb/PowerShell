@@ -208,6 +208,10 @@ class ASTer {
         return $this.GetPreviousToken().Kind -eq "Pipe"
     }
 
+    [bool] IsBeforePipe() {
+        return $this.GetActiveToken().Kind -eq "Pipe"
+    }
+
     ReplaceTokenByIndex([int]$index, [string]$newText) {
         $t = $this.tokens[$index]
         [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
@@ -221,7 +225,7 @@ class ASTer {
 }
 
 
-Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debutActiveToken" -LongDescription "debutActiveToken" -ScriptBlock {
+Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debugActiveToken" -LongDescription "debugActiveToken" -ScriptBlock {
     $a = [Aster]::new()
     $t = $a.GetActiveToken()
     $o = [PSCustomObject]@{
@@ -259,8 +263,11 @@ Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescr
 
 Set-PSReadLineKeyHandler -Key "alt+n" -BriefDescription "complete-next-param" -LongDescription "complete-next-param" -ScriptBlock {
     $a = [ASTer]::new()
+    if ($a.IsAfterPipe()) {
+        return
+    }
     $t = $a.GetActiveToken()
-    if ($t.Kind -eq "EndOfInput" -or $a.IsEndOfToken()) {
+    if ($t.Kind -eq "EndOfInput" -or $a.IsEndOfToken() -or $a.IsBeforePipe()) {
         $s = ($a.IsEndOfToken())? " -" : "-"
         [PSConsoleReadLine]::Insert($s)
         [PSConsoleReadLine]::MenuComplete()
