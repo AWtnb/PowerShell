@@ -147,7 +147,7 @@ function Invoke-DayPicker {
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPicker | scb")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPicker -span 365 | scb")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
