@@ -140,7 +140,7 @@ function Invoke-DayPicker {
         [int]$y = 0
         ,[int]$m = 0
         ,[int]$d = 0
-        ,[int]$span = 365
+        ,[int]$span = 30
         ,[switch]$weekday
     )
     $opt = @("--year", $y, "--month", $m, "--day", $d, "--span", $span)
