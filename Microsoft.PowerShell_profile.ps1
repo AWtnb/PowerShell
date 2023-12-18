@@ -390,12 +390,26 @@ function ml ([string]$pattern, [switch]$case, [switch]$negative){
     return @($input).Where({$reg.IsMatch($_)})
 }
 
-function ato ([string]$s, [int]$linesAfter=0) {
-    return $($input | ForEach-Object {[string]$_ + $s + "`n" * $linesAfter})
+function ato ([string]$s) {
+    return $($input | ForEach-Object {[string]$_ + $s})
 }
 
-function saki ([string]$s, [int]$linesBefore=0) {
-    return $($input | ForEach-Object {"`n" * $linesBefore + $b + $s + [string]$_})
+function made ([string]$s) {
+    return $($input | ForEach-Object {
+        $t = $_ -as [string]
+        return $t.Substring(0, $t.IndexOf($s))
+    })
+}
+
+function kara ([string]$s) {
+    return $($input | ForEach-Object {
+        $t = $_ -as [string]
+        return $t.Substring($t.IndexOf($s)+1)
+    })
+}
+
+function saki ([string]$s) {
+    return $($input | ForEacjh-Object {$s + [string]$_})
 }
 
 function sand([string]$pair = "「」") {
