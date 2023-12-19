@@ -137,13 +137,14 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
 
 function Invoke-DayPicker {
     param (
-        [int]$y = 0
+        [string]$start = ""
+        ,[int]$y = 0
         ,[int]$m = 0
         ,[int]$d = 0
         ,[int]$span = 30
         ,[switch]$weekday
     )
-    $opt = @("--year", $y, "--month", $m, "--day", $d, "--span", $span)
+    $opt = @("--start", $start, "--year", $y, "--month", $m, "--day", $d, "--span", $span)
     if ($weekday) {
         $opt += "--weekday"
     }
