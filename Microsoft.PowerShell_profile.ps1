@@ -443,7 +443,14 @@ function Invoke-Taskview ([int]$waitMsec = 150) {
 }
 
 function c {
-    @($input).ForEach({$_ -as [string]}) | Set-Clipboard
+    $lines = @($input).ForEach({$_ -as [string]})
+    if ($lines.length -lt 1) {
+        $lastCmd = ([Microsoft.PowerShell.PSConsoleReadLine]::GetHistoryItems() | Select-Object -SkipLast 1 | Select-Object -Last 1).CommandLine
+        Invoke-Expression $lastCmd | Set-Clipboard
+    }
+    else {
+        $lines | Set-Clipboard
+    }
     [System.Windows.Forms.SendKeys]::SendWait("%{ESC}")
 }
 
