@@ -144,7 +144,8 @@ function Invoke-DayPicker {
         ,[int]$span = 30
         ,[switch]$weekday
     )
-    $opt = @("--start", $start, "--year", $y, "--month", $m, "--day", $d, "--span", $span)
+    $opt = ($start)? @("--start", $start) : @()
+    $opt = $opt + @("--year", $y, "--month", $m, "--day", $d, "--span", $span)
     if ($weekday) {
         $opt += "--weekday"
     }
