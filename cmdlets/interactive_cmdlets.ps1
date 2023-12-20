@@ -151,9 +151,25 @@ function Invoke-DayPicker {
     }
     & "C:\Personal\tools\bin\fuzzy-daypick.exe" $opt | Write-Output
 }
+function Invoke-DayPickerClipper {
+    param (
+        [string]$start = ""
+        ,[int]$y = 0
+        ,[int]$m = 0
+        ,[int]$d = 0
+        ,[int]$span = 30
+        ,[switch]$weekday
+    )
+    $days = Invoke-DayPicker -start $start -y $y -m $m -d $d -span $span -weekday:$weekday
+    if ($day) {
+        $days | Set-Clipboard
+        "coplied:" | Write-Host -ForegroundColor Blue
+        $days | Write-Host
+    }
+}
 Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPicker -weekday | scb")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPickerClipper")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
