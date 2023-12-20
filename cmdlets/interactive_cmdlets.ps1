@@ -161,7 +161,7 @@ function Invoke-DayPickerClipper {
         ,[switch]$weekday
     )
     $days = Invoke-DayPicker -start $start -y $y -m $m -d $d -span $span -weekday:$weekday
-    if ($day) {
+    if ($days) {
         $days | Set-Clipboard
         "coplied:" | Write-Host -ForegroundColor Blue
         $days | Write-Host
@@ -169,7 +169,7 @@ function Invoke-DayPickerClipper {
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPickerClipper")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPickerClipper -weekday")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
