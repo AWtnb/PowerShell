@@ -409,7 +409,7 @@ function kara ([string]$s) {
 }
 
 function saki ([string]$s) {
-    return $($input | ForEacjh-Object {$s + [string]$_})
+    return $($input | ForEach-Object {$s + [string]$_})
 }
 
 function sand([string]$pair = "「」") {
