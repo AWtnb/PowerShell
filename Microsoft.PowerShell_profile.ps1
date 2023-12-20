@@ -377,8 +377,8 @@ function sieve ([switch]$net) {
     $input | Where-Object {return ($net)? ($_ -replace "\s") : $_} | Write-Output
 }
 
-function padZero ([int]$pad) {
-    $input | ForEach-Object {"{0:d$($pad)}" -f [int]$_ | Write-Output}
+function pad ([int]$width = 3, [string]$char = "0") {
+    $input | ForEach-Object {($_ -as [string]).PadLeft($width, $char)} | Write-Output
 }
 
 function ml ([string]$pattern, [switch]$case, [switch]$negative){
