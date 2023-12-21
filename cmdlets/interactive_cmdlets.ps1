@@ -169,8 +169,8 @@ function Invoke-DayPickerClipper {
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPickerClipper -weekday")
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPickerClipper -weekday -")
+    [Microsoft.PowerShell.PSConsoleReadLine]::MenuComplete()
 }
 
 function Invoke-MokoLauncher {
