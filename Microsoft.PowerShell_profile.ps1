@@ -451,7 +451,7 @@ function c {
     else {
         $lines | Set-Clipboard
     }
-    [System.Windows.Forms.SendKeys]::SendWait("%{ESC}")
+    [System.Windows.Forms.SendKeys]::SendWait("%{Tab}")
 }
 
 function cds {

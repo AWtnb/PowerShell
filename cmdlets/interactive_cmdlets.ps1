@@ -165,6 +165,7 @@ function Invoke-DayPickerClipper {
         $days | Set-Clipboard
         "coplied:" | Write-Host -ForegroundColor Blue
         $days | Write-Host
+        [System.Windows.Forms.SendKeys]::SendWait("%{Tab}")
     }
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
