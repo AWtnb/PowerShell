@@ -45,9 +45,13 @@ class CorvusSKK {
         Start-Process $this.userdictPath
     }
 
+    [void] run() {
+        Start-Process $this.managerPath
+    }
+
     [void] reload() {
         $this.stopProcess()
-        Start-Process $this.managerPath
+        $this.run()
     }
 
     [void] config() {
@@ -64,9 +68,17 @@ Set-PSReadLineKeyHandler -Key "alt+s,c" -BriefDescription "skk-config" -LongDesc
 }
 Set-PSReadLineKeyHandler -Key "alt+s,r" -BriefDescription "skk-reload" -LongDescription "skk-reload" -ScriptBlock {
     $skk = [CorvusSKK]::new()
-    $skk.reload()
-    "Reloaded SKK Config!" | Write-Host -ForegroundColor Green
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    try {
+        $skk.reload()
+        "Reloaded SKK Config!" | Write-Host -ForegroundColor Green
+    }
+    catch {
+        "Started SKK Config!" | Write-Host -ForegroundColor Yellow
+        $skk.run()
+    }
+    finally {
+        [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    }
 }
 Set-PSReadLineKeyHandler -Key "alt+s,d" -BriefDescription "skk-dict" -LongDescription "skk-dict" -ScriptBlock {
     $skk = [CorvusSKK]::new()
