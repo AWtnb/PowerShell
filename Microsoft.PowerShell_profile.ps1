@@ -191,82 +191,6 @@ class MacOSFile {
 # prompt
 #################################################################
 
-class CorvusSKK {
-    [string]$managerPath
-    [string]$dialogPath
-    [string]$procName
-    [string]$userdictPath
-    CorvusSKK() {
-        $this.managerPath = "C:\windows\system32\IME\IMCRVSKK\imcrvmgr.exe"
-        if (Test-Path $this.managerPath) {
-            $f = Get-Item $this.managerPath
-            $this.procName = $f.BaseName
-        } else {
-            $this.procName = ""
-        }
-        $this.dialogPath = "C:\Windows\System32\IME\IMCRVSKK\imcrvcnf.exe"
-        $this.userdictPath = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
-    }
-
-    [bool] isRunning() {
-        try {
-            Get-Process -Name $this.procName -ErrorAction Stop
-            return $true
-        }
-        catch {
-            return $false
-        }
-        return $false
-    }
-
-    [void] stopProcess() {
-        if ($this.isRunning()) {
-            Get-Process -Name $this.procName | Stop-Process
-        }
-    }
-
-    [void] invokeDict() {
-        $this.stopProcess()
-        Start-Process $this.userdictPath
-    }
-
-    [void] reload() {
-        $this.stopProcess()
-        Start-Process $this.managerPath
-    }
-
-    [void] config() {
-        Start-Process $this.dialogPath
-    }
-}
-
-Set-PSReadLineKeyHandler -Key "alt+s,c" -BriefDescription "skk-config" -LongDescription "skk-config" -ScriptBlock {
-    $skk = [CorvusSKK]::new()
-    $skk.config()
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-}
-Set-PSReadLineKeyHandler -Key "alt+s,r" -BriefDescription "skk-reload" -LongDescription "skk-reload" -ScriptBlock {
-    try {
-        $skk = [CorvusSKK]::new()
-        $skk.reload()
-        "Reloaded SKK config!" | Write-Host -ForegroundColor Green
-    }
-    catch {
-        "Failed to reload SKK config..." | Write-Host -ForegroundColor Red
-    }
-    finally {
-        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-    }
-}
-Set-PSReadLineKeyHandler -Key "alt+s,d" -BriefDescription "skk-dict" -LongDescription "skk-dict" -ScriptBlock {
-    $skk = [CorvusSKK]::new()
-    $skk.invokeDict()
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-}
-
-
-
-
 Class Prompter {
 
     [string]$color
@@ -328,14 +252,6 @@ Class Prompter {
         return ""
     }
 
-    [string] GetSKK() {
-        $skk = [CorvusSKK]::new()
-        if ($skk.isRunning()) {
-            return " SKK:`u{2705}"
-        }
-        return " SKK:`u{26d4}"
-    }
-
     [string] GetWd() {
         $prof = $env:USERPROFILE
         $wd = $pwd.ProviderPath
@@ -359,8 +275,7 @@ Class Prompter {
             + $this.markedFg `
             + $leaf `
             + $this.stopDeco`
-            + $this.GetRepoInfo() `
-            + $this.GetSKK())
+            + $this.GetRepoInfo())
     }
 
     [string] GetPrompt() {
