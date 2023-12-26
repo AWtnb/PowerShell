@@ -6,6 +6,20 @@ cmdlets for processing japanese
             encoding: utf8bom
 ============================== #>
 
+function skkdict {
+    $proc = Get-Process -Name "imcrvmgr"
+    if ($proc) {
+        $proc | Stop-Process
+    }
+    $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
+    if (Test-Path $p) {
+        Start-Process $p
+    } else {
+        "cannot find path: '{0}'" -f $p | Write-Host -ForegroundColor Magenta
+    }
+}
+
+
 function aw {
     "あかさたなはまやらわ".GetEnumerator() | Write-Output
 }
