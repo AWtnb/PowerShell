@@ -236,10 +236,7 @@ class CorvusSKK {
     }
 
     [void] config() {
-        $this.stopProcess()
-        if (Test-Path $this.dialogPath) {
-            Start-Process $this.dialogPath
-        }
+        Start-Process $this.dialogPath
     }
 }
 
