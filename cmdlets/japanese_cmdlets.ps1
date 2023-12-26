@@ -6,17 +6,71 @@ cmdlets for processing japanese
             encoding: utf8bom
 ============================== #>
 
-function skkdict {
-    $proc = Get-Process -Name "imcrvmgr"
-    if ($proc) {
-        $proc | Stop-Process
+class CorvusSKK {
+    [string]$managerPath
+    [string]$dialogPath
+    [string]$procName
+    [string]$userdictPath
+    CorvusSKK() {
+        $this.managerPath = "C:\windows\system32\IME\IMCRVSKK\imcrvmgr.exe"
+        if (Test-Path $this.managerPath) {
+            $f = Get-Item $this.managerPath
+            $this.procName = $f.BaseName
+        } else {
+            $this.procName = ""
+        }
+        $this.dialogPath = "C:\Windows\System32\IME\IMCRVSKK\imcrvcnf.exe"
+        $this.userdictPath = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
     }
-    $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
-    if (Test-Path $p) {
-        Start-Process $p
-    } else {
-        "cannot find path: '{0}'" -f $p | Write-Host -ForegroundColor Magenta
+
+    [bool] isRunning() {
+        try {
+            Get-Process -Name $this.procName
+            return $true
+        }
+        catch {
+            return $false
+        }
+        return $false
     }
+
+    [void] stopProcess() {
+        if ($this.isRunning()) {
+            Get-Process -Name $this.procName | Stop-Process
+        }
+    }
+
+    [void] invokeDict() {
+        $this.stopProcess()
+        Start-Process $this.userdictPath
+    }
+
+    [void] reload() {
+        $this.stopProcess()
+        Start-Process $this.managerPath
+    }
+
+    [void] config() {
+        $this.stopProcess()
+        if (Test-Path $this.dialogPath) {
+            Start-Process $this.dialogPath
+        }
+    }
+}
+
+Set-PSReadLineKeyHandler -Key "alt+s,c" -BriefDescription "skk-config" -LongDescription "skk-config" -ScriptBlock {
+    $skk = [CorvusSKK]::new()
+    $skk.config()
+}
+Set-PSReadLineKeyHandler -Key "alt+s,r" -BriefDescription "skk-reload" -LongDescription "skk-reload" -ScriptBlock {
+    $skk = [CorvusSKK]::new()
+    $skk.reload()
+    "Reloaded SKK Config!" | Write-Host -ForegroundColor Green
+    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+}
+Set-PSReadLineKeyHandler -Key "alt+s,d" -BriefDescription "skk-dict" -LongDescription "skk-dict" -ScriptBlock {
+    $skk = [CorvusSKK]::new()
+    $skk.invokeDict()
 }
 
 
@@ -337,7 +391,7 @@ class FormatJP {
 }
 
 [FormatJP].DeclaredMembers | Where-Object MemberType -eq Method | ForEach-Object {
-@"
+    @"
 Update-TypeData -MemberName $($_.Name) -TypeName System.String -Force -MemberType ScriptMethod -Value {
     return [FormatJP]::$($_.Name)(`$this)
 }
@@ -345,11 +399,11 @@ Update-TypeData -MemberName $($_.Name) -TypeName System.String -Force -MemberTyp
 }
 
 @{
-    "ConvertTo-Katakana" = "ToKatakana";
-    "ConvertTo-Hiragana" = "ToHiragana";
-    "ConvertTo-Hairetsu" = "Normalize";
-    "ConvertFrom-Roman" = "FromRoman";
-    "ConvertTo-Roman" = "ToRoman";
+    "ConvertTo-Katakana"  = "ToKatakana";
+    "ConvertTo-Hiragana"  = "ToHiragana";
+    "ConvertTo-Hairetsu"  = "Normalize";
+    "ConvertFrom-Roman"   = "FromRoman";
+    "ConvertTo-Roman"     = "ToRoman";
     "ConvertTo-HalfWidth" = "ToHalfWidth";
     "ConvertTo-FullWidth" = "ToFullWidth";
 }.GetEnumerator() | ForEach-Object { @"
@@ -500,11 +554,11 @@ class SudachiPy {
             $line = $_.raw_line
             $reading = $reader.GetReading()
             return [PSCustomObject]@{
-                "Line" = $line;
-                "Reading" = $reading;
-                "Tokenize" = $reader.GetDetail();
+                "Line"       = $line;
+                "Reading"    = $reading;
+                "Tokenize"   = $reader.GetDetail();
                 "Normalized" = [FormatJP]::Normalize($reading);
-                "Roman" = [FormatJP]::ToRoman($reading);
+                "Roman"      = [FormatJP]::ToRoman($reading);
             }
         }
     }
@@ -550,8 +604,8 @@ function Get-ReadingWithSudachi {
     }
     process {
         $inputLine.ForEach({
-            $lines.Add($_) > $null
-        })
+                $lines.Add($_) > $null
+            })
     }
     end {
         $sudachi = [SudachiPy]::new($lines, $forBookIndex, $forBookIndex)
@@ -568,8 +622,8 @@ function Invoke-SortByReading {
     }
     process {
         $inputLine.ForEach({
-            $lines.Add($_) > $null
-        })
+                $lines.Add($_) > $null
+            })
     }
     end {
         $sudachi = [SudachiPy]::new($lines, $forBookIndex, $forBookIndex)
