@@ -7,6 +7,59 @@ cmdlets for processing japanese
 ============================== #>
 
 
+class CorvusSKK {
+    [string]$managerPath
+    [string]$dialogPath
+    [string]$procName
+    [string]$userdictPath
+    CorvusSKK() {
+        $this.managerPath = "C:\windows\system32\IME\IMCRVSKK\imcrvmgr.exe"
+        if (Test-Path $this.managerPath) {
+            $f = Get-Item $this.managerPath
+            $this.procName = $f.BaseName
+        }
+        else {
+            $this.procName = ""
+        }
+        $this.dialogPath = "C:\Windows\System32\IME\IMCRVSKK\imcrvcnf.exe"
+        $this.userdictPath = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
+    }
+
+    [bool] isRunning() {
+        try {
+            Get-Process -Name $this.procName -ErrorAction Stop
+            return $true
+        }
+        catch {
+            return $false
+        }
+        return $false
+    }
+
+    [void] stopProcess() {
+        if ($this.isRunning()) {
+            Get-Process -Name $this.procName | Stop-Process
+        }
+    }
+
+    [void] invokeConfig() {
+        Start-Process $this.dialogPath
+    }
+
+    [void] invokeDict() {
+        $this.stopProcess()
+        Start-Process $this.userdictPath
+        $this.invokeConfig()
+    }
+
+}
+
+function skkdictedit() {
+    $skk = [CorvusSKK]::new()
+    $skk.invokeDict()
+    "Now CorvusSKK is not running. Do not forget reload from dialog!" | Write-Host -ForegroundColor DarkGreen
+}
+
 function aw {
     "あかさたなはまやらわ".GetEnumerator() | Write-Output
 }
