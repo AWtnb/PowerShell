@@ -236,6 +236,10 @@ Class Prompter {
             + $this.stopDeco)
     }
 
+    [bool] isAdmin() {
+        return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    }
+
     [string] GetRepoInfo() {
         $trial = 100
         $p = (Get-Location).Path
@@ -267,10 +271,8 @@ Class Prompter {
             }
         }
         $connector = ($parent.Length -lt 1 -or $parent.EndsWith("\"))? "" : "\"
-        return $($this.subMarkerStart `
-            + "#" `
-            + $parent `
-            + $connector `
+        $prefix = $this.subMarkerStart + "#" + $parent + $connector + $this.stopDeco
+        return $($prefix `
             + $this.accentBg `
             + $this.markedFg `
             + $leaf `
@@ -279,7 +281,7 @@ Class Prompter {
     }
 
     [string] GetPrompt() {
-        $prompt = "# "
+        $prompt = ($this.isAdmin())? ($this.warningFg + "#[SUDO] " + $this.stopDeco) : "# "
         if (($pwd.Path | Split-Path -Leaf) -ne "Desktop") {
             return $this.warningFg + $prompt + $this.stopDeco
         }
