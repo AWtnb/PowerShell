@@ -149,7 +149,7 @@ function Invoke-DayPicker {
     if ($weekday) {
         $opt += "--weekday"
     }
-    & "C:\Personal\tools\bin\fuzzy-daypick.exe" $opt | Write-Output
+    & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\fuzzy-daypick.exe") $opt | Write-Output
 }
 function Invoke-DayPickerClipper {
     param (
@@ -178,12 +178,12 @@ function Invoke-MokoLauncher {
     param (
         [switch]$all
     )
-    $dataPath = "C:\Personal\launch.yaml"
+    $dataPath = ($env:USERPROFILE | Join-Path -ChildPath "Personal\launch.yaml")
     $opt = @("--src", $dataPath, "--filer", $env:TABLACUS_PATH, "--exclude=_obsolete,node_modules")
     if ($all) {
         $opt += "--all"
     }
-    & "C:\Personal\tools\bin\moko.exe" $opt
+    & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\moko.exe") $opt
     if ($LASTEXITCODE -eq 0) {
         Hide-ConsoleWindow
     }
@@ -223,7 +223,7 @@ function Invoke-RDriveDatabase {
 }
 
 function hinagata {
-    $d = "C:\Personal\tools\templates"
+    $d = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\templates"
     if (-not (Test-Path $d)) {
         return
     }

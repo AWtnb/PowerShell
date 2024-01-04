@@ -139,7 +139,7 @@ function New-SymlnkOnPersonalBin {
     param (
         [parameter(Mandatory)][string]$src
     )
-    $linkLocation = "C:\Personal\tools\bin"
+    $linkLocation = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin"
     if (-not (Test-Path $linkLocation)) {
         "'{0}' not exists!" -f $linkLocation | Write-Host -ForegroundColor Red
         return
@@ -182,7 +182,7 @@ function New-ShortCutOnStartup {
 function New-ShortCutOnMyDataSources {
     <#
         .EXAMPLE
-        New-ShortCutOnMyDataSources "C:\Personal\hogehoge.txt" # => create lnk to "~\Documents\My Data Sources"
+        New-ShortCutOnMyDataSources ".\hogehoge.txt" # => create lnk to "~\Documents\My Data Sources"
     #>
     param (
         [string]$path
