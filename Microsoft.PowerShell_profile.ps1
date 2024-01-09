@@ -242,7 +242,7 @@ Class Prompter {
 
     [string] GetRepoInfo() {
         $trial = 100
-        $p = (Get-Location).Path
+        $p = (Get-Location).ProviderPath
         while ($p) {
             $trial += -1
             if ($trial -lt 0) {
@@ -335,7 +335,7 @@ function Out-FileUtil {
     if (-not $basename) {
         $basename = Get-Date -Format yyyyMMddHHmmss
     }
-    $outPath = (Get-Location).Path | Join-Path -ChildPath ($basename + "." + $extension)
+    $outPath = (Get-Location).ProviderPath | Join-Path -ChildPath ($basename + "." + $extension)
     $input | Join-String -Separator "`r`n" | Out-File -FilePath $outPath -Encoding utf8NoBOM -NoClobber:$(-not $force)
 }
 Set-Alias of Out-FileUtil
@@ -364,7 +364,7 @@ function iit {
     )
     begin {}
     process {
-        $path = ($inputLine.length)? (Get-Item $inputLine).FullName : (Get-Location).Path
+        $path = ($inputLine.length)? (Get-Item $inputLine).FullName : (Get-Location).ProviderPath
         if ((Test-Path $env:TABLACUS_PATH) -and (Test-Path $path -PathType Container)) {
             Start-Process $env:TABLACUS_PATH -ArgumentList $path
         }

@@ -70,7 +70,7 @@ class PsLinker {
         if ($this.srcName.Length -lt 1) {
             $this.srcName = $this.srcPath | Split-Path -Leaf
         }
-        $this.workDir = ($workDir.Length -gt 0)? (Get-Item -LiteralPath $workDir).FullName : (Get-Location).Path
+        $this.workDir = ($workDir.Length -gt 0)? (Get-Item -LiteralPath $workDir).FullName : (Get-Location).ProviderPath
         $this.linkPath = $this.workDir | Join-Path -ChildPath $this.srcName
     }
 
