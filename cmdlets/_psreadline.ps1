@@ -62,7 +62,7 @@ Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(
 }
 
 # custom-cd
-Set-PSReadLineKeyHandler -Key "ctrl+K,d","ctrl+K,s","ctrl+K,c" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     param($key, $arg)
     $dir = switch ($key.KeyChar) {
         <#case#> "d" { "{0}\desktop" -f $env:USERPROFILE ; break }
