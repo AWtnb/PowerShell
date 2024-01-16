@@ -203,7 +203,7 @@ function Set-ShortcutFiler {
         $filerPath = $env:TABLACUS_PATH
     )
     begin {
-        $shell  = New-Object -ComObject WScript.Shell
+        $shell = New-Object -ComObject WScript.Shell
     }
     process {
         if ($_.Extension -ne ".lnk") {
@@ -227,4 +227,21 @@ function Set-ShortcutFiler {
     }
     end {
     }
+}
+
+function New-TablacusShortcutOnStartmenu {
+    param (
+        [parameter(Mandatory)][string]$src
+    )
+    $linker = [PsLinker]::New($src, "")
+    $linker.MakeShortcut()
+    $lnkPath = $linker.linkPath + ".lnk"
+    $lnk = Get-Item $lnkPath
+    $lnk | Set-ShortcutFiler
+    $dest = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\Microsoft\Windows\Start Menu"
+    if (Test-Path ($dest | Join-Path -ChildPath $lnk.Name)) {
+        "'{0}' exists on '{1}'" -f $lnk.Name, $dest | Write-Host -ForegroundColor Magenta
+        return
+    }
+    Get-Item $lnkPath | Move-Item -Destination $dest
 }
