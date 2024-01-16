@@ -271,9 +271,19 @@ function ConvertTo-Tsv {
     #>
     param (
         [switch]$withHeader
+        ,[string[]]$header
     )
     $tsv = $input | ConvertTo-Csv -Delimiter "`t" -NoTypeInformation -UseQuotes Always
-    return ($withHeader)? $tsv : $($tsv | Select-Object -Skip 1)
+    if ($withHeader) {
+        return $tsv
+    }
+    $content = $($tsv | Select-Object -Skip 1)
+    if (0 -lt $header.Count) {
+        $lines = @()
+        $lines += $header | Join-String -DoubleQuote -Separator "`t"
+        return $lines + $content
+    }
+    return $content
 }
 Set-Alias toTSV ConvertTo-Tsv
 Set-Alias toCSV ConvertTo-Csv
