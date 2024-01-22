@@ -375,6 +375,10 @@ function iit {
     end {}
 }
 
+function noblank () {
+    $input | Foreach-Object {$_ -replace "\s"} | Write-Output
+}
+
 function sieve ([switch]$net) {
     $input | Where-Object {return ($net)? ($_ -replace "\s") : $_} | Write-Output
 }
