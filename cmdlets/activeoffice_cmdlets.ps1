@@ -1138,6 +1138,17 @@ function Invoke-StripeOnActiveExcelSheet {
     }
 }
 
+function Invoke-EdgeBorderSelectionOnActiveExcelSheet {
+    param([switch]$vertical)
+    $e = Get-ActiveExcelApp
+    if (-not $e) { return }
+    $xlInsideVertical = 11
+    $xlInsideHorizontal = 12
+    $xlDot = -4118
+    $b = ($vertical)? $xlInsideVertical : $xlInsideHorizontal
+    $e.Selection.Borders($b).LineStyle = $xlDot
+}
+
 function Remove-PaddingFromActiveWordSelectionTableCells {
     $wd = Get-ActiveWordApp
     if (-not $wd) {
