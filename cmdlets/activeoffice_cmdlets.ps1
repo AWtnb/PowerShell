@@ -812,6 +812,7 @@ class DocDiff {
     static [bool] $compareComments = $true
     static [bool] $compareMoves = $true
     static [int] $wdShowSourceDocumentsBoth = 3
+    static [string] $RevisedAuthor = ""
     static [bool] $IgnoreAllComparisonWarnings = $true
 
 }
@@ -854,7 +855,7 @@ function Invoke-DiffFromActiveWordDocumnt {
         [DocDiff]::compareFields,
         [DocDiff]::compareComments,
         [DocDiff]::compareMoves,
-        [Type]::Missing,
+        [DocDiff]::RevisedAuthor,
         [DocDiff]::IgnoreAllComparisonWarnings
     ) > $null
     $wd.ActiveWindow.ShowSourceDocuments = [DocDiff]::wdShowSourceDocumentsBoth
