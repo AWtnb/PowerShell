@@ -24,6 +24,41 @@ class DomTree:
         for i, hd in enumerate(elems):
             hd.set("id", "section-{}".format(i))
 
+    def render_arrowlink(self) -> None:
+        elems = self._root.xpath("//li")
+        for l in elems:
+            if str(l.text).startswith("=>"):
+                l.text = l.text[3:]
+                l.classes.add("sub")
+
+    def render_pagebreak(self) -> None:
+        elems = self._root.xpath("p")
+        for p in elems:
+            if str(p.text).startswith("==="):
+                p.text = ""
+                p.classes.add("page-separator")
+
+    def render_pdflink(self) -> None:
+        elems = self._root.xpath("//a")
+        for a in elems:
+            if str(a.get("href")).endswith(".pdf"):
+                a.set("filetype", "pdf")
+
+    def render_td(self) -> None:
+        elems = self._root.xpath("//td")
+        for td in elems:
+            if (al := td.get("align")) is not None:
+                td.classes.add(al)
+
+    def render_codeblock_label(self) -> None:
+        elems = self._root.xpath("//pre/code")
+        for bl in elems:
+            if (cl := bl.classes) and len(cl):
+                n = list(cl)[0][len("language-"):]
+                if (p := bl.getparent()) is not None:
+                    p.classes.add("codeblock-header")
+                    p.set("data-label", n)
+
     def fix_spacing(self, x_path:str) -> None:
         for elem in self._root.xpath(x_path):
             t = elem.text_content()

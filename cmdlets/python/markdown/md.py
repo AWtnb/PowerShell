@@ -48,6 +48,11 @@ class MdHtml:
         dom.fix_spacing("h2 | h3 | h4 | h5")
         dom.set_link_target()
         dom.set_timestamp(raw_md.get_timestamp())
+        dom.render_pagebreak()
+        dom.render_arrowlink()
+        dom.render_pdflink()
+        dom.render_td()
+        dom.render_codeblock_label()
 
         self.content = dom.get_content()
         self.toc = '<div class="toc">{}</div>'.format(dom.get_toc())
