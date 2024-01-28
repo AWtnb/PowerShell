@@ -39,31 +39,44 @@ function lsc {
 
 class Repos {
     [System.IO.DirectoryInfo[]]$repoDirs
+    [scriptblock]$checkBlock
+
     Repos([string[]]$paths) {
-        $this.repoDirs = $paths | ForEach-Object {Get-Item $_} | Where-Object {-not $_.Extension} | Where-Object {Get-ChildItem $_ ".git" -Force}
+        $this.repoDirs = $paths | ForEach-Object {Get-Item $_} | Where-Object {-not $_.Extension} | Where-Object {$_ | Get-ChildItem -Filter ".git" -Force}
+        $this.checkBlock = {
+            param($path)
+            $grep = (Get-Content -Path "$path\.git\config" | Select-String -Pattern "^\[remote .+\]")
+            return $grep.Matches.Count -gt 0
+        }
     }
 
     [System.IO.DirectoryInfo[]]GetRemotes() {
         return $($this.repoDirs | Where-Object {
             $p = $_.Fullname
-            return $(Get-Item "$p\.git\config" | Get-Content | Select-String -Pattern "^\[remote .+\]")
+            return $this.checkBlock.Invoke($p)
         })
     }
 
     [System.IO.DirectoryInfo[]]GetLocals() {
         return $($this.repoDirs | Where-Object {
             $p = $_.Fullname
-            return -not $(Get-Item "$p\.git\config" | Get-Content | Select-String -Pattern "^\[remote .+\]")
+            return -not $this.checkBlock.Invoke($p)
         })
     }
 }
 
 function Find-RemoteRepository {
-    $items = $input | ForEach-Object {Get-Item $_}
-    return [Repos]::new($items).GetRemotes()
+    $paths = $input | ForEach-Object {Get-Item $_.Fullname}
+    if ($paths.Length -lt 1) {
+        $paths = (Get-ChildItem -Directory).FullName
+    }
+    return [Repos]::new($paths).GetRemotes()
 }
 
 function Find-LocalRepository {
-    $items = $input | ForEach-Object {Get-Item $_}
-    return [Repos]::new($items).GetLocals()
+    $paths = $input | ForEach-Object {Get-Item $_.Fullname}
+    if ($paths.Length -lt 1) {
+        $paths = (Get-ChildItem -Directory).FullName
+    }
+    return [Repos]::new($paths).GetLocals()
 }
