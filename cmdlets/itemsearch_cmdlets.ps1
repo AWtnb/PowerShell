@@ -35,3 +35,35 @@ function lsc {
         "invalid-path!" | Write-Host -ForegroundColor Magenta
     }
 }
+
+
+class Repos {
+    [System.IO.DirectoryInfo[]]$repoDirs
+    Repos([string[]]$paths) {
+        $this.repoDirs = $paths | ForEach-Object {Get-Item $_} | Where-Object {-not $_.Extension} | Where-Object {Get-ChildItem $_ ".git" -Force}
+    }
+
+    [System.IO.DirectoryInfo[]]GetRemotes() {
+        return $($this.repoDirs | Where-Object {
+            $p = $_.Fullname
+            return $(Get-Item "$p\.git\config" | Get-Content | Select-String -Pattern "^\[remote .+\]")
+        })
+    }
+
+    [System.IO.DirectoryInfo[]]GetLocals() {
+        return $($this.repoDirs | Where-Object {
+            $p = $_.Fullname
+            return -not $(Get-Item "$p\.git\config" | Get-Content | Select-String -Pattern "^\[remote .+\]")
+        })
+    }
+}
+
+function Find-RemoteRepository {
+    $items = $input | ForEach-Object {Get-Item $_}
+    return [Repos]::new($items).GetRemotes()
+}
+
+function Find-LocalRepository {
+    $items = $input | ForEach-Object {Get-Item $_}
+    return [Repos]::new($items).GetLocals()
+}
