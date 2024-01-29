@@ -10,18 +10,19 @@ Renderer for block quote content
 
 """
 
-class Tag(SpanToken):
-    pattern = re.compile(r" #([^ ]+)")
-    parse_group = 1
+# class Tag(SpanToken):
+#     pattern = re.compile(r" #([^ ]+)")
+#     parse_group = 1
 
 class QuoteRenderer(HTMLRenderer):
 
     def __init__(self):
-        super().__init__(Tag)
+        # super().__init__(Tag)
+        super().__init__()
 
-    def render_tag(self, token):
-        template = '<span class="tag">{}</span>'
-        return template.format(self.render_inner(token))
+    # def render_tag(self, token):
+    #     template = '<span class="tag">{}</span>'
+    #     return template.format(self.render_inner(token))
 
     def render_line_break(self, _):
         """

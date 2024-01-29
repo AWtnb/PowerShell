@@ -191,8 +191,8 @@ function Invoke-MokoLauncher {
 Set-Alias moko Invoke-MokoLauncher
 
 Set-PSReadLineKeyHandler -Key "alt+z" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>moko")
+    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>moko #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 Set-PSReadLineKeyHandler -Key "ctrl+alt+z" -ScriptBlock {
