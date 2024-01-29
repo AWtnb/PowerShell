@@ -41,7 +41,6 @@ class MdHtml:
         markup = mistletoe.markdown(raw_md.content, CustomRenderer)
 
         dom = DomTree(markup)
-        self.additional_style = '<style>\n{}\n</style>'.format(dom.trim_leading_css_block())
 
         dom.adjust_index("//*[contains(@class, 'force-order')]")
         dom.set_heading_id("h2 | h3 | h4 | h5 | h6")
@@ -54,6 +53,7 @@ class MdHtml:
         dom.render_td()
         dom.render_codeblock_label()
 
+        self.additional_style = '<style>\n{}\n</style>'.format(dom.trim_leading_css_block())
         self.content = dom.get_content()
         self.toc = '<div class="toc">{}</div>'.format(dom.get_toc())
         self.comments = dom.get_comments()
