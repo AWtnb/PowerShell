@@ -49,7 +49,7 @@ class MdHtml:
         dom.set_link_target()
         dom.set_timestamp(raw_md.get_timestamp())
         dom.render_pagebreak()
-        dom.render_arrowlink()
+        dom.render_arrowlist()
         dom.render_pdflink()
         dom.render_td()
         dom.render_codeblock_label()

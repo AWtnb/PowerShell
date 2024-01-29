@@ -24,7 +24,7 @@ class DomTree:
         for i, hd in enumerate(elems):
             hd.set("id", "section-{}".format(i))
 
-    def render_arrowlink(self) -> None:
+    def render_arrowlist(self) -> None:
         elems = self._root.xpath("//li")
         for l in elems:
             if str(l.text).startswith("=>"):
