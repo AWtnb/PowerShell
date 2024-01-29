@@ -40,42 +40,39 @@ class MdHtml:
         raw_md = RawMd(file_path)
         markup = mistletoe.markdown(raw_md.content, CustomRenderer)
 
-        dom = DomTree(markup)
+        tree = DomTree(markup)
+        tree.adjust_index("//*[contains(@class, 'force-order')]")
+        tree.set_heading_id("h2 | h3 | h4 | h5 | h6")
+        tree.fix_spacing("h2 | h3 | h4 | h5")
+        tree.set_link_target()
+        tree.set_timestamp(raw_md.get_timestamp())
+        tree.render_pagebreak()
+        tree.render_arrowlist()
+        tree.render_pdflink()
+        tree.render_td()
+        tree.render_codeblock_label()
 
-        dom.adjust_index("//*[contains(@class, 'force-order')]")
-        dom.set_heading_id("h2 | h3 | h4 | h5 | h6")
-        dom.fix_spacing("h2 | h3 | h4 | h5")
-        dom.set_link_target()
-        dom.set_timestamp(raw_md.get_timestamp())
-        dom.render_pagebreak()
-        dom.render_arrowlist()
-        dom.render_pdflink()
-        dom.render_td()
-        dom.render_codeblock_label()
+        self._tree = tree
 
-        self.additional_style = '<style>\n{}\n</style>'.format(dom.trim_leading_css_block())
-        self.content = dom.get_content()
-        self.toc = '<div class="toc">{}</div>'.format(dom.get_toc())
-        self.comments = dom.get_comments()
+    @property
+    def additional_style(self) -> str:
+        return '<style>\n{}\n</style>'.format(self._tree.trim_leading_css_block())
 
-        title_comment = self.grep_comment(r"^title:")
-        if len(title_comment) > 0:
-            self.title = title_comment[0][6:].strip()
-        else:
-            top_heading = dom.get_top_heading()
-            if top_heading:
-                self.title = top_heading
-            else:
-                self.title = Path(file_path).stem
-        self.title = '<title>{}</title>'.format(self.title)
+    @property
+    def content(self) -> str:
+        return self._tree.get_content()
 
-    def grep_comment(self, pattern) -> list[str]:
-        reg = re.compile(pattern)
-        found = []
-        for c in self.comments:
+    @property
+    def toc(self) -> str:
+        return '<div class="toc">{}</div>'.format(self._tree.get_toc())
+
+    @property
+    def title(self) -> str:
+        reg = re.compile(r"^title:")
+        for c in self._tree.get_comments():
             if reg.search(c):
-                found.append(c)
-        return found
+                return c[len("title:"):].strip()
+        return self._tree.get_top_heading()
 
 
 class HeadElem:
@@ -84,7 +81,7 @@ class HeadElem:
         self.lines = [
             '<meta charset="utf-8">',
             '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">',
-            title,
+            '<title>{}</title>'.format(title),
             '<link rel="icon" href="data:image/svg+xml,{}">'.format(urllib.parse.quote(svg))]
 
         if not no_default_css:
@@ -113,7 +110,7 @@ def main(file_path:str, no_default_css:bool=False, invoke:bool=False, favicon_un
 
     md_html = MdHtml(str(md_path))
 
-    head = HeadElem(md_html.title, favicon_unicode, no_default_css)
+    head = HeadElem((md_html.title or md_path.stem), favicon_unicode, no_default_css)
     extra_css_files = list(Path(md_path.parent).glob("*.css"))
     for css_path in extra_css_files:
         print("  + external style sheet: '{}'".format(css_path.name))
