@@ -24,12 +24,18 @@ class DomTree:
         for i, hd in enumerate(elems):
             hd.set("id", "section-{}".format(i))
 
-    def render_arrowlist(self) -> None:
+    def render_arrow_list(self) -> None:
         elems = self._root.xpath("//li")
         for l in elems:
             if str(l.text).startswith("=>"):
                 l.text = l.text[3:]
                 l.classes.add("sub")
+
+    def render_blank_list(self) -> None:
+        elems = self._root.xpath("//li")
+        for l in elems:
+            if l.text is None:
+                l.classes.add("empty")
 
     def render_pagebreak(self) -> None:
         elems = self._root.xpath("p")
