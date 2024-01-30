@@ -34,14 +34,14 @@ class DomTree:
     def render_blank_list(self) -> None:
         elems = self._root.xpath("//li")
         for l in elems:
-            if l.text is None:
+            if len(l.text_content()) < 1:
                 l.classes.add("empty")
 
     def render_pagebreak(self) -> None:
         elems = self._root.xpath("p")
         for p in elems:
             if str(p.text).startswith("==="):
-                p.text = ""
+                p.clear()
                 p.classes.add("page-separator")
 
     def render_pdflink(self) -> None:
