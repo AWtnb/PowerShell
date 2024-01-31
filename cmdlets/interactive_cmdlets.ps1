@@ -161,7 +161,7 @@ function Invoke-DayPickerClipper {
         ,[switch]$weekday
     )
     $days = Invoke-DayPicker -start $start -y $y -m $m -d $d -span $span -weekday:$weekday
-    if ($days) {
+    if ($days -and $LASTEXITCODE -eq 0) {
         $days | Set-Clipboard
         "coplied:" | Write-Host -ForegroundColor Blue
         $days | Write-Host
