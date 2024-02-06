@@ -349,9 +349,28 @@ function d {
 }
 
 function sum {
+    $a = @()
+    if ($args.Count) {
+        $args | ForEach-Object {$a += $_}
+    } else {
+        $input | ForEach-Object {$a += $_}
+    }
     $n = 0
-    $args | ForEach-Object {$n += $_}
+    $a | ForEach-Object {$n += $_}
     return $n
+}
+
+function yen {
+    $reg = [regex]::new("(\d)(?=(\d{3})+$)")
+    $a = @()
+    if ($args.Count) {
+        $args | ForEach-Object {$a += $_}
+    } else {
+        $input | ForEach-Object {$a += $_}
+    }
+    return $a | ForEach-Object {
+        return $reg.Replace($_, '$1,')
+    }
 }
 
 function ii. {
@@ -385,11 +404,6 @@ function sieve ([switch]$net) {
 
 function pad ([int]$width = 3, [string]$char = "0") {
     $input | ForEach-Object {($_ -as [string]).PadLeft($width, $char)} | Write-Output
-}
-
-function yen([int]$num) {
-    $reg = [regex]::new("(\d)(?=(\d{3})+$)")
-    return $reg.Replace($num, '$1,')
 }
 
 function ml ([string]$pattern, [switch]$case, [switch]$negative){
