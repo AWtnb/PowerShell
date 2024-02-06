@@ -387,6 +387,11 @@ function pad ([int]$width = 3, [string]$char = "0") {
     $input | ForEach-Object {($_ -as [string]).PadLeft($width, $char)} | Write-Output
 }
 
+function yen([int]$num) {
+    $reg = [regex]::new("(\d)(?=(\d{3})+$)")
+    return $reg.Replace($num, '$1,')
+}
+
 function ml ([string]$pattern, [switch]$case, [switch]$negative){
     # ml: match line
     $reg = ($case)? [regex]::New($pattern) : [regex]::New($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
