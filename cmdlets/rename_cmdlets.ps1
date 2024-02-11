@@ -445,6 +445,7 @@ class NameReplaceEntry {
     [string]$_orgBaseName
     [string]$_extension
     [string]$_relDirName
+    [bool]$execute = $false
     NameReplaceEntry([string]$fullName, [string]$curDir, [string]$newName) {
         $this._newName = $newName
         $this._fullName = $fullName
@@ -475,11 +476,11 @@ class NameReplaceEntry {
         return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
     }
 
-    [string] getFullMarkerdText([bool]$org, [bool]$execute) {
+    [string] getFullMarkerdText([bool]$org) {
         if ($org) {
             return $this._getDimmedRelDir() + $this._orgBaseName + $this._extension
         }
-        $color = ($execute)?  "Green" : "White"
+        $color = ($this.execute)?  "Green" : "White"
         $ansi = $global:PSStyle.Foreground.PSObject.Properties[$color].Value
         return $this._getDimmedRelDir() + $ansi + $this._newName + $global:PSStyle.Reset
     }
@@ -504,14 +505,14 @@ class NameReplacer {
         return $ansi + $filler + $Global:PSStyle.Reset
     }
 
-    [void] run([bool]$execute) {
+    [void] run() {
         $this.entries | ForEach-Object {
-            $left = $_.getFullMarkerdText($true, $execute)
+            $left = $_.getFullMarkerdText($true)
             $indent = $_.getLeftSideByteLen()
-            $filler = $this._getFiller($indent, $execute)
-            $right = $_.getFullMarkerdText($false, $execute)
+            $filler = $this._getFiller($indent, $ent.execute)
+            $right = $_.getFullMarkerdText($false)
             $left + $filler + $right | Write-Host
-            if (-not $execute) {
+            if (-not $ent.execute) {
                 return
             }
             $item = Get-Item -LiteralPath $_.getFullname()
@@ -524,6 +525,61 @@ class NameReplacer {
             }
         }
     }
+}
+
+function Rename-ApplyScriptBlock {
+    <#
+        .EXAMPLE
+        Get-Childitem *.txt | renB -renameBlock {$_.Name -Replace "hogehoge", "hugahuga"}
+        .EXAMPLE
+        Get-Childitem *.txt | Where-Object Name -Match "foo" | renB -renameBlock {$_.Name -Replace "hogehoge", "hugahuga"} -execute
+    #>
+    [OutputType([System.Void])]
+    param (
+        [scriptblock]$renameBlock
+        ,[switch]$execute
+    )
+
+    $replacer = [NameReplacer]::new()
+    $cur = (Get-Location).ProviderPath
+    $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
+        $newName = & $renameBlock
+        $ent = [NameReplaceEntry]::new($_.Fullname, $cur, $newName)
+        $ent.execute = $execute
+        if ($ent.isRenamable()) {
+            $replacer.setEntry($ent)
+        }
+    }
+    $replacer.run()
+}
+
+function Rename-LightroomFromDropbox {
+    param (
+        [switch]$execute
+    )
+    $input | Rename-ApplyScriptBlock {
+        $fmt = ($_.BaseName -replace "[ \-]","" -replace "写真" -replace "\(","-" -replace "\)")
+        $newName = $fmt.substring(0,8) + "-IMG_" + $fmt.substring(8).PadLeft(6, "0") + $_.extension
+        return $newName
+    } -execute:$execute
+}
+
+function Rename-FromData {
+    [OutputType([System.Void])]
+    param (
+        [string[]]$data
+        ,[string]$separator = "`t"
+        ,[switch]$execute
+    )
+    $hashtable = @{}
+    $data | Where-Object {$_ -replace "\s"} | ForEach-Object {
+        $fields = $_ -split $separator
+        $hashtable.Add($fields[0], $fields[1])
+    }
+    if (-not $data.Count) {
+        return
+    }
+    $input | Where-Object {$_.Name -in $hashtable.keys} | Rename-ApplyScriptBlock { $hashtable[$_.Name] } -execute:$execute
 }
 
 class PSStringDiff {
@@ -557,59 +613,4 @@ class PSStringDiff {
         }
         return $builder.ToString()
     }
-}
-
-
-function Rename-ApplyScriptBlock {
-    <#
-        .EXAMPLE
-        Get-Childitem *.txt | renB -renameBlock {$_.Name -Replace "hogehoge", "hugahuga"}
-        .EXAMPLE
-        Get-Childitem *.txt | Where-Object Name -Match "foo" | renB -renameBlock {$_.Name -Replace "hogehoge", "hugahuga"} -execute
-    #>
-    [OutputType([System.Void])]
-    param (
-        [scriptblock]$renameBlock
-        ,[switch]$execute
-    )
-
-    $replacer = [NameReplacer]::new()
-    $cur = (Get-Location).ProviderPath
-    $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
-        $newName = & $renameBlock
-        $ent = [NameReplaceEntry]::new($_.Fullname, $cur, $newName)
-        if ($ent.isRenamable()) {
-            $replacer.setEntry($ent)
-        }
-    }
-    $replacer.run($execute)
-}
-
-function Rename-LightroomFromDropbox {
-    param (
-        [switch]$execute
-    )
-    $input | Rename-ApplyScriptBlock {
-        $fmt = ($_.BaseName -replace "[ \-]","" -replace "写真" -replace "\(","-" -replace "\)")
-        $newName = $fmt.substring(0,8) + "-IMG_" + $fmt.substring(8).PadLeft(6, "0") + $_.extension
-        return $newName
-    } -execute:$execute
-}
-
-function Rename-FromData {
-    [OutputType([System.Void])]
-    param (
-        [string[]]$data
-        ,[string]$separator = "`t"
-        ,[switch]$execute
-    )
-    $hashtable = @{}
-    $data | Where-Object {$_ -replace "\s"} | ForEach-Object {
-        $fields = $_ -split $separator
-        $hashtable.Add($fields[0], $fields[1])
-    }
-    if (-not $data.Count) {
-        return
-    }
-    $input | Where-Object {$_.Name -in $hashtable.keys} | Rename-ApplyScriptBlock { $hashtable[$_.Name] } -execute:$execute
 }
