@@ -275,7 +275,7 @@ Set-Alias rIns Rename-Insert
 class IndexRenameEntry {
     [string]$_idx
     [string]$_pre
-    [string]$_highlight
+    [string]$_indexed
     [string]$_suf
     [string]$_fullName
     [string]$_orgBaseName
@@ -290,24 +290,24 @@ class IndexRenameEntry {
         $this._extension = $item.Extension
         $this._relDirName = [System.IO.Path]::GetRelativePath($curDir, ($this._fullName | Split-Path -Parent))
         $this.hasNewName = $altName.Length -gt 0
-        if ($altName.Length -gt 0) {
+        if ($this.hasNewName) {
             $this._pre = ""
             $this._suf = $this._extension
             if ($tail) {
-                $this._highlight = $altName + $this._idx
+                $this._indexed = $altName + $this._idx
                 return
             }
-            $this._highlight = $this._idx + $altName
+            $this._indexed = $this._idx + $altName
             return
         }
         if ($tail) {
             $this._pre = $this._orgBaseName
-            $this._highlight = "_" + $this._idx
+            $this._indexed = "_" + $this._idx
             $this._suf = $this._extension
             return
         }
         $this._pre = ""
-        $this._highlight = $this._idx + "_"
+        $this._indexed = $this._idx + "_"
         $this._suf = $this._orgBaseName + $this._extension
     }
 
@@ -316,7 +316,7 @@ class IndexRenameEntry {
     }
 
     [string] getNewName() {
-        return $this._pre + $this._highlight + $this._suf
+        return $this._pre + $this._indexed + $this._suf
     }
 
     [bool] isRenamable() {
@@ -328,7 +328,7 @@ class IndexRenameEntry {
         return $this._pre + `
             $Global:PSStyle.Foreground.Black + `
             $Global:PSStyle.Background.PSObject.Properties[$color].Value + `
-            $this._highlight + `
+            $this._indexed + `
             $Global:PSStyle.Reset + `
             $this._suf
     }
