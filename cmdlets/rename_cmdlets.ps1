@@ -282,6 +282,7 @@ class IndexRenameEntry {
     [string]$_extension
     [string]$_relDirName
     [bool]$hasNewName
+    [bool]$execute = $false
     IndexRenameEntry([string]$fullName, [string]$curDir, [string]$altName, [int]$idx, [int]$pad, [bool]$tail) {
         $this._idx = ($idx -as [string]).PadLeft($pad, "0")
         $this._fullName = $fullName
@@ -323,8 +324,8 @@ class IndexRenameEntry {
         return -not (($this._orgBaseName + $this._extension) -ceq $this.getNewName())
     }
 
-    [string] _getMarkerdNewName([bool]$execute) {
-        $color = ($execute)? "Green" : "White"
+    [string] _getMarkerdNewName() {
+        $color = ($this.execute)? "Green" : "White"
         return $this._pre + `
             $Global:PSStyle.Foreground.Black + `
             $Global:PSStyle.Background.PSObject.Properties[$color].Value + `
@@ -347,11 +348,11 @@ class IndexRenameEntry {
         return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
     }
 
-    [string] getFullMarkerdText([bool]$org, [bool]$execute) {
+    [string] getFullMarkerdText([bool]$org) {
         if ($org) {
             return $this._getDimmedRelDir() + $this._orgBaseName + $this._extension
         }
-        return $this._getDimmedRelDir() + $this._getMarkerdNewName($execute)
+        return $this._getDimmedRelDir() + $this._getMarkerdNewName()
     }
 
 }
@@ -376,13 +377,13 @@ class IndexRenamer {
         return " " * $padding
     }
 
-    [void] run($execute) {
+    [void] run() {
         $this.entries | ForEach-Object {
-            $left = ($_.hasNewName)? $_.getFullMarkerdText($true, $execute) : ""
+            $left = ($_.hasNewName)? $_.getFullMarkerdText($true) : ""
             $offset = ($_.hasNewName)? $_.getLeftSideByteLen() : $_.getPrefixByteLen()
             $filler = $this._getFiller($offset, $_.hasNewName)
-            $left + $filler + $_.getFullMarkerdText($false, $execute) | Write-Host
-            if (-not $execute) {
+            $left + $filler + $_.getFullMarkerdText($false) | Write-Host
+            if (-not $_.execute) {
                 return
             }
             $item = Get-Item -LiteralPath $_.getFullname()
@@ -419,6 +420,7 @@ function Rename-Index {
     $i = $start
     $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
         $ent = [IndexRenameEntry]::new($_.Fullname, $cur, $altName, $i, $pad, $tail)
+        $ent.execute = $execute
         if ($ent.isRenamable()) {
             $renamer.setEntry($ent)
             $i += $step
@@ -429,7 +431,7 @@ function Rename-Index {
             }
         }
     }
-    $renamer.run($execute)
+    $renamer.run()
 }
 Set-Alias rInd Rename-Index
 
