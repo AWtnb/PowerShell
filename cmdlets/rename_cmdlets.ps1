@@ -81,7 +81,7 @@ class BasenameReplacer {
         }
     }
 
-    [string] getFiller([int]$indent) {
+    [string] _getFiller([int]$indent) {
         $rightPadding = [Math]::Max($this._leftBufferWidth - $indent, 0)
         $filler = " {0}=> " -f ("=" * $rightPadding)
         return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
@@ -91,7 +91,7 @@ class BasenameReplacer {
         $this.entries | ForEach-Object {
             $left = $_.getFullMarkerdText($true, $execute)
             $indent = $_.getLeftSideByteLen()
-            $filler = $this.getFiller($indent)
+            $filler = $this._getFiller($indent)
             $right = $_.getFullMarkerdText($false, $execute)
             $left + $filler + $right | Write-Host
             if (-not $execute) {
@@ -225,7 +225,7 @@ class InsertRenamer {
         }
     }
 
-    [string] getFiller([int]$leftSideLen) {
+    [string] _getFiller([int]$leftSideLen) {
         $padding = [Math]::Max($this._leftBufferWidth - $leftSideLen, 0)
         return " " * $padding
     }
@@ -233,7 +233,7 @@ class InsertRenamer {
     [void] run($execute) {
         $this.entries | ForEach-Object {
             $indent = $_.getLeftSideByteLen()
-            $filler = $this.getFiller($indent)
+            $filler = $this._getFiller($indent)
             $filler + $_.getFullMarkerdText($execute) | Write-Host
             if (-not $execute) {
                 return
@@ -498,7 +498,7 @@ class NameReplacer {
         }
     }
 
-    [string] getFiller([int]$indent, [bool]$execute) {
+    [string] _getFiller([int]$indent, [bool]$execute) {
         $color = ($execute)? "Cyan" : "Black"
         $ansi = $global:PSStyle.Foreground.PSObject.Properties[$color].Value
         $rightPadding = [Math]::Max($this._leftBufferWidth - $indent, 0)
@@ -510,7 +510,7 @@ class NameReplacer {
         $this.entries | ForEach-Object {
             $left = $_.getFullMarkerdText($true, $execute)
             $indent = $_.getLeftSideByteLen()
-            $filler = $this.getFiller($indent, $execute)
+            $filler = $this._getFiller($indent, $execute)
             $right = $_.getFullMarkerdText($false, $execute)
             $left + $filler + $right | Write-Host
             if (-not $execute) {
