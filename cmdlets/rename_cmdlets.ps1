@@ -76,9 +76,7 @@ class BasenameReplacer {
     [void] setEntry([BasenameReplaceEntry]$ent) {
         $this.entries += $ent
         $w = $ent.getLeftSideByteLen()
-        if ($this._leftBufferWidth -lt $w) {
-            $this._leftBufferWidth = $w
-        }
+        $this._leftBufferWidth = [Math]::Max($this._leftBufferWidth, $w)
     }
 
     [string] _getFiller([int]$indent) {
@@ -220,9 +218,7 @@ class InsertRenamer {
     [void] setEntry([InsertRenameEntry]$ent) {
         $this.entries += $ent
         $w = $ent.getLeftSideByteLen()
-        if ($this._leftBufferWidth -lt $w) {
-            $this._leftBufferWidth = $w
-        }
+        $this._leftBufferWidth = [Math]::Max($this._leftBufferWidth, $w)
     }
 
     [string] _getFiller([int]$leftSideLen) {
@@ -368,9 +364,7 @@ class IndexRenamer {
     [void] setEntry([IndexRenameEntry]$ent) {
         $this.entries += $ent
         $w = ($ent.hasNewName)? $ent.getLeftSideByteLen() : $ent.getPrefixByteLen()
-        if ($this._leftBufferWidth -lt $w) {
-            $this._leftBufferWidth = $w
-        }
+        $this._leftBufferWidth = [Math]::Max($this._leftBufferWidth, $w)
     }
 
     [string] _getFiller([int]$offset, [bool]$showOrigin) {
@@ -493,9 +487,7 @@ class NameReplacer {
     [void] setEntry([NameReplaceEntry]$ent) {
         $this.entries += $ent
         $w = $ent.getLeftSideByteLen()
-        if ($this._leftBufferWidth -lt $w) {
-            $this._leftBufferWidth = $w
-        }
+        $this._leftBufferWidth = [Math]::Max($this._leftBufferWidth, $w)
     }
 
     [string] _getFiller([int]$indent, [bool]$execute) {
