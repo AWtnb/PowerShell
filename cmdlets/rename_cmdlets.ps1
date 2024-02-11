@@ -341,12 +341,14 @@ class IndexRenameEntry {
         return $global:PSStyle.Foreground.BrightBlack + $this._relDirName + "\" + $global:PSStyle.Reset
     }
 
+    [int] getPrefixByteLen() {
+        $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
+        return $sj.GetByteCount($this._relDirName + $this._pre)
+    }
+
     [int] getLeftSideByteLen() {
         $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
-        if ($this.hasNewName) {
-            return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
-        }
-        return $sj.GetByteCount($this._relDirName + $this._pre)
+        return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
     }
 
     [string] getFullMarkerdText([bool]$org, [bool]$execute) {
@@ -365,14 +367,14 @@ class IndexRenamer {
 
     [void] setEntry([IndexRenameEntry]$ent) {
         $this.entries += $ent
-        $w = $ent.getLeftSideByteLen()
+        $w = ($ent.hasNewName)? $ent.getLeftSideByteLen() : $ent.getPrefixByteLen()
         if ($this._leftBufferWidth -lt $w) {
             $this._leftBufferWidth = $w
         }
     }
 
-    [string] _getFiller([int]$indent, [bool]$showOrigin) {
-        $padding = [Math]::Max($this._leftBufferWidth - $indent, 0)
+    [string] _getFiller([int]$offset, [bool]$showOrigin) {
+        $padding = [Math]::Max($this._leftBufferWidth - $offset, 0)
         if ($showOrigin) {
             $filler = " {0}=> " -f ("=" * $padding)
             return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
@@ -382,12 +384,10 @@ class IndexRenamer {
 
     [void] run($execute) {
         $this.entries | ForEach-Object {
-            $indent = $_.getLeftSideByteLen()
-            $filler = $this._getFiller($indent, $_.hasNewName)
-            if ($_.hasNewName) {
-                $filler = $_.getFullMarkerdText($true, $execute) + $filler
-            }
-            $filler + $_.getFullMarkerdText($false, $execute) | Write-Host
+            $left = ($_.hasNewName)? $_.getFullMarkerdText($true, $execute) : ""
+            $offset = ($_.hasNewName)? $_.getLeftSideByteLen() : $_.getPrefixByteLen()
+            $filler = $this._getFiller($offset, $_.hasNewName)
+            $left + $filler + $_.getFullMarkerdText($false, $execute) | Write-Host
             if (-not $execute) {
                 return
             }
