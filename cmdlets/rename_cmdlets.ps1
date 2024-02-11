@@ -41,7 +41,7 @@ class BasenameReplaceEntry {
         return $global:PSStyle.Foreground.PSObject.Properties[$this._execColor].Value + $this._newName + $global:PSStyle.Reset
     }
 
-    [string] _getMatchesMarkerdOrgName([bool]$execute) {
+    [string] _getMatchesMarkeredOrgName([bool]$execute) {
         $col = ($execute)? $this._execColor : "White"
         $ansi = $global:PSStyle.Background.PSObject.Properties[$col].Value + $global:PSStyle.Foreground.Black
         return $this._reg.Replace($this._orgBaseName, {
@@ -61,7 +61,7 @@ class BasenameReplaceEntry {
 
     [string] getFullMarkerdText([bool]$org, [bool]$execute) {
         if ($org) {
-            return $this._getDimmedRelDir() + $this._getMatchesMarkerdOrgName($execute)
+            return $this._getDimmedRelDir() + $this._getMatchesMarkeredOrgName($execute)
         }
         return $this._getDimmedRelDir() + $this._getMarkerdNewName()
     }
