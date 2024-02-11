@@ -285,6 +285,7 @@ class IndexRenameEntry {
     [string]$_orgBaseName
     [string]$_extension
     [string]$_relDirName
+    [bool]$hasNewName
     IndexRenameEntry([string]$fullName, [string]$curDir, [string]$altName, [int]$idx, [int]$pad, [bool]$tail) {
         $this._idx = ($idx -as [string]).PadLeft($pad, "0")
         $this._fullName = $fullName
@@ -292,6 +293,7 @@ class IndexRenameEntry {
         $this._orgBaseName = $item.BaseName
         $this._extension = $item.Extension
         $this._relDirName = [System.IO.Path]::GetRelativePath($curDir, ($this._fullName | Split-Path -Parent))
+        $this.hasNewName = $altName.Length -gt 0
         if ($altName.Length -gt 0) {
             $this._pre = ""
             $this._suf = $this._extension
@@ -341,10 +343,16 @@ class IndexRenameEntry {
 
     [int] getLeftSideByteLen() {
         $sj = [System.Text.Encoding]::GetEncoding("Shift_JIS")
+        if ($this.hasNewName) {
+            return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
+        }
         return $sj.GetByteCount($this._relDirName + $this._pre)
     }
 
-    [string] getFullMarkerdText([bool]$execute) {
+    [string] getFullMarkerdText([bool]$org, [bool]$execute) {
+        if ($org) {
+            return $this._getDimmedRelDir() + $this._orgBaseName + $this._extension
+        }
         return $this._getDimmedRelDir() + $this._getMarkerdNewName($execute)
     }
 
@@ -363,16 +371,23 @@ class IndexRenamer {
         }
     }
 
-    [string] getFiller([int]$leftSideLen) {
-        $padding = [Math]::Max($this._leftBufferWidth - $leftSideLen, 0)
+    [string] _getFiller([int]$indent, [bool]$showOrigin) {
+        $padding = [Math]::Max($this._leftBufferWidth - $indent, 0)
+        if ($showOrigin) {
+            $filler = " {0}=> " -f ("=" * $padding)
+            return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
+        }
         return " " * $padding
     }
 
     [void] run($execute) {
         $this.entries | ForEach-Object {
             $indent = $_.getLeftSideByteLen()
-            $filler = $this.getFiller($indent)
-            $filler + $_.getFullMarkerdText($execute) | Write-Host
+            $filler = $this._getFiller($indent, $_.hasNewName)
+            if ($_.hasNewName) {
+                $filler = $_.getFullMarkerdText($true, $execute) + $filler
+            }
+            $filler + $_.getFullMarkerdText($false, $execute) | Write-Host
             if (-not $execute) {
                 return
             }
