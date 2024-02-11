@@ -14,6 +14,7 @@ class BasenameReplaceEntry {
     [string]$_extension
     [string]$_relDirName
     [string]$_newName
+    [bool]$execute = $false
     BasenameReplaceEntry([string]$fullName, [string]$curDir, [string]$from, [string]$to, [switch]$case) {
         $regOpt = ($case)? [System.Text.RegularExpressions.RegexOptions]::None : [System.Text.RegularExpressions.RegexOptions]::IgnoreCase
         $this._reg = [regex]::new($from, $regOpt)
@@ -41,8 +42,8 @@ class BasenameReplaceEntry {
         return $global:PSStyle.Foreground.PSObject.Properties[$this._execColor].Value + $this._newName + $global:PSStyle.Reset
     }
 
-    [string] _getMatchesMarkeredOrgName([bool]$execute) {
-        $col = ($execute)? $this._execColor : "White"
+    [string] _getMatchesMarkeredOrgName() {
+        $col = ($this.execute)? $this._execColor : "White"
         $ansi = $global:PSStyle.Background.PSObject.Properties[$col].Value + $global:PSStyle.Foreground.Black
         return $this._reg.Replace($this._orgBaseName, {
                 param([System.Text.RegularExpressions.Match]$m)
@@ -59,9 +60,9 @@ class BasenameReplaceEntry {
         return $sj.GetByteCount($this._relDirName + $this._orgBaseName + $this._extension)
     }
 
-    [string] getFullMarkerdText([bool]$org, [bool]$execute) {
+    [string] getFullMarkerdText([bool]$org) {
         if ($org) {
-            return $this._getDimmedRelDir() + $this._getMatchesMarkeredOrgName($execute)
+            return $this._getDimmedRelDir() + $this._getMatchesMarkeredOrgName()
         }
         return $this._getDimmedRelDir() + $this._getMarkerdNewName()
     }
@@ -85,14 +86,14 @@ class BasenameReplacer {
         return $Global:PSStyle.Foreground.Yellow + $filler + $Global:PSStyle.Reset
     }
 
-    [void] run([bool]$execute) {
+    [void] run() {
         $this.entries | ForEach-Object {
-            $left = $_.getFullMarkerdText($true, $execute)
+            $left = $_.getFullMarkerdText($true)
             $indent = $_.getLeftSideByteLen()
             $filler = $this._getFiller($indent)
-            $right = $_.getFullMarkerdText($false, $execute)
+            $right = $_.getFullMarkerdText($false)
             $left + $filler + $right | Write-Host
-            if (-not $execute) {
+            if (-not $_.execute) {
                 return
             }
             $item = Get-Item -LiteralPath $_.getFullname()
@@ -125,11 +126,12 @@ function Rename-ReplaceBasename {
     $cur = (Get-Location).ProviderPath
     $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
         $ent = [BasenameReplaceEntry]::new($_.Fullname, $cur, $from, $to, $case)
+        $ent.execute = $execute
         if ($ent.isRenamable()) {
             $replacer.setEntry($ent)
         }
     }
-    $replacer.run($execute)
+    $replacer.run()
 }
 Set-Alias repBN Rename-ReplaceBasename
 
@@ -143,6 +145,7 @@ class InsertRenameEntry {
     [string]$_orgBaseName
     [string]$_extension
     [string]$_relDirName
+    [bool]$execute = $false
     InsertRenameEntry([string]$fullName, [string]$curDir, [string]$insert, [int]$pos) {
         $this._pos = $pos
         $this._fullName = $fullName
@@ -183,8 +186,8 @@ class InsertRenameEntry {
         return -not (($this._orgBaseName + $this._extension) -ceq $this.getNewName())
     }
 
-    [string] _getMarkerdNewName([bool]$execute) {
-        $color = ($execute)? "Green" : "White"
+    [string] _getMarkerdNewName() {
+        $color = ($this.execute)? "Green" : "White"
         return $this._pre + `
             $Global:PSStyle.Foreground.Black + `
             $Global:PSStyle.Background.PSObject.Properties[$color].Value + `
@@ -203,8 +206,8 @@ class InsertRenameEntry {
         return $sj.GetByteCount($this._relDirName + $this._pre)
     }
 
-    [string] getFullMarkerdText([bool]$execute) {
-        return $this._getDimmedRelDir() + $this._getMarkerdNewName($execute)
+    [string] getFullMarkerdText() {
+        return $this._getDimmedRelDir() + $this._getMarkerdNewName()
     }
 
 }
@@ -226,12 +229,12 @@ class InsertRenamer {
         return " " * $padding
     }
 
-    [void] run($execute) {
+    [void] run() {
         $this.entries | ForEach-Object {
             $indent = $_.getLeftSideByteLen()
             $filler = $this._getFiller($indent)
-            $filler + $_.getFullMarkerdText($execute) | Write-Host
-            if (-not $execute) {
+            $filler + $_.getFullMarkerdText() | Write-Host
+            if (-not $_.execute) {
                 return
             }
             $item = Get-Item -LiteralPath $_.getFullname()
@@ -263,11 +266,12 @@ function Rename-Insert {
     $cur = (Get-Location).ProviderPath
     $input | Where-Object {Test-Path $_} | ForEach-Object {Get-Item $_} | ForEach-Object {
         $ent = [InsertRenameEntry]::new($_.Fullname, $cur, $insert, $position)
+        $ent.execute = $execute
         if ($ent.isRenamable()) {
             $renamer.setEntry($ent)
         }
     }
-    $renamer.run($execute)
+    $renamer.run()
 }
 Set-Alias rIns Rename-Insert
 
