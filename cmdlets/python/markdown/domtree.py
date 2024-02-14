@@ -73,6 +73,11 @@ class DomTree:
                 if l >= 2 and l <= 4:
                     elem.classes.add("spacing-{}".format(l))
 
+    def set_image_container(self) -> None:
+        for elem in self._root.xpath("//p"):
+            if elem.xpath("img"):
+                elem.classes.add("img-container")
+
     def set_link_target(self) -> None:
         for elem in self._root.xpath("//a"):
             if not str(elem.get("href")).startswith("#"):

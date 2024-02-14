@@ -53,6 +53,7 @@ class MdHtml:
         tree.render_pdflink()
         tree.render_td()
         tree.render_codeblock_label()
+        tree.set_image_container()
 
         self._tree = tree
 
