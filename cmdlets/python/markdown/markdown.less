@@ -166,6 +166,12 @@ img {
   margin: 2rem auto;
   display: block;
   max-width: 90%;
+}
+img:has(~ em),
+img:has(~ strong) {
+  margin: 2rem auto 0.5rem auto;
+}
+img {
   ~ em,
   ~ strong {
     // caption
@@ -174,7 +180,6 @@ img {
     display: block;
     line-height: 1.25;
     text-align: center;
-    margin-top: -1em;
     color: lighten(@color-main-dark, 30%);
     font-weight: normal;
   }
@@ -187,6 +192,11 @@ img[alt~="right"] {
 img[alt~="left"] {
   margin-right: auto;
   margin-left: 0;
+}
+
+p:has(> img) {
+  page-break-inside: avoid;
+  border: 1px solid transparent; // for page-break
 }
 
 //////////////////////////////
