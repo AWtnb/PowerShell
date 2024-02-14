@@ -304,8 +304,7 @@ function Invoke-ImageMagickResize {
 
 function Convert-ClipboardImage2File {
     param (
-        [string]$basename,
-        [switch]$force
+        [string]$basename
     )
     $img = [Windows.Forms.Clipboard]::GetImage()
     if(-not $img) {
@@ -315,15 +314,21 @@ function Convert-ClipboardImage2File {
     if (-not $basename) {
         $basename = Get-Date -Format yyyyMMddHHmmss
     }
-    $fullpath = $pwd.ProviderPath | Join-Path -ChildPath ($basename + ".png")
-    if (Test-Path $fullpath) {
-        if (-not $force) {
-            Write-Host ("'{0}.png' already exists!" -f $basename) -ForegroundColor Magenta
+    $fullpath = $pwd.ProviderPath | Join-Path -ChildPath ("{0}.png" -f $basename)
+    $counter = 0
+    while (Test-Path $fullpath) {
+        if ($counter -ge 10) {
+            Write-Host "failed to save image..." -ForegroundColor Magenta
             return
+        }
+        $counter += 1
+        $fullpath = $pwd.ProviderPath | Join-Path -ChildPath ("{0}-{1}.png" -f $basename, $counter)
+        if (-not (Test-Path $fullpath)) {
+            break
         }
     }
     $img.save($fullpath)
-    "save clipboard image as '{0}.png'" -f $basename | Write-Host -ForegroundColor Cyan
+    "save clipboard image as '{0}.png'" -f ($fullpath | Split-Path -Leaf) | Write-Host -ForegroundColor Cyan
 }
 Set-Alias cbImage2file Convert-ClipboardImage2File
 
