@@ -8,6 +8,7 @@ encoding: utf8
 
 import sys
 import re
+import json
 from pathlib import Path
 
 from sudachipy import tokenizer, dictionary
@@ -21,7 +22,8 @@ class ParsedLine:
 
     def trim_paren(self) -> None:
         reg_paren = re.compile(
-            r"\(.+?\)|\[.+?\]|\uff08.+?\uff09|\uff3b.+?\uff3d")
+            r"\(.+?\)|\[.+?\]|\uff08.+?\uff09|\uff3b.+?\uff3d"
+        )
         self.line = reg_paren.sub("", self.line)
 
     def trim_noise(self) -> None:
@@ -29,12 +31,17 @@ class ParsedLine:
         self.line = reg_noise.sub("", self.line)
 
 
-def main(input_file_path: str, output_file_path: str, ignore_paren: bool = False, focus_name: bool = False):
+def main(
+    input_file_path: str,
+    output_file_path: str,
+    ignore_paren: bool = False,
+    focus_name: bool = False,
+):
 
     tknzr = dictionary.Dictionary().create()
     lines = Path(input_file_path).read_text("utf-8").splitlines()
 
-    out = []
+    stack = []
     for line in lines:
         pl = None
         if len(line.strip()) < 1:
@@ -46,19 +53,19 @@ def main(input_file_path: str, output_file_path: str, ignore_paren: bool = False
             if focus_name:
                 pl.trim_noise()
             for t in tknzr.tokenize(pl.line, tokenizer.Tokenizer.SplitMode.C):
-                pl.tokens.append({
-                    "surface": t.surface(),
-                    "dict_form": t.dictionary_form(),
-                    "pos": t.part_of_speech()[0],
-                    "reading": t.reading_form(),
-                })
-        out.append({
-            "raw_line": pl.raw_line,
-            "line": pl.line,
-            "tokens": pl.tokens
-        })
+                pl.tokens.append(
+                    {
+                        "surface": t.surface(),
+                        "dict_form": t.dictionary_form(),
+                        "pos": t.part_of_speech()[0],
+                        "reading": t.reading_form(),
+                    }
+                )
+        stack.append(
+            {"raw_line": pl.raw_line, "line": pl.line, "tokens": pl.tokens}
+        )
 
-    Path(output_file_path).write_text(str(out), "utf-8")
+    Path(output_file_path).write_text(json.dumps(stack))
 
 
 if __name__ == "__main__":

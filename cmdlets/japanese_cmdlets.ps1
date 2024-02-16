@@ -383,7 +383,7 @@ class SudachiPy {
             $opt += (($ignoreParen)? "IgnoreParen" : "IncludeParen")
             $opt += (($focusName)? "FocusName" : "IncludeNoise")
             Start-Process -Path python.exe -wait -ArgumentList (@("-B", $sudachiPath, $in.FullName, $out.FullName) + $opt) -NoNewWindow
-            $this.parsed = Get-Content -Path $out.FullName -Encoding utf8NoBOM | ConvertFrom-Json
+            $this.parsed = Get-Content -Path $out.FullName | ConvertFrom-Json
         }
     }
 
@@ -539,6 +539,6 @@ function Get-LinesSimilarityWithPython {
         $out = New-Item -Path ".\out.txt"
         $lines | Out-File -Encoding utf8NoBOM -FilePath $in.FullName
         Start-Process -Path python.exe -wait -ArgumentList @("-B", $pyCodePath, $in.FullName, $out.FullName) -NoNewWindow
-        return Get-Content -Path $out.FullName -Encoding utf8NoBOM | ConvertFrom-Json
+        return Get-Content -Path $out.FullName | ConvertFrom-Json
     }
 }

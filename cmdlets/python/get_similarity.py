@@ -6,6 +6,7 @@ encoding: utf8
 
 import sys
 import itertools
+import json
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -119,7 +120,7 @@ class LinesMatcher:
 def main(input_file_path: str, output_file_path: str):
     lines = Path(input_file_path).read_text("utf-8").splitlines()
     out = LinesMatcher(lines).compare()
-    Path(output_file_path).write_text(str(out), "utf-8")
+    Path(output_file_path).write_text(json.dumps(out))
 
 
 if __name__ == "__main__":
