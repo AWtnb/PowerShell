@@ -141,7 +141,7 @@ function Invoke-DayPicker {
         ,[int]$y = 0
         ,[int]$m = 0
         ,[int]$d = 0
-        ,[int]$span = 30
+        ,[int]$span = 365
         ,[switch]$weekday
     )
     $opt = ($start)? @("--start", $start) : @()
@@ -157,7 +157,7 @@ function Invoke-DayPickerClipper {
         ,[int]$y = 0
         ,[int]$m = 0
         ,[int]$d = 0
-        ,[int]$span = 30
+        ,[int]$span = 365
         ,[switch]$weekday
     )
     $days = Invoke-DayPicker -start $start -y $y -m $m -d $d -span $span -weekday:$weekday
