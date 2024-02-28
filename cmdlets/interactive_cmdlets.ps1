@@ -184,9 +184,6 @@ function Invoke-MokoLauncher {
         $opt += "--all"
     }
     & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\moko.exe") $opt
-    if ($LASTEXITCODE -eq 0) {
-        Hide-ConsoleWindow
-    }
 }
 Set-Alias moko Invoke-MokoLauncher
 
