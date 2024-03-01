@@ -12,7 +12,7 @@ from pypdf import PdfReader, PdfWriter
 def main(file_path: str, title_str: str = "", preserve_untouched_data: bool = False) -> None:
     src_pdf = PdfReader(file_path)
     pdf_path = Path(file_path)
-    new_path = pdf_path.with_stem(pdf_path.stem + "_newmatadata")
+    new_path = pdf_path.with_stem(pdf_path.stem + "_newmetadata")
     new_pdf = PdfWriter()
 
     for page in src_pdf.pages:
