@@ -478,3 +478,24 @@ function Invoke-PdfTextExtractWithPython {
     }
     end {}
 }
+
+function Invoke-PdfTitleModifyWithPython {
+    param (
+        [parameter(ValueFromPipeline)]
+        [ArgumentCompleter({[PyPdf]::getFiles()})]
+        $inputObj
+        ,[string]$title = "Title"
+        ,[switch]$preserveUntouchedData
+    )
+    begin {
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("modify_metadata.py")
+        $py.RunCommand(@($file.FullName, $title, $preserveUntouchedData))
+    }
+    end {}
+}
