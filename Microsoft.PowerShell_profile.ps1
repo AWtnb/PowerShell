@@ -531,6 +531,13 @@ function Restart-Keyhac {
     Start-Process ("C:\Users\{0}\Sync\portable_app\keyhac\keyhac.exe" -f $env:USERNAME)
 }
 
+# restart corvusskk
+function Restart-CorvusSKK {
+    $p = Get-Process | Where-Object {$_.Name -eq "imcrvmgr"}
+    $p | Stop-Process -Force
+    Start-Process $p.Path
+}
+
 # pip
 
 function pipinst {
