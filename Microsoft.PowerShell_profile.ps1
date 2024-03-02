@@ -538,6 +538,17 @@ function Restart-CorvusSKK {
     Start-Process $p.Path
 }
 
+# get skk customize function
+function Get-CorvusSKKUserFunctions {
+    $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\init.lua"
+    if (Test-Path $p) {
+        $pattern = "-- usage: "
+        Get-Content -Path $p | Where-Object {$_.StartsWith($pattern)} | ForEach-Object {$_.Substring($pattern.Length)} | Write-Output
+    }
+}
+
+
+
 # pip
 
 function pipinst {
