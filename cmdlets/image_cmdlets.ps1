@@ -328,7 +328,7 @@ function Convert-ClipboardImage2File {
         }
     }
     $img.save($fullpath)
-    "save clipboard image as '{0}.png'" -f ($fullpath | Split-Path -Leaf) | Write-Host -ForegroundColor Cyan
+    "save clipboard image as '{0}'" -f ($fullpath | Split-Path -Leaf) | Write-Host -ForegroundColor Cyan
 }
 Set-Alias cbImage2file Convert-ClipboardImage2File
 
