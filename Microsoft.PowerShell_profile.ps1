@@ -533,9 +533,10 @@ function Restart-Keyhac {
 
 # restart corvusskk
 function Restart-CorvusSKK {
-    $p = Get-Process | Where-Object {$_.Name -eq "imcrvmgr"}
-    $p | Stop-Process -Force
-    Start-Process $p.Path
+    $proc = Get-Process | Where-Object {$_.Name -eq "imcrvmgr"}
+    $p = $proc.Path
+    $proc | Stop-Process -Force
+    Start-Process $p
 }
 
 # get skk customize function
