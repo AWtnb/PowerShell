@@ -479,7 +479,7 @@ function Invoke-PdfTextExtractWithPython {
     end {}
 }
 
-function Invoke-PdfTitleModifyWithPython {
+function Invoke-PdfTitleMetadataModifyWithPython {
     param (
         [parameter(ValueFromPipeline)]
         [ArgumentCompleter({[PyPdf]::getFiles()})]
