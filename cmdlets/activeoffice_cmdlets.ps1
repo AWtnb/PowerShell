@@ -140,6 +140,7 @@ function Set-ActiveWordPageSetup {
         $_.PageSetup.LeftMargin = 2.835 * $leftMarginMM
         $_.PageSetup.RightMargin = 2.835 * $rightMarginMM
     }
+    $adoc.Save()
 }
 
 class OfficeColor {
