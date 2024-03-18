@@ -55,13 +55,13 @@ function Convert-WordDocument2PDF {
                     "converting '{0}' to PDF..." -f $_.Name | Write-Host
                     try {
                         $doc = $word.Documents.Open($_.FullName, $null, $true)
-                        if ($acceptRevisions) {
-                            $doc.AcceptAllRevisions()
-                            "==> accepting all revisions..." | Write-Host
-                        }
-                        if ($removeComment) {
+                        if ($removeComment -and $doc.comments.count -gt 0) {
                             $doc.DeleteAllComments()
                             "==> removing all comments..." | Write-Host
+                        }
+                        if ($acceptRevisions -and $doc.revisions.count -gt 0) {
+                            $doc.AcceptAllRevisions()
+                            "==> accepting all revisions..." | Write-Host
                         }
                         $outPath = $_.FullName -replace "\.docx?$", ".pdf"
                         $doc.ExportAsFixedFormat($outPath, `
