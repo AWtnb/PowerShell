@@ -121,6 +121,27 @@ function Set-ActiveWordCheckBoxStyle {
     "{0} content controls are formatted!" -f $counter | Write-Host
 }
 
+function Set-ActiveWordPageSetup {
+    param(
+        [int]$charsPerLine = 40
+        ,[int]$linesPerPage = 36
+        ,[double]$topMarginMM = 35
+        ,[double]$bottomMarginMM = 30
+        ,[double]$leftMarginMM = 30
+        ,[double]$rightMarginMM = 30
+    )
+    $adoc = Get-ActiveWordDocument
+    if (-not $adoc) { return }
+    $adoc.Sections | ForEach-Object {
+        $_.PageSetup.CharsLine = $charsPerLine
+        $_.PageSetup.LinesPage = $linesPerPage
+        $_.PageSetup.TopMargin = 2.835 * $topMarginMM
+        $_.PageSetup.BottomMargin = 2.835 * $bottomMarginMM
+        $_.PageSetup.LeftMargin = 2.835 * $leftMarginMM
+        $_.PageSetup.RightMargin = 2.835 * $rightMarginMM
+    }
+}
+
 class OfficeColor {
 
     static [int] FromColorcode([string]$s) {
