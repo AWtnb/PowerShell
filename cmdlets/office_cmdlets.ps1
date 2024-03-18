@@ -25,6 +25,7 @@ class ComController {
 function Convert-WordDocument2PDF {
     param (
         [parameter(ValueFromPipeline)]$inputObj
+        ,[switch]$acceptRevisions
         ,[switch]$removeComment
     )
     begin {
@@ -54,6 +55,10 @@ function Convert-WordDocument2PDF {
                     "converting '{0}' to PDF..." -f $_.Name | Write-Host
                     try {
                         $doc = $word.Documents.Open($_.FullName, $null, $true)
+                        if ($acceptRevisions) {
+                            $doc.AcceptAllRevisions()
+                            "==> accepting all revisions..." | Write-Host
+                        }
                         if ($removeComment) {
                             $doc.DeleteAllComments()
                             "==> removing all comments..." | Write-Host
