@@ -291,6 +291,7 @@ function Invoke-PdfUnspreadWithPython {
         ,[switch]$vertical
         ,[switch]$singleTop
         ,[switch]$singleLast
+        ,[switch]$toLeft
     )
     begin {}
     process {
@@ -308,6 +309,9 @@ function Invoke-PdfUnspreadWithPython {
         }
         if ($singleLast) {
             $params += "--singleLast"
+        }
+        if ($toLeft) {
+            $params += "--toLeft"
         }
         $py.RunCommand($params)
     }
