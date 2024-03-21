@@ -245,3 +245,27 @@ function New-TablacusShortcutOnStartmenu {
     }
     Get-Item $lnkPath | Move-Item -Destination $dest
 }
+
+function New-WinWordShortcutForDotxTemplate {
+    param (
+        [string]$templatePath
+        ,[string]$shortcutName
+    )
+    $templatePath = $templatePath -replace "^`"" -replace "`"$"
+    if (-not (Test-Path $templatePath)) {
+        "cannnot found template path: '{0}'" -f $templatePath | Write-Host -ForegroundColor Red
+        return
+    }
+    $wordAppPath = "C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE"
+    if (-not (Test-Path $wordAppPath)) {
+        "cannnot found exe path: '{0}'" -f $wordAppPath | Write-Host -ForegroundColor Red
+        return
+    }
+    $basename = ($shortcutName.Length -gt 0)? $shortcutName : (Get-Item $templatePath).BaseName
+    $shortcutPath = (Get-Location).ProviderPath | Join-Path -ChildPath ($basename + ".lnk")
+    $wsShell = New-Object -ComObject WScript.Shell
+    $shortcut = $WsShell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = $wordAppPath
+    $shortcut.Arguments = "/t`"{0}`"" -f $templatePath
+    $shortcut.Save()
+}
