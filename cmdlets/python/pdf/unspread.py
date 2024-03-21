@@ -12,18 +12,16 @@ from pdfrw import PdfReader, PdfWriter, PageMerge
 from package.pdfbox import PdfBox
 
 
-def get_variation(pages: list, vertical: bool) -> list:
-    if vertical:
-        return [PdfBox(p).media.height for p in pages]
-    return [PdfBox(p).media.width for p in pages]
-
-
 class PdfPages:
     def __init__(self, file_path: str, vertical: bool) -> None:
         self._file_path = file_path
         self._pages = PdfReader(self._file_path).pages
         self._vertical = vertical
-        self._size_variation = get_variation(self._pages, vertical)
+
+        if self._vertical:
+            self._size_variation = [PdfBox(p).media.height for p in self._pages]
+        else:
+            self._size_variation = [PdfBox(p).media.width for p in self._pages]
 
     def is_max(self, idx: int) -> bool:
         return self._size_variation[idx] == max(self._size_variation)
@@ -37,19 +35,13 @@ class PdfPages:
     def is_last(self, idx: int) -> bool:
         return idx == len(self._pages) - 1
 
-    def is_unspreadable(self, idx: int) -> bool:
-        if self.is_max(idx):
-            return True
-        try:
-            assert self.is_min(
-                idx
-            ), "page {} is neither largest nor smallest size! -> skipped unspreading".format(
-                idx + 1
+    def check_weird_size(self, idx: int):
+        if not self.is_min(idx):
+            print(
+                "skipped unspreading page {}".format(idx + 1),
+                "because this page is neither largest nor smallest size.",
+                file=sys.stderr,
             )
-        except AssertionError as err:
-            print("[WARNING] '{}': {}".format(self._file_path, err), file=sys.stderr)
-        finally:
-            return False
 
     def unspread(self, idx: int, to_left: bool):
         page = self._pages[idx]
@@ -64,11 +56,11 @@ class PdfPages:
             yield PageMerge().add(page, viewrect=rect).render()
 
     def centerize(self, idx: int):
-        page = self._pages[idx]
         if self._vertical:
             rect = (0, 0.25, 1, 0.5)
         else:
             rect = (0.25, 0, 0.5, 1)
+        page = self._pages[idx]
         return PageMerge().add(page, viewrect=rect).render()
 
     def unspread_pages(
@@ -83,15 +75,16 @@ class PdfPages:
         writer = PdfWriter(out_path)
 
         for i, page in enumerate(self._pages):
-            if single_top and self.is_first(i) and self.is_unspreadable(i):
-                writer.addpage(self.centerize(i))
-                continue
-            if single_last and self.is_last(i) and self.is_unspreadable(i):
-                writer.addpage(self.centerize(i))
-                continue
-            if self.is_unspreadable(i):
+            if self.is_max(i):
+                if single_top and self.is_first(i):
+                    writer.addpage(self.centerize(i))
+                    continue
+                if single_last and self.is_last(i):
+                    writer.addpage(self.centerize(i))
+                    continue
                 writer.addpages(self.unspread(i, to_left))
             else:
+                self.check_weird_size(i)
                 writer.addpage(page)
         writer.write()
 
