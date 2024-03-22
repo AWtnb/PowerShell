@@ -319,27 +319,6 @@ function Invoke-PdfUnspreadWithPython {
 }
 Set-Alias pdfUnspreadPy Invoke-PdfUnspreadWithPython
 
-
-function Invoke-PdfCropCenterWithPython {
-    param (
-        [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
-        $inputObj
-        ,[ValidateSet("head", "tail", "both")][string]$mode = "both"
-    )
-    begin {}
-    process {
-        $file = Get-Item -LiteralPath $inputObj
-        if ($file.Extension -ne ".pdf") {
-            return
-        }
-        $py = [PyPdf]::new("crop_center.py")
-        $py.RunCommand(@($file.Fullname, $mode))
-    }
-    end {}
-}
-
-
 function Invoke-PdfTrimGalleyMarginWithPython {
     param (
         [parameter(ValueFromPipeline)]
