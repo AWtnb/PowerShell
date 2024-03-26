@@ -191,21 +191,27 @@ class WdConst {
 
 class ActiveDocument {
 
+    [System.__ComObject]$App
     [System.__ComObject]$Document
 
     ActiveDocument() {
         $wd = Get-ActiveWordApp
         if ($wd) {
+            $this.App = $wd
             $this.Document = $wd.ActiveDocument
         }
     }
 
+    [string] GetFullname() {
+        return $this.Document.FullName
+    }
+
     [string[]] GetParagraphs() {
         $array = New-Object System.Collections.ArrayList
-        $regControlChar = [regex]"[`u{00}-`u{001f}]"
         if ($this.Document) {
             foreach ($p in $this.Document.Paragraphs) {
-                $array.Add($regControlChar.Replace($p.Range.Text, "")) > $null
+                $s = [ActiveDocument]::RemoveControlChars($p.Range.Text)
+                $array.Add($s) > $null
             }
         }
         return $array
@@ -225,6 +231,19 @@ class ActiveDocument {
             }
         }
         return $array
+    }
+
+    [bool] AcceptAllRevisions() {
+        if ($this.Document.Revisions.Count -lt 1) {
+            return $false
+        }
+        $this.Document.AcceptAllRevisions()
+        return $true
+    }
+
+    static [string] RemoveControlChars([string]$s) {
+        $reg = [regex]"[`u{00}-`u{001f}]"
+        return $reg.Replace($s, "")
     }
 }
 
@@ -284,9 +303,9 @@ function Invoke-GrepOnActiveWordDocument {
     foreach ($g in $grep) {
         $lineNum = "{0:d4}:" -f $g.LineNumber
         $markup = $reg.Replace($g.Line, {
-            param([System.Text.RegularExpressions.Match]$m)
-            return $global:PSStyle.Background.BrightBlue + $global:PSStyle.Foreground.Black + $m.Value + $stopDeco
-        })
+                param([System.Text.RegularExpressions.Match]$m)
+                return $global:PSStyle.Background.BrightBlue + $global:PSStyle.Foreground.Black + $m.Value + $stopDeco
+            })
         $global:PSStyle.Foreground.Blue + $lineNum + $stopDeco + $markup | Write-Output
     }
 
@@ -446,9 +465,9 @@ function Invoke-GrepOnActiveWordDocumentComment {
             if ($reg.IsMatch($line)) {
                 $a = "{0}:" -f $author
                 $markup = $reg.Replace($line, {
-                    param([System.Text.RegularExpressions.Match]$m)
-                    return $global:PSStyle.Background.BrightBlue + $global:PSStyle.Foreground.Black + $m.Value + $stopDeco
-                })
+                        param([System.Text.RegularExpressions.Match]$m)
+                        return $global:PSStyle.Background.BrightBlue + $global:PSStyle.Foreground.Black + $m.Value + $stopDeco
+                    })
                 $global:PSStyle.Foreground.Blue + $a + $stopDeco + $markup | Write-Output
             }
         }
@@ -839,6 +858,61 @@ class DocDiff {
 
 }
 
+
+function Invoke-DiffOnActiveWordDocumntWithPython {
+    param (
+        [parameter(Mandatory)][string]$originalFile
+        ,[string]$outBasename = "diff"
+    )
+    $curDoc = [ActiveDocument]::new()
+    if (-not $curDoc) {
+        return
+    }
+
+    if ($curDoc.AcceptAllRevisions()) {
+        "==> accepted all revisions on active document!" | Write-Host
+    }
+
+    $curLines = $curDoc.GetParagraphs()
+    if ($curLines.Count -lt 1) {
+        return
+    }
+    $curName = $curDoc.GetFullname() | Split-Path -Leaf
+
+    $orgPath = (Get-Item $originalFile).FullName
+    $orgDoc = $null
+    $word = $curDoc.App
+    try {
+        $orgDoc = $word.Documents($orgPath)
+    }
+    catch {
+        $orgDoc = $word.Documents.Open($orgPath)
+    }
+    if (-not $orgDoc) {
+        return
+    }
+    if ($orgDoc.Revisions.Count -gt 0) {
+        $orgDoc.AcceptAllRevisions()
+        "==> accepted all revisions on original document! (not saved)" | Write-Host
+    }
+    $orgLines = @($orgDoc.Paragraphs).ForEach({
+        return [ActiveDocument]::RemoveControlChars($_.Range.Text)
+    })
+    $orgName = $orgPath | Split-Path -Leaf
+    $orgDoc.Close($false)
+
+    $outPath = (Get-Location).ProviderPath | Join-Path -ChildPath ($outBasename + ".html")
+    Use-TempDir {
+        $fromPath = New-Item -Path $orgName
+        $orgLines | Out-File -Encoding utf8NoBOM -FilePath $fromPath
+        $toPath = New-Item -Path $curName
+        $curLines | Out-File -Encoding utf8NoBOM -FilePath $toPath
+        $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\diff_as_html\inline\diff.py"
+        $cmd = 'python -B "{0}" "{1}" "{2}" "{3}"' -f $pyCodePath, $fromPath, $toPath, $outPath
+        $cmd | Invoke-Expression
+    }
+}
+Set-Alias pyDiffActiveDoc Invoke-DiffOnActiveWordDocumntWithPython
 
 function Invoke-DiffFromActiveWordDocumnt {
     <#
