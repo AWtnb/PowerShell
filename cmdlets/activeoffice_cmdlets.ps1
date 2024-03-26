@@ -862,7 +862,7 @@ class DocDiff {
 function Invoke-DiffOnActiveWordDocumntWithPython {
     param (
         [parameter(Mandatory)][string]$originalFile
-        ,[string]$outBasename = "diff"
+        ,[string]$outName = "diff"
     )
     $curDoc = [ActiveDocument]::new()
     if (-not $curDoc) {
@@ -877,7 +877,7 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
     if ($curLines.Count -lt 1) {
         return
     }
-    $curName = $curDoc.GetFullname() | Split-Path -Leaf
+    $curPath = $curDoc.GetFullname()
 
     $orgPath = (Get-Item $originalFile).FullName
     $orgDoc = $null
@@ -901,11 +901,12 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
     $orgName = $orgPath | Split-Path -Leaf
     $orgDoc.Close($false)
 
-    $outPath = (Get-Location).ProviderPath | Join-Path -ChildPath ($outBasename + ".html")
+    $outName = ($outName.EndsWith(".html"))? $outName : $outName + ".html"
+    $outPath = $curPath | Split-Path -Parent | Join-Path -ChildPath $outName
     Use-TempDir {
         $fromPath = New-Item -Path $orgName
         $orgLines | Out-File -Encoding utf8NoBOM -FilePath $fromPath
-        $toPath = New-Item -Path $curName
+        $toPath = New-Item -Path ($curPath | Split-Path -Leaf)
         $curLines | Out-File -Encoding utf8NoBOM -FilePath $toPath
         $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\diff_as_html\inline\diff.py"
         $cmd = 'python -B "{0}" "{1}" "{2}" "{3}"' -f $pyCodePath, $fromPath, $toPath, $outPath
