@@ -287,7 +287,42 @@ function Invoke-ImageMagickShadow {
     end {}
 }
 
+function Invoke-ImageMagickGrayscale {
+    param (
+        [parameter(ValueFromPipeline)]$inputObj
+    )
+    begin {
+    }
+    process {
+        $fileObj = Get-Item -LiteralPath $inputObj
+        $fullname = $fileObj.Fullname
+        $outName = "{0}_gray{1}" -f $fileObj.basename, $fileObj.Extension
+        'magick convert "{0}" -quality 100 -colorspace Gray {1}' -f $fullname, $outName | Invoke-Expression
+    }
+    end {}
+}
+
 function Invoke-ImageMagickResize {
+    param (
+        [parameter(ValueFromPipeline)]$inputObj
+        ,[int]$width = 256
+        ,[int]$height = 0
+    )
+    begin {
+        if ($height -lt 1) {
+            $height = $width
+        }
+    }
+    process {
+        $fileObj = Get-Item -LiteralPath $inputObj
+        $fullname = $fileObj.Fullname
+        $outName = "{0}_{1}{2}" -f $fileObj.basename, $width, $fileObj.Extension
+        'magick convert "{0}" -quality 100 -resize {1}x{2} {3}' -f $fullname, $width, $height, $outName | Invoke-Expression
+    }
+    end {}
+}
+
+function Invoke-ImageMagickResizeByWidth {
     param (
         [parameter(ValueFromPipeline)]$inputObj,
         [int]$maxWidth = 500
