@@ -531,13 +531,29 @@ function Restart-Keyhac {
     Start-Process ("C:\Users\{0}\Sync\portable_app\keyhac\keyhac.exe" -f $env:USERNAME)
 }
 
+# restart corvusskk server
+function Restart-CorvusSKKServer {
+    $proc = Get-Process | Where-Object {$_.Name -eq "crvskkserv"}
+    if ($proc) {
+        $p = $proc.Path
+        $proc | Stop-Process -Force
+        Start-Process $p
+    }
+}
+
 # restart corvusskk
 function Restart-CorvusSKK {
+    param(
+        [switch]$withServer
+    )
     $proc = Get-Process | Where-Object {$_.Name -eq "imcrvmgr"}
     if ($proc) {
         $p = $proc.Path
         $proc | Stop-Process -Force
         Start-Process $p
+    }
+    if ($withServer) {
+        Restart-CorvusSKKServer
     }
 }
 
