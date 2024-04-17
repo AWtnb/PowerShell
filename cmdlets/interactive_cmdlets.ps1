@@ -171,31 +171,17 @@ function Invoke-DayPickerClipper {
 Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
     [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPickerClipper -weekday")
-    # [Microsoft.PowerShell.PSConsoleReadLine]::MenuComplete()
 }
 
-function Invoke-MokoLauncher {
-    param (
-        [switch]$all
-    )
+
+Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {
+    param($key, $arg)
     $dataPath = ($env:USERPROFILE | Join-Path -ChildPath "Personal\launch.yaml")
     $opt = @("--src", $dataPath, "--filer", $env:TABLACUS_PATH, "--exclude=_obsolete,node_modules")
-    if ($all) {
+    if ($key.Modifiers -band [System.ConsoleModifiers]::Control) {
         $opt += "--all"
     }
     & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\moko.exe") $opt
-}
-Set-Alias moko Invoke-MokoLauncher
-
-Set-PSReadLineKeyHandler -Key "alt+z" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>moko #")
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-}
-Set-PSReadLineKeyHandler -Key "ctrl+alt+z" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>moko -all")
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
 function Invoke-RDriveDatabase {
