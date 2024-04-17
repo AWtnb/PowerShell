@@ -5,9 +5,8 @@ pwsh profile
                 encoding: utf8bom
 ============================== #>
 
-@(
-    "Scoop-Completion"
-) | ForEach-Object { Import-Module $_ }
+# https://github.com/Moeologist/scoop-completion
+Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 
 # disble progress bar
 $progressPreference = "silentlyContinue"

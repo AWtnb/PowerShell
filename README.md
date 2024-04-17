@@ -4,10 +4,17 @@ This repository is the content of `$env:USERPROFILE\Documents\PowerShell` .
 
 ## Packages
 
-[scoop-completion](https://www.powershellgallery.com/packages/scoop-completion/)
+[scoop-completion](https://github.com/Moeologist/scoop-completion)
 
 ```PowerShell
-Install-Module -Name scoop-completion
+# add extras bucket
+scoop bucket add extras
+
+# install
+scoop install scoop-completion
+
+# enable completion in current shell, use absolute path because PowerShell Core not respect $env:PSModulePath
+Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
 ```
 
 [ZLocation](https://www.powershellgallery.com/packages/ZLocation/)
