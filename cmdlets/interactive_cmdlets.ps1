@@ -174,14 +174,21 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
 }
 
 
-Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {
-    param($key, $arg)
+function Invoke-MokoLauncher {
+    param (
+        [switch]$all
+    )
     $dataPath = ($env:USERPROFILE | Join-Path -ChildPath "Personal\launch.yaml")
     $opt = @("--src", $dataPath, "--filer", $env:TABLACUS_PATH, "--exclude=_obsolete,node_modules")
-    if ($key.Modifiers -band [System.ConsoleModifiers]::Control) {
+    if ($all) {
         $opt += "--all"
     }
     & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\moko.exe") $opt
+}
+
+Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {
+    param($key, $arg)
+    Invoke-MokoLauncher -all $key.Modifiers -band [System.ConsoleModifiers]::Control
 }
 
 function Invoke-RDriveDatabase {
