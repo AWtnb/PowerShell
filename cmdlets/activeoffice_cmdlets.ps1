@@ -669,6 +669,36 @@ class WdStyler {
         }
     }
 
+    [void] UpdateByOutlieLevel() {
+        $doc = $this.Document
+        if (-not $doc) { return }
+        $doc.Styles | Where-Object {$_.ParagraphFormat.OutlineLevel -ne 10} | ForEach-Object {
+            $outlinedStyle = $_
+            $fill = ""
+            $border = ""
+            switch ($outlinedStyle.ParagraphFormat.OutlineLevel) {
+                <#case#> 1 {$fill = "#f5ff3d"; $border="#1700c2"; break }
+                <#case#> 2 {$fill = "#97ff57"; $border="#ff007b"; break }
+                <#case#> 3 {$fill = "#5efffc"; $border="#ffaa00"; break }
+                <#case#> 4 {$fill = "#ff91fa"; $border="#167335"; break }
+                <#case#> 5 {$fill = "#ffca59"; $border="#2f5773"; break }
+                <#case#> 6 {$fill = "#d6d6d6"; $border="#0f1c24"; break }
+            }
+            if (-not $fill -or -not $border) {
+                return
+            }
+            $fillColor = [OfficeColor]::FromColorcode($fill)
+            $borderColor = [OfficeColor]::FromColorcode($border)
+            $pf = $outlinedStyle.ParagraphFormat
+            $pf.Shading.BackgroundPatternColor = $fillColor
+            foreach ($i in -4..-1) {
+                $pf.Borders($i).LineStyle = [WdConst]::wdLineStyleSingle
+                $pf.Borders($i).LineWidth = [WdConst]::wdLineWidth050pt
+                $pf.Borders($i).Color = $borderColor
+            }
+        }
+    }
+
     [void] SetMarker () {
         $doc = $this.Document
         if (-not $doc) { return }
@@ -758,6 +788,15 @@ function Set-MyStyleToActiveWordDocument {
         $styler.SetCharacter()
         $styler.SetTable()
     }
+}
+
+function Update-OutlineStyleOnActiveWordDocument {
+    <#
+        .SYNOPSIS
+        現在開いている Word 文書の既存のスタイルを上書きする
+    #>
+    $styler = [WdStyler]::new()
+    $styler.UpdateByOutlieLevel()
 }
 
 function Set-FilenameToHeaderOnActiveWordDocument {
