@@ -181,6 +181,7 @@ class WdConst {
     static [int] $wdStyleTypeCharacter = 2
     static [int] $wdStyleTypeParagraphOnly = 5
     static [int] $wdStyleTypeTable = 3
+    static [int] $wdUnderlineNone = 0
     static [int] $wdUnderlineDashHeavy = 23
     static [int] $wdUnderlineDotDashHeavy = 25
     static [int] $wdUnderlineDotDotDashHeavy = 26
@@ -699,9 +700,34 @@ class WdStyler {
         }
     }
 
-    [void] SetMarker () {
+    [void] AddParagraphStyle ([string]$name, [string]$fill, [string]$border, [char]$level) {
         $doc = $this.Document
         if (-not $doc) { return }
+        $style = $null
+        try {
+            $style = $doc.Styles.Add($name, [WdConst]::wdStyleTypeParagraphOnly)
+        }
+        catch {
+            "[ERROR] Paragraph style name '{0}' is already used!" -f $name | Write-Host -ForegroundColor Red
+            return
+        }
+        if (-not $style) { return }
+        $style.ParagraphFormat = $this.BaseStyle.ParagraphFormat
+        $fillColor = [OfficeColor]::FromColorcode($fill)
+        $borderColor = [OfficeColor]::FromColorcode($border)
+        foreach ($i in -4..-1) {
+            $style.ParagraphFormat.Borders($i).LineStyle = [WdConst]::wdLineStyleSingle
+            $style.ParagraphFormat.Borders($i).LineWidth = [WdConst]::wdLineWidth050pt
+            $style.ParagraphFormat.Borders($i).Color = $borderColor
+        }
+        $style.Font = $this.BaseStyle.Font
+        $style.NextParagraphStyle = $this.BaseStyle
+        $style.ParagraphFormat.Shading.BackgroundPatternColor = $fillColor
+        $style.ParagraphFormat.OutlineLevel = $level
+        $style.QuickStyle = $true
+    }
+
+    [void] SetMarker () {
         @{
             "yMarker1" = [PSCustomObject]@{"fill"="#f5ff3d"; "border"="#1700c2"; "level"=[char]1};
             "yMarker2" = [PSCustomObject]@{"fill"="#97ff57"; "border"="#ff007b"; "level"=[char]2};
@@ -710,28 +736,30 @@ class WdStyler {
             "yMarker5" = [PSCustomObject]@{"fill"="#ffca59"; "border"="#2f5773"; "level"=[char]5};
             "yMarker6" = [PSCustomObject]@{"fill"="#d6d6d6"; "border"="#0f1c24"; "level"=[char]6};
         }.GetEnumerator() | ForEach-Object {
-            $styleName = $_.Key
-            $style = $doc.Styles.Add($styleName, [WdConst]::wdStyleTypeParagraphOnly)
-            $style.ParagraphFormat = $this.BaseStyle.ParagraphFormat
-            $fillColor = [OfficeColor]::FromColorcode($_.Value.fill)
-            $borderColor = [OfficeColor]::FromColorcode($_.Value.border)
-            $level = $_.Value.level
-            foreach ($i in -4..-1) {
-                $style.ParagraphFormat.Borders($i).LineStyle = [WdConst]::wdLineStyleSingle
-                $style.ParagraphFormat.Borders($i).LineWidth = [WdConst]::wdLineWidth050pt
-                $style.ParagraphFormat.Borders($i).Color = $borderColor
-            }
-            $style.Font = $this.BaseStyle.Font
-            $style.NextParagraphStyle = $this.BaseStyle
-            $style.ParagraphFormat.Shading.BackgroundPatternColor = $fillColor
-            $style.ParagraphFormat.OutlineLevel = $level
-            $style.QuickStyle = $true
+            $this.AddParagraphStyle($_.Key, $_.Value.fill, $_.Value.border, $_.Value.level)
         }
     }
 
-    [void] SetCharacter () {
+    [void] AddCharacterStyle ([string]$name, [string]$color, [int]$lineStyle) {
         $doc = $this.Document
         if (-not $doc) { return }
+        $style = $null
+        try {
+            $style = $doc.Styles.Add($name, [WdConst]::wdStyleTypeCharacter)
+        }
+        catch {
+            "[ERROR] Character style name '{0}' is already used!" -f $name | Write-Host -ForegroundColor Red
+            return
+        }
+        if (-not $style) { return }
+        $style.Font = $this.BaseStyle.Font
+        $style.Font.Shading.BackgroundPatternColor = [OfficeColor]::FromColorcode($color)
+        $style.Font.Color = [OfficeColor]::FromColorcode("#111111")
+        $style.Font.Underline = $lineStyle
+        $style.QuickStyle = $true
+    }
+
+    [void] SetCharacter () {
         @{
             "yChar1" = [PSCustomObject]@{"Color"="#ffda0a"; "Line"=[wdConst]::wdUnderlineThick;}
             "yChar2" = [PSCustomObject]@{"Color"="#66bdcc"; "Line"=[wdConst]::wdUnderlineDotDashHeavy;}
@@ -740,19 +768,33 @@ class WdStyler {
             "yChar5" = [PSCustomObject]@{"Color"="#bf3de3"; "Line"=[wdConst]::wdUnderlineDashHeavy;}
             "yChar6" = [PSCustomObject]@{"Color"="#ff9500"; "Line"=[wdConst]::wdUnderlineWavyHeavy;}
         }.GetEnumerator() | ForEach-Object {
-            $styleName = $_.Key
-            $style = $doc.Styles.Add($styleName, [WdConst]::wdStyleTypeCharacter)
-            $style.Font = $this.BaseStyle.Font
-            $style.Font.Shading.BackgroundPatternColor = [OfficeColor]::FromColorcode($_.Value.Color)
-            $style.Font.Color = [OfficeColor]::FromColorcode("#111111")
-            $style.Font.Underline = $_.Value.Line
-            $style.QuickStyle = $true
+            $this.AddCharacterStyle($_.Key, $_.Value.Color, $_.Value.Line)
+        }
+    }
+
+
+    [void] AddTableStyle ([string]$name, [string]$borderColor) {
+        $doc = $this.Document
+        if (-not $doc) { return }
+        $style = $null
+        try {
+            $style = $doc.Styles.Add($name, [WdConst]::wdStyleTypeTable)
+        }
+        catch {
+            "[ERROR] Character style name '{0}' is already used!" -f $name | Write-Host -ForegroundColor Red
+            return
+        }
+        if (-not $style) { return }
+        $style.Font = $this.BaseStyle.Font
+        foreach ($i in -4..-1) {
+            $style.Table.Borders($i).LineStyle = [WdConst]::wdLineStyleSingle
+            $style.Table.Borders($i).LineWidth = [WdConst]::wdLineWidth150pt
+            $style.Table.Borders($i).Color = [OfficeColor]::FromColorcode($borderColor)
+            $style.Table.Shading.BackgroundPatternColor = [OfficeColor]::FromColorcode("#eeeeee")
         }
     }
 
     [void] SetTable () {
-        $doc = $this.Document
-        if (-not $doc) { return }
         @{
             "yTable1" = "#2b70ba";
             "yTable2" = "#fc035a";
@@ -760,15 +802,7 @@ class WdStyler {
             "yTable4" = "#ff4f14";
             "yTable5" = "#fffb00";
         }.GetEnumerator() | ForEach-Object {
-            $styleName = $_.Key
-            $style = $doc.Styles.Add($styleName, [WdConst]::wdStyleTypeTable)
-            $style.Font = $this.BaseStyle.Font
-            foreach ($i in -4..-1) {
-                $style.Table.Borders($i).LineStyle = [WdConst]::wdLineStyleSingle
-                $style.Table.Borders($i).LineWidth = [WdConst]::wdLineWidth150pt
-                $style.Table.Borders($i).Color = [OfficeColor]::FromColorcode($_.Value)
-                $style.Table.Shading.BackgroundPatternColor = [OfficeColor]::FromColorcode("#eeeeee")
-            }
+            $this.AddTableStyle($_.Key, $_.Value)
         }
     }
 
@@ -787,6 +821,23 @@ function Set-MyStyleToActiveWordDocument {
     if (-not $onlyMarker) {
         $styler.SetCharacter()
         $styler.SetTable()
+    }
+}
+
+function Add-CharStyleToActiveWordDocument {
+    <#
+        .SYNOPSIS
+        現在開いている Word 文書に「文字列」タイプの自作スタイルを追加する。
+        下記のプロパティを指定すること。
+        - name: スタイル名
+        - color: 背景色のカラーコード
+        .EXAMPLE
+        cat hoge.json | ConvertFrom-Json | Add-StyleToActiveWordDocument
+    #>
+    $styler = [WdStyler]::new()
+    @($input) | ForEach-Object {
+        "Adding new style '{0}'..." -f $_.name | Write-Host
+        $styler.AddCharacterStyle($_.name, $_.Color, [WdConst]::wdUnderlineNone)
     }
 }
 
