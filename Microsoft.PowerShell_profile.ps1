@@ -444,6 +444,11 @@ function sand([string]$pair = "「」") {
     elseif ($pair.Length -eq 1) {
         $pre = $post = $pair
     }
+    elseif ($pair.Length % 2 -eq 0) {
+        $l = $pair.Length / 2
+        $pre = $pair.Substring(0, $l)
+        $post = $pair.Substring($l)
+    }
     else {
         $pre = $post = ""
     }
