@@ -806,6 +806,16 @@ class WdStyler {
         }
     }
 
+    [void] UpdateByName([string]$styleName, [string]$color, [string]$background) {
+        $doc = $this.Document
+        if (-not $doc) { return }
+        $target = $doc.Styles | Where-Object {$_.NameLocal -eq $styleName}
+        if (-not $target) { return }
+        $ftColor = [OfficeColor]::FromColorcode($color)
+        $bgColor = [OfficeColor]::FromColorcode($background)
+        $target.Font.Shading.BackgroundPatternColor = $bgColor
+        $target.Font.Color = $ftColor
+    }
 }
 
 function Set-MyStyleToActiveWordDocument {
@@ -852,10 +862,39 @@ function Add-CharStyleToActiveWordDocument {
 function Update-OutlineStyleOnActiveWordDocument {
     <#
         .SYNOPSIS
-        現在開いている Word 文書の既存のスタイルを上書きする
+        現在開いている Word 文書の既存のスタイルを上書きする（アウトラインレベル基準）
     #>
     $styler = [WdStyler]::new()
     $styler.UpdateByOutlieLevel()
+}
+
+function Update-ExistingStyleOnActiveWordDocument {
+    <#
+        .SYNOPSIS
+        現在開いている Word 文書の既存のスタイル（背景色と文字色）を上書きする
+        .EXAMPLE
+        cat hoge.json | ConvertFrom-Json | Update-ExistingStyleOnActiveWordDocument
+    #>
+    $styler = [WdStyler]::new()
+    @($input) | ForEach-Object {
+        if (-not $_.name) {
+            "'name' property is empty!" | Write-Host -ForegroundColor Red
+            return
+        }
+        if (-not $_.mapping) {
+            "'mapping' property (for specifying color and background color) is empty!" | Write-Host -ForegroundColor Red
+            return
+        }
+        if (-not $_.mapping.color) {
+            "'mapping.color' property is empty!" | Write-Host -ForegroundColor Red
+            return
+        }
+        if (-not $_.mapping.background) {
+            "'mapping.background' property is empty!" | Write-Host -ForegroundColor Red
+            return
+        }
+        $styler.UpdateByName($_.name, $_.mapping.color, $_.mapping.background)
+    }
 }
 
 function Set-FilenameToHeaderOnActiveWordDocument {
