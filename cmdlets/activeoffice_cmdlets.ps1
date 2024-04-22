@@ -836,6 +836,14 @@ function Add-CharStyleToActiveWordDocument {
     #>
     $styler = [WdStyler]::new()
     @($input) | ForEach-Object {
+        if (-not $_.name) {
+            "'name' property is empty!" | Write-Host -ForegroundColor Red
+            return
+        }
+        if (-not $_.color) {
+            "'color' property is empty!" | Write-Host -ForegroundColor Red
+            return
+        }
         "Adding new style '{0}'..." -f $_.name | Write-Host
         $styler.AddCharacterStyle($_.name, $_.Color, [WdConst]::wdUnderlineNone)
     }
