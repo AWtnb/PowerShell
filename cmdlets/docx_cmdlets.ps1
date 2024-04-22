@@ -12,27 +12,29 @@ if ("System.IO.Compression.Filesystem" -notin ([System.AppDomain]::CurrentDomain
 
 class Docx2 {
 
+    [string]$Path
     [string]$Status
     [string]$DocumentXml
     [string]$CommentXml
 
     Docx2([string]$path) {
-        if ([Docx2]::IsOpened($path)) {
+        $this.Path = $path
+        if ($this.IsOpened()) {
             $this.Status = "FILEOPENED"
         }
         else {
             $this.Status = "OK"
-            $rawXml = [Docx2]::ReadData($path, "word/document.xml")
-            $this.DocumentXml = [Docx2]::RemoveNoise($rawXml)
-            $this.CommentXml = [Docx2]::ReadData($path, "word/comments.xml")
+            $rawXml = $this.ReadData("word/document.xml")
+            $this.DocumentXml = $rawXml.Replace("<w:t xml:space=`"preserve`">", "<w:t>") -replace "<mc:FallBack>.+?</mc:FallBack>"
+            $this.CommentXml = $this.ReadData("word/comments.xml")
         }
     }
 
-    static [bool] IsOpened([string]$path) {
+    [bool] IsOpened() {
         $stream = $null
         $inAccessible = $false
         try {
-            $stream = [System.IO.FileStream]::new($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+            $stream = [System.IO.FileStream]::new($this.Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
         }
         catch {
             $inAccessible = $true
@@ -45,9 +47,9 @@ class Docx2 {
         return $inAccessible
     }
 
-    static [string] ReadData([string]$path, [string]$relPath) {
+    [string] ReadData([string]$relPath) {
         $content = ""
-        $archive = [IO.Compression.Zipfile]::OpenRead($path)
+        $archive = [IO.Compression.Zipfile]::OpenRead($this.Path)
         $entry = $archive.GetEntry($relPath)
         if ($entry) {
             $stream = $entry.Open()
@@ -58,10 +60,6 @@ class Docx2 {
         }
         $archive.Dispose()
         return $content
-    }
-
-    static [string] RemoveNoise([string]$s) {
-        return $s.Replace("<w:t xml:space=`"preserve`">", "<w:t>") -replace "<mc:FallBack>.+?</mc:FallBack>"
     }
 
     static [string] GetNodeText([string]$node) {
