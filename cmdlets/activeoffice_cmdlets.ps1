@@ -904,18 +904,23 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
     $orgLines = @($orgDoc.Paragraphs).ForEach({
         return [ActiveDocument]::RemoveControlChars($_.Range.Text)
     })
-    $orgName = $orgPath | Split-Path -Leaf
     $orgDoc.Close($false)
+    $fromName = $orgPath | Split-Path -Leaf
+    $toName = $curPath | Split-Path -Leaf
+    if ($fromName -eq $toName) {
+        "Rivised file has the same name with original file!" | Write-Error
+        return
+    }
 
     $outName = ($outName.EndsWith(".html"))? $outName : $outName + ".html"
     $outPath = $curPath | Split-Path -Parent | Join-Path -ChildPath $outName
     Use-TempDir {
-        $fromPath = New-Item -Path $orgName
-        $orgLines | Out-File -Encoding utf8NoBOM -FilePath $fromPath
-        $toPath = New-Item -Path ($curPath | Split-Path -Leaf)
-        $curLines | Out-File -Encoding utf8NoBOM -FilePath $toPath
+        $fromItem = New-Item -Path $fromName
+        $orgLines | Out-File -Encoding utf8NoBOM -FilePath $fromItem.FullName
+        $toItem = New-Item -Path $toName
+        $curLines | Out-File -Encoding utf8NoBOM -FilePath $toItem.FullName
         $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\diff_as_html\inline\diff.py"
-        $cmd = 'python -B "{0}" "{1}" "{2}" "{3}"' -f $pyCodePath, $fromPath, $toPath, $outPath
+        $cmd = 'python -B "{0}" "{1}" "{2}" "{3}"' -f $pyCodePath, $fromItem.FullName, $toItem.FullName, $outPath
         $cmd | Invoke-Expression
     }
 }
