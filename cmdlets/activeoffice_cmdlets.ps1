@@ -868,7 +868,7 @@ class DocDiff {
 function Invoke-DiffOnActiveWordDocumntWithPython {
     param (
         [parameter(Mandatory)][string]$originalFile
-        ,[string]$outName = "diff"
+        ,[string]$outName = ""
     )
     $curDoc = [ActiveDocument]::new()
     if (-not $curDoc) {
@@ -912,7 +912,13 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         return
     }
 
-    $outName = ($outName.EndsWith(".html"))? $outName : $outName + ".html"
+    if ($outName.Length -lt 1) {
+        $outName = "{0}_diff_from_{1}.html" -f ($toName -replace "\.docx?$"), ($fromName -replace "\.docx?$")
+    }
+    elseif(-not $outName.EndsWith(".html")) {
+        $outName = $outName + ".html"
+    }
+
     $outPath = $curPath | Split-Path -Parent | Join-Path -ChildPath $outName
     Use-TempDir {
         $fromItem = New-Item -Path $fromName
