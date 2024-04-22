@@ -25,22 +25,21 @@ function Get-ExifDate {
         [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
-        class Jpeg {
-            # https://www.84kure.com/blog/2014/07/10/
-            static [byte[]] GetExifByteArray ([string]$path) {
-                $fs = [System.IO.File]::OpenRead($path)
-                $img = [System.Drawing.Bitmap]::FromStream($fs, $false, $false)
-                $b = $null
-                try {
-                    $b = $img.GetPropertyItem(0x9003).value
-                }
-                catch {}
-                finally {
-                    $img.Dispose()
-                    $fs.Close()
-                }
-                return $b
+        # https://www.84kure.com/blog/2014/07/10/
+        [scriptblock]$getExifByteArray = {
+            param([string]$path)
+            $fs = [System.IO.File]::OpenRead($path)
+            $img = [System.Drawing.Bitmap]::FromStream($fs, $false, $false)
+            $b = $null
+            try {
+                $b = $img.GetPropertyItem(0x9003).value
             }
+            catch {}
+            finally {
+                $img.Dispose()
+                $fs.Close()
+            }
+            return $b[0..($b.Length - 2)]
         }
     }
     process {
@@ -48,15 +47,19 @@ function Get-ExifDate {
         if ($fileObj.Extension -notmatch "jpe?g$") {
             return
         }
-        $byteArray = [Jpeg]::GetExifByteArray($fileObj.FullName)
+        $byteArray = $getExifByteArray.Invoke($fileObj.FullName)
         if (-not $byteArray) {
             $timestamp = "0000_0000_00000000"
         }
         else {
-            $exifTime = [System.Text.Encoding]::ASCII.GetString($byteArray)
-            $timestamp = ($exifTime -match "\d")?
-                ("{0}_{1}{2}_{3}{4}{5}00" -f ($exifTime -split "[^\d]+")) :
-                "0000_0000_00000000"
+            $decoded = [System.Text.Encoding]::ASCII.GetString($byteArray)
+            $date = [Datetime]::ParseExact($decoded.Trim(), "yyyy:MM:dd HH:mm:ss", $null)
+            try {
+                $timestamp = $date.ToString("yyyy_MMdd_HHmmss00")
+            }
+            catch {
+                $timestamp = "0000_0000_00000000"
+            }
         }
         return [PSCustomObject]@{
             Name = $fileObj.Name;
