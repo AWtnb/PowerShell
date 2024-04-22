@@ -20,22 +20,21 @@ function Select-StringHilight {
         ,[ValidateSet("default", "oem")][string]$encoding = "default"
     )
 
-    class GrepContext {
-        static [void] Show ([string[]]$context, [int]$lineIndex, [bool]$post) {
-            if (-not $context) {
-                return
-            }
-            $l = ($post)? $lineIndex : $lineIndex - $context.Count - 1
-            $context | ForEach-Object {
-                $l += 1
-                "{0:d4}:{1}" -f $l, $_ | Write-Host -ForegroundColor DarkGray
-            }
+    [scriptblock]$decorate = {
+        param([string[]]$context, [int]$lineIndex, [bool]$post)
+        if (-not $context) {
+            return
+        }
+        $l = ($post)? $lineIndex : $lineIndex - $context.Count - 1
+        $context | ForEach-Object {
+            $l += 1
+            "{0:d4}:{1}" -f $l, $_ | Write-Host -ForegroundColor DarkGray
         }
     }
 
     $grep = $input | Select-String -Encoding $encoding -Pattern $pattern -CaseSensitive:$case -AllMatches -Context $context
     foreach ($g in $grep) {
-        [GrepContext]::Show($g.Context.PreContext, $g.LineNumber, $false)
+        $decorate.Invoke($g.Context.PreContext, $g.LineNumber, $false)
 
         ($g.Filename -eq "InputStream")?
             "{0:d4}:" -f $g.LineNumber :
@@ -43,7 +42,7 @@ function Select-StringHilight {
 
         $g.Line | hilight -pattern $pattern -case:$case -color "Yellow"
 
-        [GrepContext]::Show($g.Context.PostContext, $g.LineNumber, $true)
+        $decorate.Invoke($g.Context.PostContext, $g.LineNumber, $true)
 
     }
     $total = $grep.Matches.Count
