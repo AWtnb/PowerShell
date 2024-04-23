@@ -65,7 +65,7 @@ class PyDiff:
             elem = self._compress_markup()
         else:
             elem = self._diff_tree
-        return self._heading + lxml.html.tostring(elem, encoding="unicode")
+        return self._heading + lxml.html.tostring(elem, encoding="unicode").replace("\u00B6", "\u21B5")
 
 
 def main(
