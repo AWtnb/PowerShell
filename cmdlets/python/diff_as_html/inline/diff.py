@@ -31,6 +31,12 @@ class PyDiff:
 
         self._diff_tree = diff_tree
 
+    @staticmethod
+    def _get_filler() -> lxml.html.Element:
+        filler = lxml.html.Element("span")
+        filler.classes.add("filler")
+        return filler
+
     def _compress_markup(self) -> lxml.html.Element:
         root = lxml.html.Element("div")
         root.classes.add("diff-container")
@@ -45,8 +51,7 @@ class PyDiff:
                     compressed = lxml.html.Element("span")
                     compressed.classes.add("compressed-lines")
                     compressed.text = text_list[0]
-                    filler = lxml.html.Element("span")
-                    filler.classes.add("filler")
+                    filler = self._get_filler()
                     filler.tail = text_list[-1]
                     compressed.append(filler)
                     if text_list[-1].endswith("\u00B6"):
