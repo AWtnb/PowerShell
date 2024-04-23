@@ -673,7 +673,7 @@ class WdStyler {
     [void] UpdateByOutlieLevel() {
         $doc = $this.Document
         if (-not $doc) { return }
-        $doc.Styles | Where-Object {$_.ParagraphFormat.OutlineLevel -ne 10} | ForEach-Object {
+        $doc.Styles | Where-Object {$_.ParagraphFormat.OutlineLevel -ne 10 -and -not $_.NameLocal.EndsWith("題")} | ForEach-Object {
             $outlinedStyle = $_
             $fill = ""
             $border = ""
