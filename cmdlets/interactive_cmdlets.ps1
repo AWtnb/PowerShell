@@ -188,7 +188,8 @@ function Invoke-MokoLauncher {
 
 Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {
     param($key, $arg)
-    Invoke-MokoLauncher -all $key.Modifiers -band [System.ConsoleModifiers]::Control | Write-Host
+    $flag = ($key.Modifiers -band [System.ConsoleModifiers]::Control) -as [bool]
+    Invoke-MokoLauncher -all:$flag | Write-Host
     if ($LASTEXITCODE -ne 0) {
         [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
     }
