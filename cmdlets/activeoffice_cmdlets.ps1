@@ -740,7 +740,7 @@ class WdStyler {
         }
     }
 
-    [void] AddCharacterStyle ([string]$name, [string]$color, [int]$lineStyle) {
+    [void] AddCharacterStyle ([string]$name, [string]$background, [string]$color, [int]$lineStyle) {
         $doc = $this.Document
         if (-not $doc) { return }
         $style = $null
@@ -753,22 +753,22 @@ class WdStyler {
         }
         if (-not $style) { return }
         $style.Font = $this.BaseStyle.Font
-        $style.Font.Shading.BackgroundPatternColor = [OfficeColor]::FromColorcode($color)
-        $style.Font.Color = [OfficeColor]::FromColorcode("#111111")
+        $style.Font.Shading.BackgroundPatternColor = [OfficeColor]::FromColorcode($background)
+        $style.Font.Color = [OfficeColor]::FromColorcode($color)
         $style.Font.Underline = $lineStyle
         $style.QuickStyle = $true
     }
 
     [void] SetCharacter () {
         @{
-            "yChar1" = [PSCustomObject]@{"Color"="#ffda0a"; "Line"=[wdConst]::wdUnderlineThick;}
-            "yChar2" = [PSCustomObject]@{"Color"="#66bdcc"; "Line"=[wdConst]::wdUnderlineDotDashHeavy;}
-            "yChar3" = [PSCustomObject]@{"Color"="#a3ff52"; "Line"=[wdConst]::wdUnderlineDottedHeavy;}
-            "yChar4" = [PSCustomObject]@{"Color"="#ff7d95"; "Line"=[wdConst]::wdUnderlineDouble;}
-            "yChar5" = [PSCustomObject]@{"Color"="#bf3de3"; "Line"=[wdConst]::wdUnderlineDashHeavy;}
-            "yChar6" = [PSCustomObject]@{"Color"="#ff9500"; "Line"=[wdConst]::wdUnderlineWavyHeavy;}
+            "yChar1" = [PSCustomObject]@{"Background"="#ffda0a"; "Line"=[wdConst]::wdUnderlineThick;}
+            "yChar2" = [PSCustomObject]@{"Background"="#66bdcc"; "Line"=[wdConst]::wdUnderlineDotDashHeavy;}
+            "yChar3" = [PSCustomObject]@{"Background"="#a3ff52"; "Line"=[wdConst]::wdUnderlineDottedHeavy;}
+            "yChar4" = [PSCustomObject]@{"Background"="#ff7d95"; "Line"=[wdConst]::wdUnderlineDouble;}
+            "yChar5" = [PSCustomObject]@{"Background"="#bf3de3"; "Line"=[wdConst]::wdUnderlineDashHeavy;}
+            "yChar6" = [PSCustomObject]@{"Background"="#ff9500"; "Line"=[wdConst]::wdUnderlineWavyHeavy;}
         }.GetEnumerator() | ForEach-Object {
-            $this.AddCharacterStyle($_.Key, $_.Value.Color, $_.Value.Line)
+            $this.AddCharacterStyle($_.Key, $_.Value.Background, "#111111", $_.Value.Line)
         }
     }
 
@@ -840,7 +840,8 @@ function Add-CharStyleToActiveWordDocument {
         現在開いている Word 文書に「文字列」タイプの自作スタイルを追加する。
         下記のプロパティを指定すること。
         - name: スタイル名
-        - color: 背景色のカラーコード
+        - color: フォント色のカラーコード
+        - background: 背景色のカラーコード
         .EXAMPLE
         cat hoge.json | ConvertFrom-Json | Add-StyleToActiveWordDocument
     #>
@@ -854,8 +855,12 @@ function Add-CharStyleToActiveWordDocument {
             "'color' property is empty!" | Write-Host -ForegroundColor Red
             return
         }
+        if (-not $_.background) {
+            "'background' property is empty!" | Write-Host -ForegroundColor Red
+            return
+        }
         "Adding new style '{0}'..." -f $_.name | Write-Host
-        $styler.AddCharacterStyle($_.name, $_.Color, [WdConst]::wdUnderlineNone)
+        $styler.AddCharacterStyle($_.name, $_.background, $_.color, [WdConst]::wdUnderlineNone)
     }
 }
 
