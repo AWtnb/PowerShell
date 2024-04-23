@@ -60,5 +60,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+M" -BriefDescription "render-as-markdown" -L
     $cbFile = [Windows.Forms.Clipboard]::GetFileDropList() | Get-Item
     $path = ($cbFile)? $cbFile.FullName : (Get-Clipboard | Select-Object -First 1).Replace('"', "")
     mdRenderPy $path -invoke
+    [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory("mdRenderPy $path -invoke")
 }
 
