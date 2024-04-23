@@ -51,8 +51,7 @@ class PyDiff:
                     compressed.append(filler)
                     if text_list[-1].endswith("\u00B6"):
                         br_tag = lxml.html.Element("br")
-                        n_children = len(list(compressed.xpath("*")))
-                        compressed.insert(n_children, br_tag)
+                        compressed.append(br_tag)
                     root.append(compressed)
         return root
 
