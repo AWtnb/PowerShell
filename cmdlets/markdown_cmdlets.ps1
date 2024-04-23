@@ -59,8 +59,6 @@ Set-Alias mdRenderPy Invoke-MarkdownRenderPython
 Set-PSReadLineKeyHandler -Key "ctrl+M" -BriefDescription "render-as-markdown" -LongDescription "Render-as-markdown" -ScriptBlock {
     $cbFile = [Windows.Forms.Clipboard]::GetFileDropList() | Get-Item
     $path = ($cbFile)? $cbFile.FullName : (Get-Clipboard | Select-Object -First 1).Replace('"', "")
-    [PSBufferState]::new().RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("mdRenderPy '$path' -invoke")
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+    mdRenderPy $path -invoke
 }
 
