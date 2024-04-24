@@ -833,10 +833,19 @@ Set-PSReadLineKeyHandler -Key "alt+c" -BriefDescription "copyToClipboard" -LongD
     [PSConsoleReadLine]::Insert($prefix + "c")
 }
 
+function Set-VariableUtil {
+    param(
+        [string]$name
+    )
+    $input | Set-Variable -Name $name -Scope 1 # One level outer scope from this block
+    [PSConsoleReadLine]::AddToHistory("$" + $name)
+}
+Set-Alias -Name svu -Value Set-VariableUtil
+
 Set-PSReadLineKeyHandler -Key "alt+v" -BriefDescription "asVariable" -LongDescription "asVariable" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
-    [PSConsoleReadLine]::Insert($prefix + "sv ")
+    [PSConsoleReadLine]::Insert($prefix + "svu ")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+t" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
