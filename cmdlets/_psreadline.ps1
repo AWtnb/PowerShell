@@ -654,21 +654,14 @@ Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDesc
 # yank-last-argument cutomize
 ##############################
 
-Set-PSReadLineKeyHandler -Key "alt+a" -BriefDescription "yankLastArgAsVariable" -LongDescription "yankLastArgAsVariable" -ScriptBlock {
-    [PSConsoleReadLine]::YankLastArg()
+Set-PSReadLineKeyHandler -Key "alt+a" -Function YankLastArg
+Set-PSReadLineKeyHandler -Key "alt+A" -BriefDescription "toggleVariable" -LongDescription "toggleVariable" -ScriptBlock {
     $a = [ASTer]::new()
+    if ($a.tokens.Count -lt 1) { return }
     $t = $a.GetActiveToken()
-    if ($t.Kind -eq "Variable") {
-        return
-    }
-    $lastCmdLine = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
-    $tokens = $null
-    $errors = $null
-    [Management.Automation.Language.Parser]::ParseInput($lastCmdLine, [ref]$tokens, [ref]$errors)
-    $lastCmd = $tokens | Where-Object { $_.TokenFlags -eq "CommandName" } | Select-Object -Last 1
-    if ($lastCmd -in @("v", "sv", "set-variable")) {
-        $a.ReplaceActiveToken(("$" + $t.Text))
-    }
+    if (-not $t -or $t.Text.Length -lt 1) { return }
+    $newText =  ($t.Kind -eq "Variable") ? $t.Text.Substring(1) : "$" + $t.Text
+    [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
 }
 
 ##############################
