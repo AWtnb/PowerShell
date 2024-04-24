@@ -433,13 +433,14 @@ function Invoke-ImageMagickWatermarkSignature {
         ,[string]$s
     )
     begin {
-        function _tempDirMake {
+        [scriptblock]$tempDirMake = {
             $dirPath = [System.IO.Path]::GetTempPath() | Join-Path -ChildPath $([System.Guid]::NewGuid())
             New-Item -ItemType Directory -Path $dirPath > $null
             return $dirPath
         }
 
-        function _watermark2 ([string]$outPath, [string]$s) {
+        [scriptblock]$watermark2 = {
+            param ([string]$outPath, [string]$s)
             $bmp = [System.Drawing.Bitmap]::new(100, 50)
             $graphic = [System.Drawing.Graphics]::FromImage($bmp)
             $graphic.FillRectangles([System.Drawing.Brushes]::Transparent, $graphic.VisibleClipBounds)
@@ -450,13 +451,14 @@ function Invoke-ImageMagickWatermarkSignature {
             $bmp.Save($outPath)
         }
 
-        function _overlay ([string]$path, [string]$watermark) {
+        [scriptblock]$overlay = {
+            param([string]$path, [string]$watermark)
             $file = Get-Item -LiteralPath $path
             $savePath = $file.Directory.Fullname | Join-Path -ChildPath ("wm{0}_{1}" -f $transparency, $file.Name)
             "magick composite '{0}' -gravity SouthEast -quality 100 '{1}' '{2}'" -f $watermark, $file.Fullname, $savePath | Invoke-Expression
         }
 
-        $tmpDirPath = _tempDirMake
+        $tmpDirPath = $tempDirMake.Invoke()
 
     }
     process {
@@ -467,8 +469,8 @@ function Invoke-ImageMagickWatermarkSignature {
         $timestamp = Get-Date -Format yyyyMMddHHmmssff
         $watermarkPath = $tmpDirPath | Join-Path -ChildPath "$($timestamp).png"
         $s = "AWtnb"
-        _watermark2 -outPath $watermarkPath -s $s
-        _overlay -path $file.FullName -watermark $watermarkPath
+        $watermark2.Invoke($watermarkPath, $s)
+        $overlay.Invoke($file.FullName, $watermarkPath)
         "Watermarked '{0}' on '{1}'" -f $s, $file.Name | Write-Host -ForegroundColor Cyan
     }
     end {

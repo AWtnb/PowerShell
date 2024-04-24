@@ -909,7 +909,8 @@ function Set-FilenameToHeaderOnActiveWordDocument {
         ,[switch]$force
     )
 
-    function getHeaderText([System.Object]$section) {
+    [scriptblock]$getHeaderText = {
+        param([System.Object]$section)
         return $section.Headers | ForEach-Object {
             if ($_.Range) {
                 return $_.Range.Text.Trim()
@@ -925,7 +926,7 @@ function Set-FilenameToHeaderOnActiveWordDocument {
 
     for ($i = 1; $i -le $doc.Sections.Count; $i++) {
         $sec = $doc.Sections($i)
-        $s = getHeaderText $sec
+        $s = $getHeaderText.Invoke($sec)
         if ($s.Length -gt 1 -and (-not $force)) {
             "[SKIP] Header on section {0} is non-empty!" -f $i | Write-Host
             continue
