@@ -36,9 +36,9 @@ def main(odd_file_path:str, even_file_path:str, out_path:str) -> None:
                     writer.addpage(even_pages[i])
                 counter = i
 
-            if counter < len(even_pages):
-                for j in range(counter+1, len(even_pages)):
-                    writer.addpage(even_pages[j])
+            rest = even_pages[counter:]
+            for page in rest:
+                writer.addPage(page)
 
             writer.write(out_path)
             Path(wm_path_odd).unlink()
