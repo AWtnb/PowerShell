@@ -29,15 +29,18 @@ def main(odd_file_path:str, even_file_path:str, out_path:str) -> None:
             odd_pages = PdfReader(wm_path_odd).pages
             even_pages = PdfReader(wm_path_even).pages
 
-            counter = 0
-            for i, page in enumerate(odd_pages):
-                writer.addpage(page)
-                if i < len(even_pages):
-                    writer.addpage(even_pages[i])
-                counter = i
+            shorter = min(len(odd_pages), len(even_pages))
 
-            rest = even_pages[counter:]
-            for page in rest:
+            for i in range(shorter):
+                writer.addPage(odd_pages[i])
+                writer.addPage(even_pages[i])
+
+            # add rest of odd file (if exists)
+            for page in odd_pages[shorter:]:
+                writer.addPage(page)
+
+            # add rest of even file (if exists)
+            for page in even_pages[shorter:]:
                 writer.addPage(page)
 
             writer.write(out_path)
