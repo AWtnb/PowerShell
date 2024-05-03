@@ -561,12 +561,25 @@ function Restart-CorvusSKK {
     }
 }
 
-# get skk customize function
+# get skk customize functions
 function Get-CorvusSKKUserFunctions {
     $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\init.lua"
     if (Test-Path $p) {
         $pattern = "-- usage: "
         Get-Content -Path $p | Where-Object {$_.StartsWith($pattern)} | ForEach-Object {$_.Substring($pattern.Length)} | Write-Output
+    }
+}
+
+# get skk lua functions in userdict
+function Get-CorvusSKKLuaFunctionsInUserdict {
+    $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
+    if (Test-Path $p) {
+        $reg = [regex]::new("\(.+?\)")
+        Get-Content -Path $p | Select-String -Pattern "/\([a-z]" | ForEach-Object {
+            return $reg.Matches($_.Line) | ForEach-Object {
+                return $_.Value
+            }
+        } | Write-Output
     }
 }
 
