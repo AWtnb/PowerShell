@@ -994,3 +994,7 @@ function Get-ClipboardFontInfo {
     $rtb | Clear-Variable -ErrorAction SilentlyContinue
 }
 Set-Alias gcbf Get-ClipboardFontInfo
+
+function Get-VBAGistZen2han {
+    Invoke-RestMethod -Uri "https://gist.githubusercontent.com/AWtnb/421c63e404c77021534082d129b92aba/raw" | Write-Output
+}
