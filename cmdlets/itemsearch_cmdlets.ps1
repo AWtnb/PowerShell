@@ -37,31 +37,22 @@ function lsc {
 }
 
 
-class Repos {
-    [System.IO.DirectoryInfo[]]$repoDirs
-    [scriptblock]$checkBlock
+class Repo {
+    [string]$path
+    Repo([string]$path) {
+        $this.path = $path
+    }
 
-    Repos([string[]]$paths) {
-        $this.repoDirs = $paths | ForEach-Object {Get-Item $_} | Where-Object {-not $_.Extension} | Where-Object {$_ | Get-ChildItem -Filter ".git" -Force}
-        $this.checkBlock = {
-            param($path)
-            $grep = (Get-Content -Path "$path\.git\config" | Select-String -Pattern "^\[remote .+\]")
-            return $grep.Matches.Count -gt 0
+    [bool]IsRemote() {
+        if (-not (Test-Path $this.path -PathType Container)) {
+            return $false
         }
-    }
-
-    [System.IO.DirectoryInfo[]]GetRemotes() {
-        return $($this.repoDirs | Where-Object {
-            $p = $_.Fullname
-            return $this.checkBlock.Invoke($p)
-        })
-    }
-
-    [System.IO.DirectoryInfo[]]GetLocals() {
-        return $($this.repoDirs | Where-Object {
-            $p = $_.Fullname
-            return -not $this.checkBlock.Invoke($p)
-        })
+        $g = Get-Item $this.path | Get-ChildItem -Filter ".git" -Force
+        if (-not $g) {
+            return $false
+        }
+        $grep = ($this.path | Join-Path -ChildPath ".git\config" | Get-Item | Select-String -Pattern "^\[remote .+\]")
+        return $grep.Matches.Count -gt 0
     }
 }
 
@@ -70,7 +61,7 @@ function Find-RemoteRepository {
     if ($paths.Length -lt 1) {
         $paths = (Get-ChildItem -Directory).FullName
     }
-    return [Repos]::new($paths).GetRemotes()
+    return $paths | Where-Object { [Repo]::new($_).IsRemote() } | ForEach-Object { Get-Item $_ }
 }
 
 function Find-LocalRepository {
@@ -78,5 +69,5 @@ function Find-LocalRepository {
     if ($paths.Length -lt 1) {
         $paths = (Get-ChildItem -Directory).FullName
     }
-    return [Repos]::new($paths).GetLocals()
+    return $paths | Where-Object { -not [Repo]::new($_).IsRemote() } | ForEach-Object { Get-Item $_ }
 }
