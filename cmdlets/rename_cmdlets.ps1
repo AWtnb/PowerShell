@@ -564,22 +564,22 @@ function Rename-LightroomFromDropbox {
     } -execute:$execute
 }
 
-function Rename-FromData {
+function Rename-ByRule {
     [OutputType([System.Void])]
     param (
-        [string[]]$data
+        [string[]]$rule
         ,[string]$separator = "`t"
         ,[switch]$execute
     )
-    $hashtable = @{}
-    $data | Where-Object {$_ -replace "\s"} | ForEach-Object {
+    $table = @{}
+    $rule | Where-Object {$_.Trim().Length -gt 0} | ForEach-Object {
         $fields = $_ -split $separator
-        $hashtable.Add($fields[0], $fields[1])
+        $table.Add($fields[0], $fields[1])
     }
-    if (-not $data.Count) {
+    if (-not $table.Count) {
         return
     }
-    $input | Where-Object {$_.Name -in $hashtable.keys} | Rename-ApplyScriptBlock { $hashtable[$_.Name] } -execute:$execute
+    $input | Where-Object {$_.Name -in $table.keys} | Rename-ApplyScriptBlock { $table[$_.Name] } -execute:$execute
 }
 
 class PSStringDiff {
