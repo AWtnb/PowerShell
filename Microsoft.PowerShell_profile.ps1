@@ -574,11 +574,9 @@ function Get-CorvusSKKUserFunctions {
 function Get-CorvusSKKLuaFunctionsInUserdict {
     $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
     if (Test-Path $p) {
-        $reg = [regex]::new("\(.+?\)")
         Get-Content -Path $p | Select-String -Pattern "/\([a-z]" | ForEach-Object {
-            return $reg.Matches($_.Line) | ForEach-Object {
-                return $_.Value
-            }
+            $line = $_.Line
+            return $line -split "/" | Select-Object -Skip 1 | Where-Object { $_.Trim().StartsWith("(")}
         } | Write-Output
     }
 }
