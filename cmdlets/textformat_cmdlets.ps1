@@ -97,6 +97,24 @@ function Format-MatchLine {
 Set-Alias fmtMch Format-MatchLine
 
 
+function ConvertTo-SequenceByValue {
+    $arrayList = New-Object System.Collections.ArrayList
+    @($input).ForEach({$arrayList.Add($_) > $null})
+    $counter = 1
+    for ($i = 0; $i -lt $arrayList.Count; $i++) {
+        if ($i -eq 0) {
+            $counter | Write-Output
+            continue
+        }
+        $pre = $arrayList[$i - 1]
+        $cur = $arrayList[$i]
+        if ($pre -cne $cur) {
+            $counter += 1
+        }
+        $counter | Write-Output
+    }
+}
+
 function ConvertTo-IncrementalSequence {
     param (
         [int]$start = 1
