@@ -153,7 +153,7 @@ class InsertRenameEntry {
         $this._orgBaseName = $item.BaseName
         $this._extension = $item.Extension
         $this._relDirName = [System.IO.Path]::GetRelativePath($curDir, ($this._fullName | Split-Path -Parent))
-        if ([Math]::Abs($this._pos) -gt $item.BaseName.Length + 1) {
+        if ([Math]::Abs($this._pos) -gt $item.BaseName.Length) {
             $this._pre = $item.Basename
             $this._insert = ""
             $this._suf = ""
