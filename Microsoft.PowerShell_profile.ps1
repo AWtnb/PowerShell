@@ -603,30 +603,39 @@ function Invoke-WeztermConfig {
 }
 
 
-# 7zip
+# tar
 
-function Invoke-7Z {
+function Invoke-TarExtract {
     param(
         [string]$path
         ,[string]$outname
     )
     $target = Get-Item -LiteralPath $path
-    if ($target.Extension -in @(".zip", ".7z")) {
-        if (-not $outname) {
-            $outname = $target.BaseName
-        }
-        "7z x '{0}' -o'{1}'" -f $target.FullName, $outname | Invoke-Expression
+    if ($target.Extension -notin @(".zip", ".7z")) {
+        return
     }
-    else {
-        if (-not $outname) {
-            $outname = $target.BaseName + ".zip"
-        }
-        "7z a '{0}' '{1}'" -f $outname, $target.FullName | Invoke-Expression
+    if (-not $outname) {
+        $outname = $target.BaseName
     }
+    if (Test-Path $outname -PathType Container) {
+        if ((Get-ChildItem -Path $outname).Length -gt 0) {
+            "'{0}' already exists and has some contents!" -f $outname | Write-Host -ForegroundColor Magenta
+            return
+        }
+    } else {
+        New-Item -Path $outname -ItemType Directory
+    }
+    $params = @("-x", "-v", "-C","$outname", "-f", $target.FullName) | ForEach-Object {
+        if ($_ -match "\s") {
+            return '"' + $_ + '"'
+        }
+        return $_
+    }
+    Start-Process -FilePath tar.exe -ArgumentList $params -NoNewWindow -Wait
 }
-Set-PSReadLineKeyHandler -Key "alt+'" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+T" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-7Z -path ")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-TarExtract -path ")
     [Microsoft.PowerShell.PSConsoleReadLine]::MenuComplete()
 }
 
