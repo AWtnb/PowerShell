@@ -20,14 +20,6 @@ class PyPdf {
         }
         Start-Process -Path python.exe -Wait -ArgumentList $fullParams -NoNewWindow
     }
-    static [string[]] getFiles() {
-        return Get-ChildItem -File | Where-Object {$_.Extension -eq ".pdf"} | ForEach-Object {".\" + $_.Name} | ForEach-Object {
-            if ($_ -match "\s") {
-                return $_ | Join-String -DoubleQuote
-            }
-            return $_
-        }
-    }
 }
 
 function Invoke-PdfConcWithPython {
@@ -60,7 +52,6 @@ Set-Alias pdfConcPy Invoke-PdfConcWithPython
 function Invoke-PdfOverlayWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[string]$overlayPdf
     )
@@ -81,7 +72,6 @@ function Invoke-PdfOverlayWithPython {
 function Invoke-PdfFilenameWatermarkWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[int]$startIdx = 1
         ,[switch]$countThrough
@@ -131,10 +121,8 @@ function pyGenSearchPdf {
 function Invoke-PdfZipToDiffWithPython {
     param (
         [string]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $oddFile,
         [string]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $evenFile,
         [string]$outName = "outdiff"
     )
@@ -152,7 +140,6 @@ function Invoke-PdfZipToDiffWithPython {
 function Invoke-PdfExtractWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[int]$from = 1
         ,[int]$to = -1
@@ -177,7 +164,6 @@ function Invoke-PdfExtractStepWithPython {
     #>
     param (
         [string]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $path
         ,[int[]]$froms
     )
@@ -195,7 +181,6 @@ function Invoke-PdfExtractStepWithPython {
 function Invoke-PdfRotateWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[ValidateSet(90, 180, 270)][int]$clockwise = 180
     )
@@ -216,7 +201,6 @@ Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
 function Invoke-PdfToImageWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj,
         [int]$dpi = 300
     )
@@ -236,7 +220,6 @@ Set-Alias pdfImagePy Invoke-PdfToImageWithPython
 function Invoke-PdfSpreadWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$singleTopPage
         ,[switch]$toLeft
@@ -268,7 +251,6 @@ Set-Alias pdfSpreadPy Invoke-PdfSpreadWithPython
 function pyGenPdfSpreadImg {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$singleTopPage
         ,[switch]$vertical
@@ -286,7 +268,6 @@ function pyGenPdfSpreadImg {
 function Invoke-PdfUnspreadWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$vertical
         ,[switch]$singleTop
@@ -322,7 +303,6 @@ Set-Alias pdfUnspreadPy Invoke-PdfUnspreadWithPython
 function Invoke-PdfTrimGalleyMarginWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[float]$marginHorizontal = 0.08
         ,[float]$marginVertical = 0.08
@@ -344,7 +324,6 @@ Set-Alias pdfTrimMarginPy Invoke-PdfTrimGalleyMarginWithPython
 function Invoke-PdfSwapWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[string]$newPdf
         ,[int]$swapStartPage = 1
@@ -364,10 +343,8 @@ function Invoke-PdfSwapWithPython {
 function Invoke-PdfZipPagesWithPython {
     param (
         [string]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $oddFile,
         [string]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $evenFile,
         [string]$outName = "outzip"
     )
@@ -385,7 +362,6 @@ function Invoke-PdfZipPagesWithPython {
 function Invoke-PdfUnzipPagesWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[switch]$evenPages
     )
@@ -406,7 +382,6 @@ function Invoke-PdfUnzipPagesWithPython {
 function Invoke-PdfSplitPagesWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
     )
     begin {
@@ -426,7 +401,6 @@ Set-Alias pdfSplitPagesPy Invoke-PdfSplitPagesWithPython
 function Invoke-PdfCompressWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
     )
     begin {
@@ -446,7 +420,6 @@ Set-Alias pdfCompressPy Invoke-PdfCompressWithPython
 function Invoke-PdfTextExtractWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
     )
     begin {
@@ -465,7 +438,6 @@ function Invoke-PdfTextExtractWithPython {
 function Invoke-PdfTitleMetadataModifyWithPython {
     param (
         [parameter(ValueFromPipeline)]
-        [ArgumentCompleter({[PyPdf]::getFiles()})]
         $inputObj
         ,[string]$title = "Title"
         ,[switch]$preserveUntouchedData
