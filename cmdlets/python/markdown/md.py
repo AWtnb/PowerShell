@@ -58,22 +58,22 @@ class RawMd:
         return mc
 
 
-"""
----
-title: title of document
-styles:
-  - p:
-      color: red
-      border: 1px solid yellow
-  - h1:
-      color: blue
-css-vars:
-  width-container: 42rem
----
-"""
 
 
 class Frontmatter:
+    """
+    ---
+    title: title of document
+    styles:
+    - p:
+        color: red
+        border: 1px solid yellow
+    - h1:
+        color: blue
+    css-vars:
+    width-container: 42rem
+    ---
+    """
     def __init__(self, lines) -> None:
         s = "\n".join(lines)
         try:
