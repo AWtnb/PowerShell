@@ -51,13 +51,11 @@ class RawMd:
         mc = MdContent()
         if 1 < len(idxes) and idxes[0] == 0:
             idx = idxes[1]
-            mc.main = lines[idx:]
+            mc.main = lines[idx + 1 :]
             mc.frontmatter = lines[1:idx]
         else:
             mc.main = lines
         return mc
-
-
 
 
 class Frontmatter:
@@ -74,6 +72,7 @@ class Frontmatter:
     width-container: 42rem
     ---
     """
+
     def __init__(self, lines) -> None:
         s = "\n".join(lines)
         try:
