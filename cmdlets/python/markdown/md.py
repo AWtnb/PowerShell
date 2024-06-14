@@ -69,7 +69,7 @@ class Frontmatter:
     - h1:
         color: blue
     css-vars:
-    width-container: 42rem
+      width-container: 42rem
     ---
     """
 
