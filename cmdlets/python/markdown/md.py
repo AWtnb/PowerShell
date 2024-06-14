@@ -67,7 +67,8 @@ styles:
       border: 1px solid yellow
   - h1:
       color: blue
-width: 42rem
+css-vars:
+  width-container: 42rem
 ---
 """
 
@@ -89,12 +90,24 @@ class Frontmatter:
     def get_styles(self) -> str:
         try:
             lines = []
-            ss = self.yaml_data["styles"]
-            for style in ss:
-                for sel, vals in style.items():
-                    val = ";".join([f"{k}:{v}" for k, v in vals.items()])
+            styles = self.yaml_data.get("styles") or self.yaml_data.get("style")
+            for style in styles:
+                for sel, rules in style.items():
+                    val = ";".join([f"{prop}:{v}" for prop, v in rules.items()])
                     line = sel + "{" + val + "}"
                     lines.append(line)
+            return "\n".join(lines)
+        except:
+            return ""
+
+    def get_css_variables(self) -> str:
+        try:
+            lines = [":root {"]
+            vs = self.yaml_data.get("css-vars") or self.yaml_data.get("css-var")
+            for k, v in vs.items():
+                line = f"--{k}:{v};"
+                lines.append(line)
+            lines.append("}")
             return "\n".join(lines)
         except:
             return ""
@@ -126,7 +139,10 @@ class MdHtml:
 
     @property
     def additional_style(self) -> str:
-        return "<style>\n{}\n</style>".format(self._frontmatter.get_styles())
+        return "<style>\n{}\n{}\n</style>".format(
+            self._frontmatter.get_styles(),
+            self._frontmatter.get_css_variables(),
+        )
 
     @property
     def content(self) -> str:
