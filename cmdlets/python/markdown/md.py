@@ -9,12 +9,18 @@ import pathlib
 import re
 import urllib.parse
 from pathlib import Path
+import yaml
 import webbrowser
 
 import mistletoe
 
 from domtree import DomTree
 from custom_renderer import CustomRenderer
+
+
+class MdContent:
+    frontmatter = []
+    main = []
 
 
 class RawMd:
@@ -35,11 +41,72 @@ class RawMd:
             last_modified, today
         )
 
+    def get_lines(self) -> MdContent:
+        idxes = []
+        lines = self.content.splitlines()
+        reg = re.compile(r"^-{3,}$")
+        for i, line in enumerate(lines):
+            if reg.search(line):
+                idxes.append(i)
+        mc = MdContent()
+        if 1 < len(idxes) and idxes[0] == 0:
+            idx = idxes[1]
+            mc.main = lines[idx:]
+            mc.frontmatter = lines[1:idx]
+        else:
+            mc.main = lines
+        return mc
+
+
+"""
+---
+title: title of document
+styles:
+  - p:
+      color: red
+      border: 1px solid yellow
+  - h1:
+      color: blue
+width: 42rem
+---
+"""
+
+
+class Frontmatter:
+    def __init__(self, lines) -> None:
+        s = "\n".join(lines)
+        try:
+            self.yaml_data = yaml.safe_load(s)
+        except:
+            self.yaml_data = None
+
+    def get_title(self) -> str:
+        try:
+            return self.yaml_data["title"]
+        except:
+            return ""
+
+    def get_styles(self) -> str:
+        try:
+            lines = []
+            ss = self.yaml_data["styles"]
+            for style in ss:
+                for sel, vals in style.items():
+                    val = ";".join([f"{k}:{v}" for k, v in vals.items()])
+                    line = sel + "{" + val + "}"
+                    lines.append(line)
+            return "\n".join(lines)
+        except:
+            return ""
+
 
 class MdHtml:
     def __init__(self, file_path: str) -> None:
         raw_md = RawMd(file_path)
-        markup = mistletoe.markdown(raw_md.content, CustomRenderer)
+        md_lines = raw_md.get_lines()
+        markup = mistletoe.markdown(md_lines.main, CustomRenderer)
+
+        self._frontmatter = Frontmatter(md_lines.frontmatter)
 
         tree = DomTree(markup)
         tree.adjust_index("//*[contains(@class, 'force-order')]")
@@ -59,9 +126,7 @@ class MdHtml:
 
     @property
     def additional_style(self) -> str:
-        return "<style>\n{}\n</style>".format(
-            self._tree.trim_leading_css_block()
-        )
+        return "<style>\n{}\n</style>".format(self._frontmatter.get_styles())
 
     @property
     def content(self) -> str:
@@ -73,11 +138,10 @@ class MdHtml:
 
     @property
     def title(self) -> str:
-        reg = re.compile(r"^title:")
-        for c in self._tree.get_comments():
-            if reg.search(c):
-                return c[len("title:") :].strip()
-        return self._tree.get_top_heading()
+        t = self._frontmatter.get_title()
+        if len(t) < 1:
+            return self._tree.get_top_heading()
+        return t
 
 
 class HeadElem:
