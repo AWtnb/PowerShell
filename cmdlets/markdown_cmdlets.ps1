@@ -69,11 +69,17 @@ function mdFrontmatter {
 ---
 title: title of document
 styles:
-  - p:
-      color: red
-      border: 1px solid yellow
   - h1:
-      color: blue
+      font-size: 2rem
+  - blockquote > p:
+      text-indent: -2em
+      margin-left: 2.5em
+      line-height: 1.5
+  - blockquote p:
+      text-wrap: pretty
+      word-break: break-all
+  - blockquote > p > em:
+      background-color: "#d0ee23"
 css-vars:
   width-container: 42rem
 ---
