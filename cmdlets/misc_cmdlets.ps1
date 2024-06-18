@@ -330,19 +330,15 @@ function Get-UniqueOrderdArray {
 Set-Alias uq Get-UniqueOrderdArray
 
 
-if(-not ('Pwsh.SHA256' -as [type]))
-{
-}
-
 function Find-SameFile {
     param (
         [parameter(ValueFromPipeline)]$inputObj
         ,[string]$searchIn = "."
     )
     begin {
-        $hashGruop = @{}
+        $hashTable = @{}
         Get-ChildItem -Path $searchIn -File -Recurse | Get-FileHash | Group-Object -Property Hash | ForEach-Object {
-            $hashGruop.Add($_.Name, @($_.Group.Path))
+            $hashTable.Add($_.Name, @($_.Group.Path))
         }
     }
     process {
@@ -350,7 +346,7 @@ function Find-SameFile {
         if ($target.Extension) {
             $targetHash = (Get-FileHash $target.Fullname).hash
             $found = New-Object System.Collections.ArrayList
-            foreach ($p in $hashGruop[$targetHash]) {
+            foreach ($p in $hashTable[$targetHash]) {
                 if ($p -and $p -ne $target.FullName) {
                     $found.Add( [System.IO.Path]::GetRelativePath($searchIn, $p) ) > $null
                 }
