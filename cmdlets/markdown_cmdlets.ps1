@@ -81,7 +81,7 @@ styles:
   - blockquote > p > em:
       background-color: "#d0ee23"
 css-vars:
-  width-container: 42rem
+  width-container: inherit
 ---
 "@ | Write-Output
 }
