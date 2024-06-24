@@ -82,7 +82,7 @@ class Frontmatter:
 
     def get_title(self) -> str:
         try:
-            return self.yaml_data["title"]
+            return self.yaml_data["title"] or ""
         except:
             return ""
 

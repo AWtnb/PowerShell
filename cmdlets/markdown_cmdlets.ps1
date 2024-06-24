@@ -67,7 +67,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+M" -BriefDescription "render-as-markdown" -L
 function mdFrontmatter {
 @"
 ---
-title: title of document
+title:
 styles:
   - h1:
       font-size: 2rem
@@ -81,7 +81,7 @@ styles:
   - blockquote > p > em:
       background-color: "#d0ee23"
 css-vars:
-  width-container: inherit
+  # width-container: 50rem
 ---
 "@ | Write-Output
 }
