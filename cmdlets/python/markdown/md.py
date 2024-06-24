@@ -90,11 +90,12 @@ class Frontmatter:
         try:
             lines = []
             styles = self.yaml_data.get("styles") or self.yaml_data.get("style")
-            for style in styles:
-                for sel, rules in style.items():
-                    val = ";".join([f"{prop}:{v}" for prop, v in rules.items()])
-                    line = sel + "{" + val + "}"
-                    lines.append(line)
+            if styles:
+                for style in styles:
+                    for sel, rules in style.items():
+                        val = ";".join([f"{prop}:{v}" for prop, v in rules.items()])
+                        line = sel + "{" + val + "}"
+                        lines.append(line)
             return "\n".join(lines)
         except:
             return ""
@@ -103,9 +104,10 @@ class Frontmatter:
         try:
             lines = [":root {"]
             vs = self.yaml_data.get("css-vars") or self.yaml_data.get("css-var")
-            for k, v in vs.items():
-                line = f"--{k}:{v};"
-                lines.append(line)
+            if vs:
+                for k, v in vs.items():
+                    line = f"--{k}:{v};"
+                    lines.append(line)
             lines.append("}")
             return "\n".join(lines)
         except:
