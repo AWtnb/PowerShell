@@ -174,7 +174,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
 }
 
 
-function Invoke-MokoLauncher {
+function Invoke-FuzzyLauncher {
     param (
         [switch]$all
     )
@@ -183,13 +183,13 @@ function Invoke-MokoLauncher {
     if ($all) {
         $opt += "--all"
     }
-    & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\moko.exe") $opt
+    & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\zyl.exe") $opt
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {
     param($key, $arg)
     $flag = ($key.Modifiers -band [System.ConsoleModifiers]::Control) -as [bool]
-    Invoke-MokoLauncher -all:$flag | Write-Host
+    Invoke-FuzzyLauncher -all:$flag | Write-Host
     if ($LASTEXITCODE -ne 0) {
         [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
     }
