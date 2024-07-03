@@ -443,7 +443,7 @@ table {
 .toc {
   position: absolute;
   left: calc(-1 * @width-side + 1em);
-  min-width: calc(@width-side - 2em);
+  max-width: calc(@width-side - 2em);
   top: -1rem;
   height: 100%;
   font-size: 0.95rem;
@@ -451,6 +451,7 @@ table {
     position: sticky;
     top: 1rem;
     margin: 0;
+    min-width: 6rem;
   }
   li {
     text-align: left;
