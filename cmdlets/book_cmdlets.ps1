@@ -22,7 +22,7 @@ class YBookCode {
     }
 
     [string] ToUrl() {
-        return "http://www.yuhikaku.co.jp/books/detail/" + $this.FullCode
+        return "https://www.yuhikaku.co.jp/books/detail/" + $this.FullCode
     }
 
     [void] Run() {
