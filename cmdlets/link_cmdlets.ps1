@@ -179,6 +179,19 @@ function New-ShortCutOnStartup {
     }
 }
 
+function New-ShortCutOnStartmenu {
+    param (
+        [parameter(Mandatory)][string]$path
+    )
+    if (Test-Path $path) {
+        $startup = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\Microsoft\Windows\Start Menu"
+        New-ShortCut -src $path -shortcutPlace $startup
+    }
+    else {
+        "INVALID PATH! : '{0}'" -f $path | Write-Host -ForegroundColor Magenta
+    }
+}
+
 function New-ShortCutOnMyDataSources {
     <#
         .EXAMPLE
