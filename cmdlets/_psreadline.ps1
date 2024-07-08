@@ -891,33 +891,3 @@ Set-PSReadLineKeyHandler -Key "ctrl+b,s", "ctrl+b,e", "ctrl+b,c", "ctrl+b,S", "c
         [PSConsoleReadLine]::BackwardChar()
     }
 }
-
-
-##############################
-# open folder
-##############################
-
-# desktop
-Set-PSReadLineKeyHandler -Key "ctrl+d" -BriefDescription "desktop" -LongDescription "Invoke desktop" -ScriptBlock {
-    if (Test-Path $env:TABLACUS_PATH) {
-        Start-Process $env:TABLACUS_PATH -ArgumentList @("{0}\desktop" -f $env:USERPROFILE)
-    }
-    else {
-        Start-Process ("{0}\desktop" -f $env:USERPROFILE)
-    }
-    Hide-ConsoleWindow
-}
-
-# scan folder
-Set-PSReadLineKeyHandler -Key "ctrl+S" -BriefDescription "openScanFolder" -LongDescription "openScanFolder" -ScriptBlock {
-    $scanDir = "X:\scan"
-    if(Test-Path $scanDir) {
-        if (Test-Path $env:TABLACUS_PATH) {
-            Start-Process $env:TABLACUS_PATH -ArgumentList $scanDir
-        }
-        else {
-            Start-Process $scanDir
-        }
-        Hide-ConsoleWindow
-    }
-}
