@@ -876,35 +876,6 @@ function Copy-ItemWithNewBasename {
 }
 
 
-function Move-ItemToObsDir {
-    $items = [ClipboardPath]::new().GetItems()
-    if ($items.Count -lt 1) {
-        return
-    }
-    $dest =  ($items | Select-Object -First 1).Fullname | Split-Path -Parent | Join-Path -ChildPath "_obsolete"
-    if (-not (Test-Path $dest)) {
-        New-Item -Path $dest -ItemType Directory > $null
-    }
-    "Moving to: " | Write-Host -ForegroundColor Blue -NoNewline
-    $dest | Write-Host
-    "--------------------------" | Write-Host -ForegroundColor Blue
-    $items | ForEach-Object {
-        try {
-            $_ | Move-Item -Destination $dest -ErrorAction Stop
-           "- " | Write-Host -ForegroundColor Blue -NoNewline
-           $_.Name | Write-Host
-        }
-        catch {
-            "Same file exists in '{0}'!" -f $dest | Write-Error
-        }
-    }
-}
-Set-PSReadLineKeyHandler -Key "ctrl+alt+o" -BriefDescription "move-to-obsDir" -LongDescription "move-to-obsDir" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#>Move-ItemToObsDir #")
-    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-}
-
 function Find-MissingValuesInSerialNumber {
     param (
         [parameter(ValueFromPipeline = $true)]$inputLine
