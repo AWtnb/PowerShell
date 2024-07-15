@@ -179,7 +179,7 @@ function Invoke-FuzzyLauncher {
         [switch]$all
     )
     $dataPath = ($env:USERPROFILE | Join-Path -ChildPath "Personal\launch.yaml")
-    $opt = @("--src", $dataPath, "--filer", $env:TABLACUS_PATH, "--exclude=_obsolete,node_modules")
+    $opt = @("--src", $dataPath, "--exclude=_obsolete,node_modules")
     if ($all) {
         $opt += "--all"
     }

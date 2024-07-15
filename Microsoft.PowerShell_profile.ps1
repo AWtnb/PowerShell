@@ -376,23 +376,6 @@ function ii. {
     Invoke-Item .
 }
 
-function iit {
-    param (
-        [parameter(ValueFromPipeline)]$inputLine
-    )
-    begin {}
-    process {
-        $path = ($inputLine.length)? (Get-Item $inputLine).FullName : (Get-Location).ProviderPath
-        if ((Test-Path $env:TABLACUS_PATH) -and (Test-Path $path -PathType Container)) {
-            Start-Process $env:TABLACUS_PATH -ArgumentList $path
-        }
-        else {
-            Start-Process $path
-        }
-    }
-    end {}
-}
-
 function noblank () {
     $input | Foreach-Object {$_ -replace "\s"} | Write-Output
 }
