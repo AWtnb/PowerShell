@@ -137,18 +137,23 @@ function Restart-GoogleIme {
 class PseudoVoicing {
     [string]$origin
     [string]$formatted
+    [string]$voicables
     PseudoVoicing([string]$s) {
         $this.origin = $s
         $this.formatted = $this.origin
+        $this.voicables = "かきくけこさしすせそたちつてとはひふへほカキクケコサシスセソタチツテトハヒフヘホ"
     }
     [void] FixVoicing() {
         $this.formatted = [regex]::new(".[\u309b\u3099]").Replace($this.formatted, {
             param($m)
             $c = $m.Value.Substring(0,1)
-            if ($c -eq "`u{3046}") {
+            if ($this.voicables.IndexOf($c) -lt 0) {
+                return $m
+            }
+            if ($c -eq "う") {
                 return "`u{3094}"
             }
-            if ($c -eq "`u{30a6}") {
+            if ($c -eq "ウ") {
                 return "`u{30f4}"
             }
             return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 1))
@@ -158,18 +163,29 @@ class PseudoVoicing {
         $this.formatted = [regex]::new(".[\u309a\u309c]").Replace($this.formatted, {
             param($m)
             $c = $m.Value.Substring(0,1)
+            if ($this.voicables.IndexOf($c) -lt 0) {
+                return $m
+            }
             return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 2))
         })
     }
 }
 
-class MacOSFile {
-    [System.IO.FileInfo[]]$files
-    MacOSFile() {
-        $this.files = @(Get-ChildItem -Path $PWD.Path | Where-Object {$_.BaseName -match "\u309a|\u309b|\u309c|\u3099"})
+function Rename-MacOSFile {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+    )
+    begin {
+        $files = @()
     }
-    [void]Rename(){
-        $this.files | ForEach-Object {
+    process {
+        $fileObj = Get-Item -LiteralPath $inputObj
+        if ($fileObj.BaseName -match "\u309a|\u309b|\u309c|\u3099") {
+            $files += $fileObj
+        }
+    }
+    end {
+        $fileObj  | ForEach-Object {
             "Pseudo voicing-mark on '{0}'!" -f $_.Name | Write-Host -ForegroundColor Magenta
             $ask = Read-Host "Fix? (y/n)"
             if ($ask -ne "y") {
@@ -183,7 +199,6 @@ class MacOSFile {
         }
     }
 }
-
 
 
 #################################################################
@@ -301,11 +316,6 @@ function prompt {
 
     if (-not (Reset-ConsoleIME)) {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
-    }
-
-    if ($pwd.Path.StartsWith("C:")) {
-        $mf = [MacOSFile]::new()
-        $mf.Rename()
     }
 
     return $p.GetPrompt()
