@@ -1207,6 +1207,7 @@ function Join-WordsOnActiveWordDocument {
     "Replacing {0} to {1}" -f $before, $after | Write-Host
 
     $range = $wd.Selection
+    $range.Find.ClearFormatting()
     $range.Find.Execute(
         $before,
         $false, #MatchCase
@@ -1221,6 +1222,29 @@ function Join-WordsOnActiveWordDocument {
         2 #wdReplaceAll
     ) > $null
 }
+
+
+function Invoke-SearchOnActiveWordDocument {
+    param(
+        [string]$query
+    )
+
+    $wd = Get-ActiveWordApp
+    if (-not $wd) { return }
+    $range = $wd.Selection
+    $range.Find.ClearFormatting()
+    $range.Find.Text = $query
+    $range.Find.MatchFuzzy = $false
+    $range.Find.Forward = $true
+    $range.Find.Wrap = 1 #wdFindContinue
+    $range.Find.Format = $true
+    $range.Find.Highlight = $false
+    $range.Find.Replacement.Text = ""
+    $range.Find.Replacement.Highlight = $true
+    $range.Find.Execute() > $null
+}
+
+Set-Alias -Name grad2 -Value Invoke-SearchOnActiveWordDocument
 
 
 
