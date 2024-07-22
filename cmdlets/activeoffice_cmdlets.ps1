@@ -1194,6 +1194,36 @@ function Get-EmbeddedDataOnActiveWordDocument {
 
 }
 
+function Join-WordsOnActiveWordDocument {
+    param(
+        [Parameter(ValueFromRemainingArguments)][string[]]$kanas
+    )
+
+    $doc = Get-ActiveWordDocument
+    if (-not $doc) { return }
+
+    $before = $kanas -join ""
+    $after = $kanas -join "・"
+    "Replacing {0} to {1}" -f $before, $after | Write-Host
+
+    $range = $doc.Range(0, 0)
+    $range.Find.Execute(
+        $before,
+        $false, #MatchCase
+        $false, #MatchWholeWord
+        $false, #MatchWildcards
+        $false, #MatchSoundsLike
+        $false, #MatchAllWordForms
+        $true,  #Forward
+        0, #wdFIndStop
+        $true, #Format
+        $after, # ReplaceWith
+        2 #wdReplaceAll
+    ) > $null
+}
+
+
+
 function Set-ActivePowerpointaSlideSize {
     param (
         [int]$widthMm
