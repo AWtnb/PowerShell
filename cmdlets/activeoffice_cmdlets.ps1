@@ -1199,14 +1199,14 @@ function Join-WordsOnActiveWordDocument {
         [Parameter(ValueFromRemainingArguments)][string[]]$kanas
     )
 
-    $doc = Get-ActiveWordDocument
-    if (-not $doc) { return }
+    $wd = Get-ActiveWordApp
+    if (-not $wd) { return }
 
     $before = $kanas -join ""
     $after = $kanas -join "・"
     "Replacing {0} to {1}" -f $before, $after | Write-Host
 
-    $range = $doc.Range(0, 0)
+    $range = $wd.Selection
     $range.Find.Execute(
         $before,
         $false, #MatchCase
@@ -1215,7 +1215,7 @@ function Join-WordsOnActiveWordDocument {
         $false, #MatchSoundsLike
         $false, #MatchAllWordForms
         $true,  #Forward
-        0, #wdFIndStop
+        1, #wdFIndContinue
         $true, #Format
         $after, # ReplaceWith
         2 #wdReplaceAll
