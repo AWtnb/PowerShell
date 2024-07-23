@@ -37,7 +37,7 @@ function Invoke-PdfConcWithPython {
     $outPath = $outDir | Join-Path -ChildPath "$($outName).pdf"
 
     if (Test-Path $outPath) {
-        "'{0}.pdf' already exists!" -f $outName | Write-Error
+        "'{0}.pdf' already exists on '{1}'!" -f $outName, $outDir | Write-Error
         return
     }
 
