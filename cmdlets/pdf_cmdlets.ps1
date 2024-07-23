@@ -36,7 +36,6 @@ function Invoke-PdfConcWithPython {
     $outDir = ($dirs.Count -gt 1)? $pwd.ProviderPath : $dirs[0]
     $outPath = $outDir | Join-Path -ChildPath "$($outName).pdf"
 
-    return $outPath
     if (Test-Path $outPath) {
         "'{0}.pdf' already exists!" -f $outName | Write-Error
         return
