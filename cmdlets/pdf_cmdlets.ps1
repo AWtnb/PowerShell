@@ -27,14 +27,18 @@ function Invoke-PdfConcWithPython {
         [string]$outName = "conc"
     )
 
-    $outPath = $pwd.ProviderPath | Join-Path -ChildPath "$($outName).pdf"
-    if (Test-Path $outPath) {
-        "'{0}.pdf' already exists!" -f $outName | Write-Error
+    $pdfs = @($input | Where-Object Extension -eq ".pdf")
+    if ($pdfs.Count -le 1) {
         return
     }
 
-    $pdfs = @($input | Where-Object Extension -eq ".pdf")
-    if ($pdfs.Count -le 1) {
+    $dirs = @($pdfs | ForEach-Object {$_.Directory.Fullname} | Sort-Object -Unique)
+    $outDir = ($dirs.Count -gt 1)? $pwd.ProviderPath : $dirs[0]
+    $outPath = $outDir | Join-Path -ChildPath "$($outName).pdf"
+
+    return $outPath
+    if (Test-Path $outPath) {
+        "'{0}.pdf' already exists!" -f $outName | Write-Error
         return
     }
 
