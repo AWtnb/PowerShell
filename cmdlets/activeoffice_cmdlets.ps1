@@ -196,15 +196,22 @@ class WdConst {
 
 }
 
-function Get-ActiveWordDocumentParagraphs {
-    $reg = [regex]"[`u{00}-`u{001f}]"
-    $adoc = Get-ActiveWordDocument
-    $paragraphs = New-Object System.Collections.ArrayList
-    foreach ($p in $adoc.Paragraphs) {
-        $s = $reg.Replace($p.Range.Text, "")
-        $paragraphs.Add($s) > $null
+function Remove-WordControlChars {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputLine
+    )
+    begin {
+        $reg = [regex]"[`u{00}-`u{001f}]"
     }
-    return $paragraphs
+    process {
+        $reg.Replace($inputLine, "") | Write-Output
+    }
+    end {}
+}
+
+function Get-ActiveWordDocumentParagraphs {
+    $adoc = Get-ActiveWordDocument
+    return $adoc.Paragraphs | ForEach-Object {$_.Range.Text} | Remove-WordControlChars
 }
 
 function Get-CommentOnActiveWordDocument {
@@ -985,7 +992,7 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         "==> accepted all revisions on active document!" | Write-Host
     }
 
-    $curLines = $curDoc.Paragraphs | ForEach-Object {$_.Range.Text -replace "[`u{00}-`u{001f}]", ""}
+    $curLines = $curDoc.Paragraphs | ForEach-Object {$_.Range.Text} | Remove-WordControlChars
     if ($curLines.Count -lt 1) {
         return
     }
@@ -1007,9 +1014,7 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         $orgDoc.AcceptAllRevisions()
         "==> accepted all revisions on original document! (not saved)" | Write-Host
     }
-    $orgLines = @($orgDoc.Paragraphs).ForEach({
-            return $_.Range.Text -replace "[`u{00}-`u{001f}]", ""
-        })
+    $orgLines = $orgDoc.Paragraphs | ForEach-Object {$_.Range.Text} | Remove-WordControlChars
     $orgDoc.Close($false)
     $fromName = $orgPath | Split-Path -Leaf
     $toName = $curPath | Split-Path -Leaf
