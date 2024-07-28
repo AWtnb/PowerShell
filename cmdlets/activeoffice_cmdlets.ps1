@@ -196,71 +196,30 @@ class WdConst {
 
 }
 
-class ActiveDocument {
-
-    [System.__ComObject]$App
-    [System.__ComObject]$Document
-
-    ActiveDocument() {
-        $wd = Get-ActiveWordApp
-        if ($wd) {
-            $this.App = $wd
-            $this.Document = $wd.ActiveDocument
-        }
-    }
-
-    [string] GetFullname() {
-        return $this.Document.FullName
-    }
-
-    [string[]] GetParagraphs() {
-        $array = New-Object System.Collections.ArrayList
-        if ($this.Document) {
-            foreach ($p in $this.Document.Paragraphs) {
-                $s = [ActiveDocument]::RemoveControlChars($p.Range.Text)
-                $array.Add($s) > $null
-            }
-        }
-        return $array
-    }
-
-    [PSCustomObject[]] GetComments() {
-        $array = New-Object System.Collections.ArrayList
-        if ($this.Document) {
-            foreach ($cmt in $this.Document.comments) {
-                $t = $cmt.Scope.Text
-                $array.Add([PSCustomObject]@{
-                        "Target" = ((($t -as [string]).trim())? $t : "");
-                        "Lines"  = @($cmt.Range.Paragraphs | ForEach-Object {$_.Range.Text});
-                        "Author" = $cmt.Author;
-                        "Date"   = $cmt.Date
-                    }) > $null
-            }
-        }
-        return $array
-    }
-
-    [bool] AcceptAllRevisions() {
-        if ($this.Document.Revisions.Count -lt 1) {
-            return $false
-        }
-        $this.Document.AcceptAllRevisions()
-        return $true
-    }
-
-    static [string] RemoveControlChars([string]$s) {
-        $reg = [regex]"[`u{00}-`u{001f}]"
-        return $reg.Replace($s, "")
-    }
-}
-
 function Get-ActiveWordDocumentParagraphs {
-    $adoc = [ActiveDocument]::new()
-    return $adoc.GetParagraphs()
+    $reg = [regex]"[`u{00}-`u{001f}]"
+    $adoc = Get-ActiveWordDocument
+    $paragraphs = New-Object System.Collections.ArrayList
+    foreach ($p in $adoc.Paragraphs) {
+        $s = $reg.Replace($p.Range.Text, "")
+        $array.Add($s) > $null
+    }
+    return $paragraphs
 }
+
 function Get-CommentOnActiveWordDocument {
-    $adoc = [ActiveDocument]::new()
-    return $adoc.GetComments()
+    $adoc = Get-ActiveWordDocument
+    $comments = New-Object System.Collections.ArrayList
+    foreach ($cmt in $adoc.comments) {
+        $t = $cmt.Scope.Text
+        $comments.Add([PSCustomObject]@{
+                "Target" = ((($t -as [string]).trim())? $t : "");
+                "Lines"  = @($cmt.Range.Paragraphs | ForEach-Object {$_.Range.Text});
+                "Author" = $cmt.Author;
+                "Date"   = $cmt.Date
+            }) > $null
+    }
+    return $comments
 }
 
 function Get-MatchPatternOnActiveWordDocument {
@@ -269,8 +228,7 @@ function Get-MatchPatternOnActiveWordDocument {
         ,[switch]$case
     )
 
-    $adoc = [ActiveDocument]::new()
-    $paragraphs = $adoc.GetParagraphs()
+    $paragraphs = Get-ActiveWordDocumentParagraphs
     if ($paragraphs.Count -lt 1) {
         return
     }
@@ -294,8 +252,7 @@ function Invoke-GrepOnActiveWordDocument {
         ,[switch]$asObject
     )
 
-    $adoc = [ActiveDocument]::new()
-    $paragraphs = $adoc.GetParagraphs()
+    $paragraphs = Get-ActiveWordDocumentParagraphs
     if ($paragraphs.Count -lt 1) {
         return
     }
@@ -317,7 +274,7 @@ function Invoke-GrepOnActiveWordDocument {
     }
 
     if ($grep.Matches.Count -gt 0) {
-        "total match: {0} in '{1}'" -f $grep.Matches.Count, $adoc.Document.Name | Write-Host -ForegroundColor Cyan
+        "total match: {0}" -f $grep.Matches.Count | Write-Host -ForegroundColor Cyan
     }
 }
 Set-Alias grad Invoke-GrepOnActiveWordDocument
@@ -458,14 +415,14 @@ function Invoke-GrepOnActiveWordDocumentComment {
         [string]$pattern
         ,[switch]$case
     )
-    $adoc = [ActiveDocument]::new()
-    if ($adoc.GetComments().Count -lt 1) {
+    $comments = Get-CommentOnActiveWordDocument
+    if ($comments.Count -lt 1) {
         return
     }
 
     $reg = ($case)? [regex]::new($pattern) : [regex]::new($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
     $stopDeco = $global:PSStyle.Reset
-    $adoc.GetComments() | ForEach-Object {
+    $comments | ForEach-Object {
         $author = $_.Author
         $_.Lines | ForEach-Object {
             $line = $_
@@ -1013,12 +970,13 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         [parameter(Mandatory)][string]$originalFile
         ,[string]$outName = ""
     )
-    $curDoc = [ActiveDocument]::new()
+    $curDoc = Get-ActiveWordDocument
     if (-not $curDoc) {
         return
     }
 
-    if ($curDoc.AcceptAllRevisions()) {
+    if ($curDoc.Revisions.Count -gt 0) {
+        $curDoc.AcceptAllRevisions()
         "==> accepted all revisions on active document!" | Write-Host
     }
 
@@ -1026,7 +984,7 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
     if ($curLines.Count -lt 1) {
         return
     }
-    $curPath = $curDoc.GetFullname()
+    $curPath = $curDoc.FullName
 
     $orgPath = (Get-Item $originalFile).FullName
     $orgDoc = $null
@@ -1045,8 +1003,8 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         "==> accepted all revisions on original document! (not saved)" | Write-Host
     }
     $orgLines = @($orgDoc.Paragraphs).ForEach({
-        return [ActiveDocument]::RemoveControlChars($_.Range.Text)
-    })
+            return $_.Range.Text -replace "[`u{00}-`u{001f}]", ""
+        })
     $orgDoc.Close($false)
     $fromName = $orgPath | Split-Path -Leaf
     $toName = $curPath | Split-Path -Leaf
