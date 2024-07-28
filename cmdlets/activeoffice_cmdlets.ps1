@@ -985,7 +985,7 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         "==> accepted all revisions on active document!" | Write-Host
     }
 
-    $curLines = $curDoc.GetParagraphs()
+    $curLines = $curDoc.Paragraphs | ForEach-Object {$_.Range.Text -replace "[`u{00}-`u{001f}]", ""}
     if ($curLines.Count -lt 1) {
         return
     }
@@ -993,7 +993,7 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
 
     $orgPath = (Get-Item $originalFile).FullName
     $orgDoc = $null
-    $word = $curDoc.App
+    $word = $curDoc.Application
     try {
         $orgDoc = $word.Documents($orgPath)
     }
