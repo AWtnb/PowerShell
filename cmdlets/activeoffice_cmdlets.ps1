@@ -202,7 +202,7 @@ function Get-ActiveWordDocumentParagraphs {
     $paragraphs = New-Object System.Collections.ArrayList
     foreach ($p in $adoc.Paragraphs) {
         $s = $reg.Replace($p.Range.Text, "")
-        $array.Add($s) > $null
+        $paragraphs.Add($s) > $null
     }
     return $paragraphs
 }
@@ -234,7 +234,12 @@ function Get-MatchPatternOnActiveWordDocument {
     }
 
     $grep = @($paragraphs | Select-String -Pattern $pattern -AllMatches -CaseSensitive:$case)
-    return $($grep.Matches.Value | Group-Object -NoElement | Sort-Object Count)
+    return $($grep.Matches.Value | Group-Object -NoElement | ForEach-Object {
+            return [PSCustomObject]@{
+                Line  = $_.Name;
+                Count = $_.Count;
+            }
+        } | Sort-Object Count)
 }
 
 function Invoke-GrepOnActiveWordDocument {
@@ -1152,7 +1157,47 @@ function Get-EmbeddedDataOnActiveWordDocument {
 
 }
 
-function Join-WordsOnActiveWordDocument {
+function Invoke-BatchReplaceOnActiveWordDocument {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputLine
+        ,[string]$from
+        ,[string]$to
+    )
+    begin {
+        $lines = @()
+    }
+    process {
+        $lines += $inputLine
+    }
+    end {
+        $wd = Get-ActiveWordApp
+        if (-not $wd) {
+            return
+        }
+        $lines | ForEach-Object {
+            $search = $_
+            $replaceWith = $search -replace $from, $to
+            "Replacing: {0} => {1}" -f $search, $replaceWith | Write-Host -ForegroundColor Cyan
+            $range = $wd.Selection
+            $range.Find.ClearFormatting()
+            $range.Find.Execute(
+                $search,
+                $false, #MatchCase
+                $false, #MatchWholeWord
+                $false, #MatchWildcards
+                $false, #MatchSoundsLike
+                $false, #MatchAllWordForms
+                $true,  #Forward
+                1, #wdFIndContinue
+                $true, #Format
+                $replaceWith, # ReplaceWith
+                2 #wdReplaceAll
+            ) > $null
+        }
+    }
+}
+
+function Join-WordsByDotOnActiveWordDocument {
     param(
         [Parameter(ValueFromRemainingArguments)][string[]]$kanas
     )
