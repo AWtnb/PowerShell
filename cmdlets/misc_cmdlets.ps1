@@ -307,6 +307,24 @@ function Edit-Tsv {
     }
 }
 
+function Group-ObjectUtil {
+    param (
+        [string]$groupBy
+        ,[string]$groupedProperty
+        ,[string]$jointBy = ","
+    )
+    $input | Group-Object $groupBy | ForEach-Object {
+        $count = $_.Count
+        $name = $_.Name
+        $grouped = $_.Group | Select-Object -ExpandProperty $groupedProperty | Join-String -Separator $jointBy
+        return [PSCustomObject]@{
+            "Name" = $name;
+            "Count" = $count;
+            "Grouped" = $grouped;
+        }
+    }
+}
+
 function Get-DuplicateItem {
     param(
         [switch]$all
