@@ -308,7 +308,15 @@ function Edit-Tsv {
 }
 
 function Get-DuplicateItem {
-    $input | Group-Object | Where-Object Count -gt 1 | Sort-Object Count -Stable | Select-Object Name, Count | Write-Output
+    param(
+        [switch]$all
+    )
+    $input | Group-Object | Where-Object {
+        if ($all) {
+            return $_
+        }
+        return $_.Count -gt 1
+    } | Sort-Object Count -Stable | Select-Object Name, Count | Write-Output
 }
 Set-Alias dupl Get-DuplicateItem
 
