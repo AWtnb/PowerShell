@@ -75,22 +75,19 @@ Set-Alias rl Format-ReplaceLine
 
 function Format-MatchLine {
     param (
-        [scriptblock]$matchBlock = {$_}
+        [scriptblock]$matchBlock = {return $true}
         ,[scriptblock]$formatBlock = {$_}
+        ,[scriptblock]$elseBlock = {$_}
     )
     $lines = New-Object System.Collections.ArrayList
     @($input).ForEach({$lines.Add($_) > $null})
 
     $lines | ForEach-Object {
-
-        if (& $matchBlock) {
-            $proced = & $formatBlock
-            [Console]::ForegroundColor = ($_ -ne $proced)? "Green": "Blue"
-            Write-Output $proced
-            [Console]::ResetColor()
+        if ($matchBlock.Invoke()){
+            $formatBlock.Invoke() | Write-Output
         }
         else {
-            Write-Output $_
+            $elseBlock.Invoke() | Write-Output
         }
     }
 }
