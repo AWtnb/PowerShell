@@ -221,7 +221,7 @@ function hinagata {
     if (-not (Test-Path $d)) {
         return
     }
-    $n = Get-ChildItem -Path $d -Name | fzf.exe
+    $n = Get-ChildItem -Path $d -Name -File | fzf.exe
     if (-not $n) {
         return
     }
