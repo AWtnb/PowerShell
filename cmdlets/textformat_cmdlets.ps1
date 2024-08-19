@@ -141,8 +141,9 @@ function Format-InsertIndex {
             $suffix = $_.Substring($position, ($maxLen - $position))
         }
         else {
-            $prefix = $_.Substring(0, $maxLen + $position)
-            $suffix = $_.Substring(($maxLen + $position), [Math]::Abs($position))
+            $pos = $position + 1
+            $prefix = $_.Substring(0, $maxLen + $pos)
+            $suffix = $_.Substring(($maxLen + $pos), [Math]::Abs($pos))
         }
         return $prefix + ($idx -as [string]).PadLeft($pad, "0") + $suffix
     }
