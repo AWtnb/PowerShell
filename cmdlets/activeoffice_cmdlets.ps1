@@ -143,7 +143,7 @@ function Set-ActiveWordPageSetup {
     $adoc.Save()
 }
 
-function Get-ActiveWordDocumentOulines {
+function Get-ActiveWordDocumentOutlines {
     $adoc = Get-ActiveWordDocument
     if (-not $adoc) { return }
     $adoc.Paragraphs | Where-Object {$_.Range.ParagraphFormat.OutlineLevel -ne 10} | ForEach-Object {$_.Range.Text} | Write-Output
