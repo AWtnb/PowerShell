@@ -28,20 +28,21 @@ class RawMd:
         self._file_path = file_path
         self.content = Path(self._file_path).read_text("utf-8").strip()
 
-    def get_timestamp(self) -> str:
+    @property
+    def last_modified(self) -> str:
         date_fmt = r"%Y-%m-%d"
         file_epoch_time = Path(self._file_path).stat().st_mtime
-        last_modified = datetime.datetime.fromtimestamp(
+        last_timestamp = datetime.datetime.fromtimestamp(
             file_epoch_time
         ).strftime(date_fmt)
         today = datetime.datetime.today().strftime(date_fmt)
-        if last_modified == today:
-            return "update: {}".format(last_modified)
+        if last_timestamp == today:
+            return "update: {}".format(last_timestamp)
         return "contents updated: {} / document generated: {}".format(
-            last_modified, today
+            last_timestamp, today
         )
 
-    def get_lines(self) -> MdContent:
+    def parse(self) -> MdContent:
         idxes = []
         lines = self.content.splitlines()
         reg = re.compile(r"^-{3,}$")
@@ -93,7 +94,9 @@ class Frontmatter:
             if styles:
                 for style in styles:
                     for sel, rules in style.items():
-                        val = ";".join([f"{prop}:{v}" for prop, v in rules.items()])
+                        val = ";".join(
+                            [f"{prop}:{v}" for prop, v in rules.items()]
+                        )
                         line = sel + "{" + val + "}"
                         lines.append(line)
             return "\n".join(lines)
@@ -117,17 +120,17 @@ class Frontmatter:
 class MdHtml:
     def __init__(self, file_path: str) -> None:
         raw_md = RawMd(file_path)
-        md_lines = raw_md.get_lines()
-        markup = mistletoe.markdown(md_lines.main, CustomRenderer)
+        content = raw_md.parse()
+        markup = mistletoe.markdown(content.main, CustomRenderer)
 
-        self._frontmatter = Frontmatter(md_lines.frontmatter)
+        self._frontmatter = Frontmatter(content.frontmatter)
 
         tree = DomTree(markup)
         tree.adjust_index("//*[contains(@class, 'force-order')]")
         tree.set_heading_id("h2 | h3 | h4 | h5 | h6")
         tree.fix_spacing("h2 | h3 | h4 | h5")
         tree.set_link_target()
-        tree.set_timestamp(raw_md.get_timestamp())
+        tree.set_timestamp(raw_md.last_modified)
         tree.render_pagebreak()
         tree.render_arrow_list()
         tree.render_blank_list()
