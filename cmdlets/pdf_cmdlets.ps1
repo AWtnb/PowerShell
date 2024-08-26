@@ -146,6 +146,7 @@ function Invoke-PdfExtractWithPython {
         $inputObj
         ,[int]$from = 1
         ,[int]$to = -1
+        ,[string]$outName = ""
     )
     begin {}
     process {
@@ -154,7 +155,7 @@ function Invoke-PdfExtractWithPython {
             return
         }
         $py = [PyPdf]::new("extract.py")
-        $py.RunCommand(@($file.Fullname, $from, $to))
+        $py.RunCommand(@($file.Fullname, $from, $to, $outName))
     }
     end {}
 }

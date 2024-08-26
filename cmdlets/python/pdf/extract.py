@@ -9,7 +9,7 @@ from pathlib import Path
 from pdfrw import PdfReader, PdfWriter
 
 
-def main(file_path: str, p_from: str, p_to: str):
+def main(file_path: str, p_from: str, p_to: str, out_name: str = ""):
     range_begin = int(p_from)
     range_end = int(p_to)
 
@@ -32,7 +32,12 @@ def main(file_path: str, p_from: str, p_to: str):
         print("OUT-OF-RANGE-ERROR: {}".format(err), file=sys.stderr)
         return
 
-    out_path = pdf_path.with_stem("{}_{:03}-{:03}".format(pdf_path.stem, range_begin, range_end))
+    if 0 < len(out_name):
+        out_path = pdf_path.with_stem(out_name)
+    else:
+        out_path = pdf_path.with_stem(
+            "{}_{:03}-{:03}".format(pdf_path.stem, range_begin, range_end)
+        )
 
     writer = PdfWriter(out_path)
     writer.addpages(pdf.pages[range_begin - 1 : range_end])
@@ -40,4 +45,4 @@ def main(file_path: str, p_from: str, p_to: str):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:5])
