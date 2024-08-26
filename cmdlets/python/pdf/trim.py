@@ -10,13 +10,13 @@ from pdfrw import PdfReader, PdfWriter, PageMerge
 
 
 def main(
-    file_path: str, margin_horizontal: float = 0.08, margin_vertical: float = 0.08
+    file_path: str, margin_horizontal_ratio: float = 0.08, margin_vertical_ratio: float = 0.08
 ) -> None:
     rect = (
-        margin_horizontal,
-        margin_vertical,
-        (1 - margin_horizontal * 2),
-        (1 - margin_vertical * 2),
+        margin_horizontal_ratio,
+        margin_vertical_ratio,
+        (1 - margin_horizontal_ratio * 2),
+        (1 - margin_vertical_ratio * 2),
     )
 
     pdf_path = Path(file_path)

@@ -307,8 +307,8 @@ function Invoke-PdfTrimGalleyMarginWithPython {
     param (
         [parameter(ValueFromPipeline)]
         $inputObj
-        ,[float]$marginHorizontal = 0.08
-        ,[float]$marginVertical = 0.08
+        ,[float]$marginHorizontalRatio = 0.08
+        ,[float]$marginVerticalRatio = 0.08
     )
     begin {}
     process {
@@ -317,7 +317,7 @@ function Invoke-PdfTrimGalleyMarginWithPython {
             return
         }
         $py = [PyPdf]::new("trim.py")
-        $py.RunCommand(@($file.Fullname, $marginHorizontal, $marginVertical))
+        $py.RunCommand(@($file.Fullname, $marginHorizontalRatio, $marginVerticalRatio))
     }
     end {}
 }
