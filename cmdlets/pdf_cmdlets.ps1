@@ -344,6 +344,28 @@ function Invoke-PdfSwapWithPython {
     end {}
 }
 
+function Invoke-PdfInsertWithPython {
+    param (
+        [parameter(ValueFromPipeline)]
+        $inputObj
+        ,[string]$newPdf
+        ,[int]$insertAfter = 1
+        ,[string]$outName = ""
+    )
+    begin {}
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $py = [PyPdf]::new("insert.py")
+
+        $py.RunCommand(@($file.Fullname, $newPdf, $insertAfter, $outName))
+    }
+    end {}
+}
+Set-Alias pdfInsertPy Invoke-PdfInsertWithPython
+
 function Invoke-PdfZipPagesWithPython {
     param (
         [string]
