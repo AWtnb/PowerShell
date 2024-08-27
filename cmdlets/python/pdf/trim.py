@@ -10,8 +10,18 @@ from pdfrw import PdfReader, PdfWriter, PageMerge
 
 
 def main(
-    file_path: str, margin_horizontal_ratio: float = 0.08, margin_vertical_ratio: float = 0.08
+    file_path: str,
+    margin_horizontal_ratio: float = 0.08,
+    margin_vertical_ratio: float = 0.08,
 ) -> None:
+    try:
+        msg = "ratio should be float between 0 and 1!"
+        assert 0 < margin_horizontal_ratio and margin_horizontal_ratio < 1, msg
+        assert 0 < margin_vertical_ratio and margin_vertical_ratio < 1, msg
+    except AssertionError as err:
+        print(err)
+        return
+
     rect = (
         margin_horizontal_ratio,
         margin_vertical_ratio,
