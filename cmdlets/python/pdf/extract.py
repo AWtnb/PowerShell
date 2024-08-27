@@ -45,4 +45,4 @@ def main(file_path: str, p_from: str, p_to: str, out_name: str = ""):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:5])
+    main(*sys.argv[1:])
