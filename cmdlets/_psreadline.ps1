@@ -70,7 +70,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
         <#case#> "c" { (Get-Clipboard | Select-Object -First 1).Replace('"', "") ; break }
     }
     if (-not (Test-Path $dir -PathType Container)) {
-        return
+        $dir = $dir | Split-Path -Parent
     }
     $p = "<#SKIPHISTORY#>cd '{0}'" -f $dir
     [PSConsoleReadLine]::Insert($p)
