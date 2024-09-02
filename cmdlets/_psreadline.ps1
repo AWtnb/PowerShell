@@ -78,7 +78,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
 }
 
 # history
-Set-PSReadLineKeyHandler -Key "ctrl+r" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+H" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $line = $bs.CursorLine.Text
     $c = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 100).CommandLine | fzf.exe --query=$line
@@ -450,7 +450,7 @@ class PSBufferState {
 }
 
 # reload
-Set-PSReadLineKeyHandler -Key "alt+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
     [PSBufferState]::new().RevertLine()
     [PSConsoleReadLine]::Insert('<#SKIPHISTORY#> . $PROFILE')
     [PSConsoleReadLine]::AcceptLine()

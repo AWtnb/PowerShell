@@ -1164,15 +1164,15 @@ function Get-EmbeddedDataOnActiveWordDocument {
 
 function Invoke-BatchReplaceOnActiveWordDocument {
     param (
-        [parameter(ValueFromPipeline = $true)]$inputLine
-        ,[string]$from
-        ,[string]$to
+        [parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName=$true)][string]$line
+        ,[parameter(Mandatory, Position=0)][string]$from
+        ,[parameter(Mandatory, Position=1)][string]$to
     )
     begin {
         $lines = @()
     }
     process {
-        $lines += $inputLine
+        $lines += $line
     }
     end {
         $wd = Get-ActiveWordApp
