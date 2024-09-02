@@ -1214,6 +1214,37 @@ function Invoke-BatchReplaceOnActiveWordDocument {
         }
     }
 }
+Set-Alias -Name wordBatchReplace -Value Invoke-BatchReplaceOnActiveWordDocument
+
+function Invoke-ReplaceOnActiveWordDocument {
+    param(
+        [Parameter(Mandatory, Position=0)][string]$from
+        ,[Parameter(Mandatory, Position=1)][string]$to
+    )
+
+    $wd = Get-ActiveWordApp
+    if (-not $wd) { return }
+
+    "Replacing {0} to {1}" -f $from, $to | Write-Host
+
+    $range = $wd.Selection
+    $range.Find.ClearFormatting()
+    $range.Find.MatchFuzzy = $false
+    $range.Find.Execute(
+        $from,
+        $false, #MatchCase
+        $false, #MatchWholeWord
+        $false, #MatchWildcards
+        $false, #MatchSoundsLike
+        $false, #MatchAllWordForms
+        $true,  #Forward
+        1, #wdFIndContinue
+        $true, #Format
+        $to, # ReplaceWith
+        2 #wdReplaceAll
+    ) > $null
+}
+Set-Alias -Name wordReplace -Value Invoke-ReplaceOnActiveWordDocument
 
 function Join-WordsByDotOnActiveWordDocument {
     param(
@@ -1229,6 +1260,7 @@ function Join-WordsByDotOnActiveWordDocument {
 
     $range = $wd.Selection
     $range.Find.ClearFormatting()
+    $range.Find.MatchFuzzy = $false
     $range.Find.Execute(
         $before,
         $false, #MatchCase
