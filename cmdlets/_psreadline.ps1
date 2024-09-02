@@ -55,8 +55,12 @@ Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription
 
 # completion
 Set-PSReadLineKeyHandler -Key "alt+i" -BriefDescription "insert-invoke" -LongDescription "insert-invoke" -ScriptBlock {
+    if ([PSBufferState]::IsSelecting()) {
+        [PSConsoleReadLine]::DeleteChar()
+    }
     [PSConsoleReadLine]::Insert("Invoke*")
 }
+
 Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(star)" -LongDescription "insertAsterisk(star)" -ScriptBlock {
     [PSConsoleReadLine]::Insert("*")
 }
