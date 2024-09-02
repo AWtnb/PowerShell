@@ -1197,6 +1197,7 @@ function Invoke-BatchReplaceOnActiveWordDocument {
             "Replacing: {0} => {1}" -f $search, $replaceWith | Write-Host -ForegroundColor Cyan
             $range = $wd.Selection
             $range.Find.ClearFormatting()
+            $range.Find.MatchFuzzy = $false
             $range.Find.Execute(
                 $search,
                 $false, #MatchCase
