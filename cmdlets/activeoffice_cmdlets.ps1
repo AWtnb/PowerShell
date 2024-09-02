@@ -248,6 +248,7 @@ function Get-MatchPatternOnActiveWordDocument {
             }
         } | Sort-Object Count)
 }
+Set-Alias -Name wordMatchPattern -Value Get-MatchPatternOnActiveWordDocument
 
 function Invoke-GrepOnActiveWordDocument {
     <#
