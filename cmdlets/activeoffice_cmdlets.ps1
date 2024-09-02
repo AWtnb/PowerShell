@@ -1165,14 +1165,11 @@ function Get-EmbeddedDataOnActiveWordDocument {
 function Invoke-BatchReplaceOnActiveWordDocument {
     param (
         [parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName=$true)][string]$line
-        ,[parameter(Mandatory, Position=0)][string]$from
+        ,[parameter(Mandatory, Position=0)]$from
         ,[parameter(Mandatory, Position=1)]$to
     )
     begin {
         $lines = @()
-        if ($to -is [scriptblock]) {
-            $to = ($to -as [scriptblock]).Invoke($from)
-        }
     }
     process {
         $lines += $line
@@ -1183,8 +1180,20 @@ function Invoke-BatchReplaceOnActiveWordDocument {
             return
         }
         $lines | ForEach-Object {
-            $search = $_
-            $replaceWith = $search -replace $from, $to
+            $search = $_ -as [string]
+            if ($from -is [scriptblock]) {
+                $f = $search | ForEach-Object $from
+            }
+            else {
+                $f = $from
+            }
+            if ($to -is [scriptblock]) {
+                $t = $f | ForEach-Object {$_ -as [string]} | ForEach-Object $to
+            }
+            else {
+                $t = $to
+            }
+            $replaceWith = $search -replace $f, $t
             "Replacing: {0} => {1}" -f $search, $replaceWith | Write-Host -ForegroundColor Cyan
             $range = $wd.Selection
             $range.Find.ClearFormatting()
