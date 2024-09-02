@@ -210,6 +210,26 @@ Update-TypeData -MemberName "CountMatches" -TypeName System.String -Force -Membe
     return [regex]::Matches($this, $pattern, $opt).Count
 }
 
+
+Update-TypeData -MemberName ToNum -TypeName System.String -Force -MemberType ScriptMethod -Value {
+    $s = $this
+    @{
+        "一"= 1;
+        "二"= 2;
+        "三"= 3;
+        "四"= 4;
+        "五"= 5;
+        "六"= 6;
+        "七"= 7;
+        "八"= 8;
+        "九"= 9;
+        "〇"= 0;
+    }.GetEnumerator() | ForEach-Object {
+        $s = $s -replace $_.Key, $_.Value
+    }
+    return $s
+}
+
 ####################
 # Class: Unicode
 ####################

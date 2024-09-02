@@ -1166,10 +1166,13 @@ function Invoke-BatchReplaceOnActiveWordDocument {
     param (
         [parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName=$true)][string]$line
         ,[parameter(Mandatory, Position=0)][string]$from
-        ,[parameter(Mandatory, Position=1)][string]$to
+        ,[parameter(Mandatory, Position=1)]$to
     )
     begin {
         $lines = @()
+        if ($to -is [scriptblock]) {
+            $to = ($to -as [scriptblock]).Invoke($from)
+        }
     }
     process {
         $lines += $line
