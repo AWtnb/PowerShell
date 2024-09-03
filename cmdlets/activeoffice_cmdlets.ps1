@@ -1298,7 +1298,7 @@ function Invoke-SearchOnActiveWordDocument {
     $range.Find.Execute() > $null
 }
 
-Set-Alias -Name grad2 -Value Invoke-SearchOnActiveWordDocument
+Set-Alias -Name wordSearch -Value Invoke-SearchOnActiveWordDocument
 
 
 
