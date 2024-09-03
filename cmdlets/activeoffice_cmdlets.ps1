@@ -1197,6 +1197,7 @@ function Invoke-BatchReplaceOnActiveWordDocument {
             $replaceWith = $search -replace $f, $t
             "Replacing: {0} => {1}" -f $search, $replaceWith | Write-Host -ForegroundColor Cyan
             $range = $wd.Selection
+            $range.Find.Replacement.ClearFormatting()
             $range.Find.ClearFormatting()
             $range.Find.MatchFuzzy = $false
             $range.Find.Execute(
@@ -1230,6 +1231,7 @@ function Invoke-ReplaceOnActiveWordDocument {
 
     $range = $wd.Selection
     $range.Find.ClearFormatting()
+    $range.Find.Replacement.ClearFormatting()
     $range.Find.MatchFuzzy = $false
     $range.Find.Execute(
         $from,
@@ -1261,6 +1263,7 @@ function Join-WordsByDotOnActiveWordDocument {
 
     $range = $wd.Selection
     $range.Find.ClearFormatting()
+    $range.Find.Replacement.ClearFormatting()
     $range.Find.MatchFuzzy = $false
     $range.Find.Execute(
         $before,
@@ -1287,6 +1290,7 @@ function Invoke-SearchOnActiveWordDocument {
     if (-not $wd) { return }
     $range = $wd.Selection
     $range.Find.ClearFormatting()
+    $range.Find.Replacement.ClearFormatting()
     $range.Find.Text = $query
     $range.Find.MatchFuzzy = $false
     $range.Find.Forward = $true
