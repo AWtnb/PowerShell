@@ -509,7 +509,8 @@ function Get-LinesSimilarityWithPython {
     }
 }
 
-class Kanji {
+class KanjiTable {
+    [hashtable]$table
 
     # 常用漢字表のうち、ひらがなが一位に定まるもの（訓読みが1つしかないもの）
     $replacableJoyo = @{
@@ -532,7 +533,6 @@ class Kanji {
         "偉" = "えら";
         "違" = "ちが";
         "慰" = "なぐさ";
-        "一" = "ひと";
         "芋" = "いも";
         "引" = "ひ";
         "印" = "しるし";
@@ -1650,21 +1650,28 @@ class Kanji {
         "腕" = "うで"
     }
 
-    Kanji() {}
+    KanjiTable() {
+        $this.table = $this.replacableJoyo
+    }
 
-    [hashtable]GetTable([hashtable]$additional) {
-        $t = $this.replacableJoyo
+    [void] Update([hashtable]$additional) {
         $additional.GetEnumerator() | ForEach-Object {
-            $t[$_.Key] = $_.Value
+            $this.table[$_.Key] = $_.Value
         }
-        return $t
+    }
+
+    [string] Replace([string]$s) {
+        $f = $s
+        $this.table.GetEnumerator() | ForEach-Object {
+            $f = $f -replace $_.Key, $_.Value
+        }
+        return $f
     }
 }
 
 Update-TypeData -MemberName ToHira -TypeName System.String -Force -MemberType ScriptMethod -Value {
-    $s = $this
-    $k = [Kanji]::new()
-    $k.GetTable(@{
+    $kTable = [KanjiTable]::new()
+    $kTable.Update(@{
         "言" = "い";
         "上" = "うえ";
         "関" = "かか";
@@ -1681,9 +1688,7 @@ Update-TypeData -MemberName ToHira -TypeName System.String -Force -MemberType Sc
         "等" = "など";
         "何" = "なん";
         "方" = "ほう";
-    }).GetEnumerator() | ForEach-Object {
-        $s = $s -replace $_.Key, $_.Value
-    }
-    return $s
+    })
+    return $kTable.Replace($this)
 }
 
