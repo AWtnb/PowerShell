@@ -463,6 +463,9 @@ function Invoke-Taskview ([int]$waitMsec = 150) {
     Start-Sleep -Milliseconds $waitMsec
     Start-Process Explorer.exe -ArgumentList @("shell:::{3080F90E-D7AD-11D9-BD98-0000947B0257}")
 }
+function Invoke-GodMode () {
+    Start-Process Explorer.exe -ArgumentList @("shell:::{ED7BA470-8E54-465E-825C-99712043E01C}")
+}
 
 function c {
     $lines = @($input).ForEach({$_ -as [string]})
