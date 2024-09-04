@@ -1620,7 +1620,7 @@ class KanjiTable {
     }
 }
 
-Update-TypeData -MemberName ToHira -TypeName System.String -Force -MemberType ScriptMethod -Value {
+Update-TypeData -MemberName Hiraku -TypeName System.String -Force -MemberType ScriptMethod -Value {
     $kTable = [KanjiTable]::new()
     $kTable.Update(@{
         "言" = "い";
