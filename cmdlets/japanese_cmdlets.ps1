@@ -1665,6 +1665,7 @@ Update-TypeData -MemberName ToHira -TypeName System.String -Force -MemberType Sc
     $s = $this
     $k = [Kanji]::new()
     $k.GetTable(@{
+        "言" = "い";
         "上" = "うえ";
         "関" = "かか";
         "極" = "きわ";
