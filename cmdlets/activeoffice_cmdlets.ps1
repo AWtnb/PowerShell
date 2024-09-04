@@ -1194,6 +1194,9 @@ function Invoke-BatchReplaceOnActiveWordDocument {
             else {
                 $t = $to
             }
+            if ($f -eq $t) {
+                return
+            }
             $replaceWith = $search -replace $f, $t
             "Replacing: {0} => {1}" -f $search, $replaceWith | Write-Host -ForegroundColor Cyan
             $range = $wd.Selection
