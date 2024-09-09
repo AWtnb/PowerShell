@@ -210,6 +210,28 @@ Update-TypeData -MemberName "CountMatches" -TypeName System.String -Force -Membe
     return [regex]::Matches($this, $pattern, $opt).Count
 }
 
+Update-TypeData -MemberName "ToGodanReg" -TypeName System.String -Force -MemberType ScriptMethod -Value {
+    $s = $this -as [string]
+    $last = $s.Substring($s.Length - 1)
+    if ($last -notmatch "[ぁ-ん]") {
+        return $s
+    }
+    $pattern = switch -Regex ($last) {
+        "[わいうえお]" {"[わいうえおっ]" ; break}
+        "[かきくけこ]" {"[かきくけこい]" ; break}
+        "[さしすせそ]" {"[さしすせそ]" ; break}
+        "[なにぬねの]" {"[なにぬねのん]" ; break }
+        "[まみむめも]" {"[まみむめもん]" ; break }
+        "[らりるれろ]" {"[らりるれろ]" ; break }
+        "[がぎぐげご]" {"[がぎぐげごい]" ; break }
+        default {""}
+    }
+    if ($pattern.Length -lt 1) {
+        return $s
+    }
+    return $s.Substring(0, 1) + $pattern
+}
+
 
 Update-TypeData -MemberName ToNum -TypeName System.String -Force -MemberType ScriptMethod -Value {
     $s = $this
