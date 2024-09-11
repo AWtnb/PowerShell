@@ -336,7 +336,6 @@ function Get-SortInfo {
 }
 
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToRtfHighlight" -Value {
-    $header = "{\rtf"
     # https://latex2rtf.sourceforge.net/rtfspec_6.html
     # https://www.biblioscape.com/rtf15_spec.htm#Heading45
     $colortbl = "{\colortbl;"
@@ -362,6 +361,36 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
     }
     $colortbl += "}"
     $t = "{\i\cf1\highlight7 " + $this + "}"
-    $footer = "}"
-    return @($header, $colortbl, $t, $footer) -join "`n"
+    return $colortbl + $t
+}
+
+function ConvertTo-Rtf {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputLine
+    )
+    begin {}
+    process {
+        "{\rtf" + $inputLine + "}" | Write-Output
+    }
+    end {}
+}
+
+function Set-ClipboardAsRtf {
+    <#
+    .EXAMPLE
+        "aa" + "bb".ToRtfHighlight() + "cc" | ConvertTo-Rtf | Set-ClipboardAsRtf
+    #>
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputLine
+    )
+    begin {
+        $lines = @()
+    }
+    process {
+        $lines += $inputLine
+    }
+    end {
+        $rtf = $lines -join "`n"
+        [System.Windows.Forms.Clipboard]::SetText($rtf, [System.Windows.Forms.TextDataFormat]::Rtf)
+    }
 }
