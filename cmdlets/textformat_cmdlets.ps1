@@ -336,31 +336,42 @@ function Get-SortInfo {
 }
 
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToRtfHighlight" -Value {
+    param([string]$color = "Yellow", [bool]$italic = $true, [bool]$bold = $false)
     # https://www.biblioscape.com/rtf15_spec.htm
-    $colortbl = "{\colortbl;"
-    @(
-        @(0, 0, 0),
-        @(0, 0, 255),
-        @(0, 255, 255),
-        @(0, 255, 0),
-        @(255, 0, 255),
-        @(255, 0, 0),
-        @(255, 255, 0),
-        @(255, 255, 255),
-        @(0, 0, 128),
-        @(0, 128, 128),
-        @(0, 128, 0),
-        @(128, 0, 128),
-        @(128, 0, 0),
-        @(128, 128, 0),
-        @(128, 128, 128),
-        @(192, 192, 192)
-    ) | ForEach-Object {
-        $rgb = $_ -as [array]
-        $colortbl += ("\red{0}\green{1}\blue{2};" -f $rgb)
+    $table = [ordered]@{
+        "Black" = @(0, 0, 0);
+        "Blue" = @(0, 0, 255);
+        "Cyan" = @(0, 255, 255);
+        "Green" = @(0, 255, 0);
+        "Magenta" = @(255, 0, 255);
+        "Red" = @(255, 0, 0);
+        "Yellow" = @(255, 255, 0);
+        "White" = @(255, 255, 255);
+        "DarkBlue" = @(0, 0, 128);
+        "DarkCyan" = @(0, 128, 128);
+        "DarkGreen" = @(0, 128, 0);
+        "DarkMagenta" = @(128, 0, 128);
+        "DarkRed" = @(128, 0, 0);
+        "DarkYellow" = @(128, 128, 0);
+        "DarkGray" = @(128, 128, 128);
+        "LightGray" = @(192, 192, 192);
     }
-    $colortbl += "}"
-    $t = "{\i\cf1\highlight7 " + $this + "}"
+
+    $colortbl = $table.Values | ForEach-Object {
+        $rgb = $_ -as [array]
+        return ("\red{0}\green{1}\blue{2};" -f $rgb)
+    } | Join-String -OutputPrefix "{\colortbl;" -OutputSuffix "}" -Separator ""
+
+    $colIdx = ($color -in $table.Keys)? @($table.Keys).IndexOf($color) + 1 : 7
+    $rtf = "\cf1"
+    if ($italic) {
+        $rtf += "\i"
+    }
+    if ($bold) {
+        $rtf += "\b"
+    }
+    $rtf += "\highlight{0} " -f $colIdx
+    $t = "{" + $rtf + $this + "}"
     return -join @("{", $colortbl, $t, "}")
 }
 
@@ -381,5 +392,24 @@ function Set-ClipboardAsRtf {
     end {
         $rtf = "{\fs21" + ($lines -join "\par") + "}"
         [System.Windows.Forms.Clipboard]::SetText($rtf, [System.Windows.Forms.TextDataFormat]::Rtf)
+    }
+}
+
+function ConvertTo-RtfInsideSymbol {
+    param (
+        [parameter(ValueFromPipeline = $true)][string]$inputLine
+        ,[string]$symbol = "▲"
+    )
+    begin {
+        $reg = [regex]::new("{0}.+?{0}" -f $symbol)
+        [scriptblock]$replacer = {
+            param([System.Text.RegularExpressions.Match]$m)
+            return $m.value.Trim($symbol).ToRtfHighlight("Yellow", $true, $false)
+        }
+    }
+    process {
+        $reg.Replace($inputLine, $replacer) | Write-Output
+    }
+    end {
     }
 }
