@@ -479,6 +479,22 @@ function c {
     [System.Windows.Forms.SendKeys]::SendWait("%{Tab}")
 }
 
+function Set-ClipboardAsRtf {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputLine
+    )
+    begin {
+        $lines = @()
+    }
+    process {
+        $lines += $inputLine
+    }
+    end {
+        $rtf = $lines -join "`n"
+        [System.Windows.Forms.Clipboard]::SetText($rtf, [System.Windows.Forms.TextDataFormat]::Rtf)
+    }
+}
+
 function cds {
     $p = "X:\scan"
     if (Test-Path $p -PathType Container) {
