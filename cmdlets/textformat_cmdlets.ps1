@@ -334,3 +334,34 @@ function Get-SortInfo {
     }
     end {}
 }
+
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToRtfHighlight" -Value {
+    $header = "{\rtf"
+    # https://latex2rtf.sourceforge.net/rtfspec_6.html
+    # https://www.biblioscape.com/rtf15_spec.htm#Heading45
+    $colortbl = "{\colortbl;"
+    @(
+        @(0, 0, 0),
+        @(0, 0, 255),
+        @(0, 255, 255),
+        @(0, 255, 0),
+        @(255, 0, 255),
+        @(255, 0, 0),
+        @(255, 255, 0),
+        @(255, 255, 255),
+        @(0, 0, 128),
+        @(0, 128, 128),
+        @(0, 128, 0),
+        @(128, 0, 128),
+        @(128, 0, 0),
+        @(128, 128, 0),
+        @(128, 128, 128),
+        @(192, 192, 192)
+    ) | ForEach-Object {
+        $colortbl += ("\red{0}\green{1}\blue{2};" -f $_[0], $_[1], $_[2])
+    }
+    $colortbl += "}"
+    $t = "{\i\cf1\highlight7 " + $this + "}"
+    $footer = "}"
+    return @($header, $colortbl, $t, $footer) -join "`n"
+}
