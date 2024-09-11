@@ -336,8 +336,7 @@ function Get-SortInfo {
 }
 
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToRtfHighlight" -Value {
-    # https://latex2rtf.sourceforge.net/rtfspec_6.html
-    # https://www.biblioscape.com/rtf15_spec.htm#Heading45
+    # https://www.biblioscape.com/rtf15_spec.htm
     $colortbl = "{\colortbl;"
     @(
         @(0, 0, 0),
@@ -357,40 +356,30 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
         @(128, 128, 128),
         @(192, 192, 192)
     ) | ForEach-Object {
-        $colortbl += ("\red{0}\green{1}\blue{2};" -f $_[0], $_[1], $_[2])
+        $rgb = $_ -as [array]
+        $colortbl += ("\red{0}\green{1}\blue{2};" -f $rgb)
     }
     $colortbl += "}"
     $t = "{\i\cf1\highlight7 " + $this + "}"
-    return $colortbl + $t
-}
-
-function ConvertTo-Rtf {
-    param (
-        [parameter(ValueFromPipeline = $true)]$inputLine
-    )
-    begin {}
-    process {
-        "{\rtf" + $inputLine + "}" | Write-Output
-    }
-    end {}
+    return -join @("{", $colortbl, $t, "}")
 }
 
 function Set-ClipboardAsRtf {
     <#
     .EXAMPLE
-        "aa" + "bb".ToRtfHighlight() + "cc" | ConvertTo-Rtf | Set-ClipboardAsRtf
+        "aa" + "bb".ToRtfHighlight() + "cc" | Set-ClipboardAsRtf
     #>
     param (
-        [parameter(ValueFromPipeline = $true)]$inputLine
+        [parameter(ValueFromPipeline = $true)][string]$inputLine
     )
     begin {
         $lines = @()
     }
     process {
-        $lines += $inputLine
+        $lines += ("{" + $inputLine + "}")
     }
     end {
-        $rtf = $lines -join "`n"
+        $rtf = "{\fs21" + ($lines -join "\par") + "}"
         [System.Windows.Forms.Clipboard]::SetText($rtf, [System.Windows.Forms.TextDataFormat]::Rtf)
     }
 }
