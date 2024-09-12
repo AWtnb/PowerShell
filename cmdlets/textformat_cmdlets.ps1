@@ -360,17 +360,18 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
     $colortbl = $table.Values | ForEach-Object {
         $rgb = $_ -as [array]
         return ("\red{0}\green{1}\blue{2};" -f $rgb)
-    } | Join-String -OutputPrefix "{\colortbl;" -OutputSuffix "}" -Separator ""
+    } | Join-String -Separator "" -OutputPrefix "{\colortbl;" -OutputSuffix "}"
 
     $colIdx = ($color -in $table.Keys)? @($table.Keys).IndexOf($color) + 1 : 7
     $rtf = "\cf1"
+    $rtf += "\highlight{0}" -f $colIdx
     if ($italic) {
         $rtf += "\i"
     }
     if ($bold) {
         $rtf += "\b"
     }
-    $rtf += "\highlight{0} " -f $colIdx
+    $rtf += " "
     $t = "{" + $rtf + $this + "}"
     return -join @("{", $colortbl, $t, "}")
 }
@@ -390,7 +391,7 @@ function Set-ClipboardAsRtf {
         $lines += ("{" + $inputLine + "}")
     }
     end {
-        $rtf = "{\fs21" + ($lines -join "\par") + "}"
+        $rtf = $lines | Join-String -Separator "\par" -OutputPrefix "{\fs21" -OutputSuffix "}"
         [System.Windows.Forms.Clipboard]::SetText($rtf, [System.Windows.Forms.TextDataFormat]::Rtf)
     }
 }
