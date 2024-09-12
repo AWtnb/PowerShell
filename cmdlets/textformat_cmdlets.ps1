@@ -335,28 +335,29 @@ function Get-SortInfo {
     end {}
 }
 
+# https://www.biblioscape.com/rtf15_spec.htm
+$global:RTF_COLORTBL = [ordered]@{
+    "Black" = @(0, 0, 0);
+    "Blue" = @(0, 0, 255);
+    "Cyan" = @(0, 255, 255);
+    "Green" = @(0, 255, 0);
+    "Magenta" = @(255, 0, 255);
+    "Red" = @(255, 0, 0);
+    "Yellow" = @(255, 255, 0);
+    "White" = @(255, 255, 255);
+    "DarkBlue" = @(0, 0, 128);
+    "DarkCyan" = @(0, 128, 128);
+    "DarkGreen" = @(0, 128, 0);
+    "DarkMagenta" = @(128, 0, 128);
+    "DarkRed" = @(128, 0, 0);
+    "DarkYellow" = @(128, 128, 0);
+    "DarkGray" = @(128, 128, 128);
+    "LightGray" = @(192, 192, 192);
+}
+
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToRtfHighlight" -Value {
     param([string]$color = "Yellow", [bool]$italic = $true, [bool]$bold = $false)
-    # https://www.biblioscape.com/rtf15_spec.htm
-    $table = [ordered]@{
-        "Black" = @(0, 0, 0);
-        "Blue" = @(0, 0, 255);
-        "Cyan" = @(0, 255, 255);
-        "Green" = @(0, 255, 0);
-        "Magenta" = @(255, 0, 255);
-        "Red" = @(255, 0, 0);
-        "Yellow" = @(255, 255, 0);
-        "White" = @(255, 255, 255);
-        "DarkBlue" = @(0, 0, 128);
-        "DarkCyan" = @(0, 128, 128);
-        "DarkGreen" = @(0, 128, 0);
-        "DarkMagenta" = @(128, 0, 128);
-        "DarkRed" = @(128, 0, 0);
-        "DarkYellow" = @(128, 128, 0);
-        "DarkGray" = @(128, 128, 128);
-        "LightGray" = @(192, 192, 192);
-    }
-
+    $table = $global:RTF_COLORTBL
     $colortbl = $table.Values | ForEach-Object {
         $rgb = $_ -as [array]
         return ("\red{0}\green{1}\blue{2};" -f $rgb)
