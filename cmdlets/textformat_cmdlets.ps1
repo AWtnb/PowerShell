@@ -387,12 +387,18 @@ function Set-ClipboardAsRtf {
     )
     begin {
         $lines = @()
+        $regNonAscii = [regex]::new("[^\u0000-\u007e]")
     }
     process {
-        $lines += ("{" + $inputLine + "}")
+        $esc = $regNonAscii.Replace($inputLine, {
+            param([System.Text.RegularExpressions.Match]$m)
+            $c = $m.Value -as [char]
+            return  "\u{0}?" -f [System.Convert]::ToInt32($c)
+        })
+        $lines += ("{" + $esc + "}")
     }
     end {
-        $rtf = $lines | Join-String -Separator "\par" -OutputPrefix "{\fs21" -OutputSuffix "}"
+        $rtf = $lines | Join-String -Separator "\par" -OutputPrefix "{\rtf\fs21" -OutputSuffix "}"
         [System.Windows.Forms.Clipboard]::SetText($rtf, [System.Windows.Forms.TextDataFormat]::Rtf)
     }
 }
