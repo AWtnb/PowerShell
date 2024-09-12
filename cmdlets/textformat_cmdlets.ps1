@@ -336,36 +336,58 @@ function Get-SortInfo {
 }
 
 # https://www.biblioscape.com/rtf15_spec.htm
-$global:RTF_COLORTBL = [ordered]@{
-    "Black" = @(0, 0, 0);
-    "Blue" = @(0, 0, 255);
-    "Cyan" = @(0, 255, 255);
-    "Green" = @(0, 255, 0);
-    "Magenta" = @(255, 0, 255);
-    "Red" = @(255, 0, 0);
-    "Yellow" = @(255, 255, 0);
-    "White" = @(255, 255, 255);
-    "DarkBlue" = @(0, 0, 128);
-    "DarkCyan" = @(0, 128, 128);
-    "DarkGreen" = @(0, 128, 0);
-    "DarkMagenta" = @(128, 0, 128);
-    "DarkRed" = @(128, 0, 0);
-    "DarkYellow" = @(128, 128, 0);
-    "DarkGray" = @(128, 128, 128);
-    "LightGray" = @(192, 192, 192);
+class Rtf {
+    Rtf() {}
+
+    static $table = [ordered]@{
+        "Black" = @(0, 0, 0);
+        "Blue" = @(0, 0, 255);
+        "Cyan" = @(0, 255, 255);
+        "Green" = @(0, 255, 0);
+        "Magenta" = @(255, 0, 255);
+        "Red" = @(255, 0, 0);
+        "Yellow" = @(255, 255, 0);
+        "White" = @(255, 255, 255);
+        "DarkBlue" = @(0, 0, 128);
+        "DarkCyan" = @(0, 128, 128);
+        "DarkGreen" = @(0, 128, 0);
+        "DarkMagenta" = @(128, 0, 128);
+        "DarkRed" = @(128, 0, 0);
+        "DarkYellow" = @(128, 128, 0);
+        "DarkGray" = @(128, 128, 128);
+        "LightGray" = @(192, 192, 192);
+    }
+
+    static [string] getColortbl() {
+        return [Rtf]::table.Values | ForEach-Object {
+            $rgb = $_ -as [array]
+            return ("\red{0}\green{1}\blue{2};" -f $rgb)
+        } | Join-String -Separator "" -OutputPrefix "{\colortbl;" -OutputSuffix "}"
+    }
+
+    static [int] getColorIndex([string]$colorName) {
+        $names = [Rtf]::table.Keys
+        if ($colorName -in $names) {
+            return $names.IndexOf($colorName) + 1
+        }
+        return $names.IndexOf("Yellow") + 1
+
+    }
+
+    static [string] escape([string]$s) {
+        return $s.GetEnumerator() | ForEach-Object {
+            $c = $_ -as [char]
+            return  "\u{0}?" -f [System.Convert]::ToInt32($c)
+        } | Join-String -Separator ""
+    }
+
 }
 
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToRtfHighlight" -Value {
     param([string]$color = "Yellow", [bool]$italic = $true, [bool]$bold = $false)
-    $table = $global:RTF_COLORTBL
-    $colortbl = $table.Values | ForEach-Object {
-        $rgb = $_ -as [array]
-        return ("\red{0}\green{1}\blue{2};" -f $rgb)
-    } | Join-String -Separator "" -OutputPrefix "{\colortbl;" -OutputSuffix "}"
-
-    $colIdx = ($color -in $table.Keys)? @($table.Keys).IndexOf($color) + 1 : 7
+    $colortbl = [rtf]::getColortbl()
     $rtf = "\cf1"
-    $rtf += "\highlight{0}" -f $colIdx
+    $rtf += "\highlight{0}" -f [Rtf]::getColorIndex($color)
     if ($italic) {
         $rtf += "\i"
     }
@@ -373,7 +395,7 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
         $rtf += "\b"
     }
     $rtf += " "
-    $t = "{" + $rtf + $this + "}"
+    $t = "{" + $rtf + [Rtf]::escape($this) + "}"
     return -join @("{", $colortbl, $t, "}")
 }
 
@@ -387,15 +409,9 @@ function Set-ClipboardAsRtf {
     )
     begin {
         $lines = @()
-        $regNonAscii = [regex]::new("[^\u0000-\u007e]")
     }
     process {
-        $esc = $regNonAscii.Replace($inputLine, {
-            param([System.Text.RegularExpressions.Match]$m)
-            $c = $m.Value -as [char]
-            return  "\u{0}?" -f [System.Convert]::ToInt32($c)
-        })
-        $lines += ("{" + $esc + "}")
+        $lines += ("{" + $inputLine + "}")
     }
     end {
         $rtf = $lines | Join-String -Separator "\par" -OutputPrefix "{\rtf\fs21" -OutputSuffix "}"
@@ -410,13 +426,22 @@ function ConvertTo-RtfInsideSymbol {
     )
     begin {
         $reg = [regex]::new("{0}.+?{0}" -f $symbol)
-        [scriptblock]$replacer = {
-            param([System.Text.RegularExpressions.Match]$m)
-            return $m.value.Trim($symbol).ToRtfHighlight("Yellow", $true, $false)
-        }
     }
     process {
-        $reg.Replace($inputLine, $replacer) | Write-Output
+        $s = ""
+        $offset = 0
+        foreach($m in @($reg.Matches($inputLine))) {
+            $pre = $inputLine.Substring($offset, $m.Index - $offset)
+            $s += [Rtf]::escape($pre)
+            $deco = $m.Value.Trim($symbol).ToRtfHighlight("Yellow", $true, $false)
+            $s += $deco
+            $offset = $m.Index + $m.Length
+        }
+        if ($offset -lt $inputLine.Length) {
+            $rest = $inputLine.Substring($offset)
+            $s += [Rtf]::escape($rest)
+        }
+        $s | Write-Output
     }
     end {
     }
