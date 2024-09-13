@@ -220,6 +220,7 @@ Update-TypeData -MemberName "ToGodanReg" -TypeName System.String -Force -MemberT
         "[わいうえお]" {"[わいうえおっ]" ; break}
         "[かきくけこ]" {"[かきくけこい]" ; break}
         "[さしすせそ]" {"[さしすせそ]" ; break}
+        "[たちつてと]" {"[たちつてとっ]" ; break}
         "[なにぬねの]" {"[なにぬねのん]" ; break }
         "[まみむめも]" {"[まみむめもん]" ; break }
         "[らりるれろ]" {"[らりるれろ]" ; break }
@@ -229,7 +230,7 @@ Update-TypeData -MemberName "ToGodanReg" -TypeName System.String -Force -MemberT
     if ($pattern.Length -lt 1) {
         return $s
     }
-    return $s.Substring(0, 1) + $pattern
+    return $s.Substring(0, $s.Length - 1) + $pattern
 }
 
 
