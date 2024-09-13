@@ -20,10 +20,10 @@ class Base64 {
 
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName ToBase64 -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToBase64" -Value {
     return [Base64]::Encode($this)
 }
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName FromBase64 -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "FromBase64" -Value {
     return [Base64]::Decode($this)
 }
 
@@ -91,10 +91,10 @@ class Base26 {
 
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName ToBase26 -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToBase26" -Value {
     return [Base26]::ToDecimal($this)
 }
-Update-TypeData -TypeName "System.Int32" -Force -MemberType ScriptMethod -MemberName ToBase26 -Value {
+Update-TypeData -TypeName "System.Int32" -Force -MemberType ScriptMethod -MemberName "ToBase26" -Value {
     return [Base26]::FromDecimal($this)
 }
 

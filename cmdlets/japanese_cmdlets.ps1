@@ -233,7 +233,7 @@ Update-TypeData -MemberName "ToGodanReg" -TypeName System.String -Force -MemberT
 }
 
 
-Update-TypeData -MemberName ToNum -TypeName System.String -Force -MemberType ScriptMethod -Value {
+Update-TypeData -MemberName "ToNum" -TypeName System.String -Force -MemberType ScriptMethod -Value {
     $s = $this
     @{
         "一"= 1;
@@ -274,10 +274,10 @@ class Unicode {
 
 }
 
-Update-TypeData -MemberName ToUnicode -TypeName System.String -Force -MemberType ScriptMethod -Value {
+Update-TypeData -MemberName "ToUnicode" -TypeName System.String -Force -MemberType ScriptMethod -Value {
     return $this.GetEnumerator() | ForEach-Object { [Unicode]::FromLetter($_) }
 }
-Update-TypeData -MemberName FromUnicode -TypeName System.String -Force -MemberType ScriptMethod -Value {
+Update-TypeData -MemberName "FromUnicode" -TypeName System.String -Force -MemberType ScriptMethod -Value {
     return [Unicode]::ToLetter($this)
 }
 
@@ -1642,7 +1642,7 @@ class KanjiTable {
     }
 }
 
-Update-TypeData -MemberName Hiraku -TypeName System.String -Force -MemberType ScriptMethod -Value {
+Update-TypeData -MemberName "Hira" -TypeName System.String -Force -MemberType ScriptMethod -Value {
     $kTable = [KanjiTable]::new()
     $kTable.Update(@{
         "言" = "い";

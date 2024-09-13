@@ -639,20 +639,20 @@ Set-PSReadLineKeyHandler -Key "alt+T" -ScriptBlock {
 # update type data
 ##############################
 
-Update-TypeData -TypeName "System.Object" -Force -MemberType ScriptMethod -MemberName GetProperties -Value {
+Update-TypeData -TypeName "System.Object" -Force -MemberType ScriptMethod -MemberName "GetProperties" -Value {
     return $($this.PsObject.Members | Where-Object MemberType -eq noteproperty | Select-Object Name, Value)
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName CaseSensitiveEquals -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "CaseSensitiveEquals" -Value {
     param([string]$s)
     return [string]::Equals($this, $s, [System.StringComparison]::Ordinal)
 }
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName CaseInSensitiveEquals -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "CaseInSensitiveEquals" -Value {
     param([string]$s)
     return [string]::Equals($this, $s, [System.StringComparison]::OrdinalIgnoreCase)
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName ToSha256 -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToSha256" -Value {
     $bs = [System.Text.Encoding]::UTF8.GetBytes($this)
     $sha = New-Object System.Security.Cryptography.SHA256CryptoServiceProvider
     $hasyBytes = $sha.ComputeHash($bs)
@@ -662,15 +662,15 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
     }))
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName WithoutSpaces -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "WithoutSpaces" -Value {
     return $this -replace "\s", ""
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName TrimParen -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "TrimParen" -Value {
     return $this -replace "\(.+?\)|（.+?）", ""
 }
 
-Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName TrimBrackat -Value {
+Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "TrimBrackat" -Value {
     return $this -replace "\[.+?\]|［.+?］", ""
 }
 
