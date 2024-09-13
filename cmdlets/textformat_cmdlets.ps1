@@ -336,8 +336,8 @@ function Get-SortInfo {
 }
 
 # https://www.biblioscape.com/rtf15_spec.htm
-class Rtf {
-    Rtf() {}
+class RtfUtil {
+    RtfUtil() {}
 
     static $table = [ordered]@{
         "Black" = @(0, 0, 0);
@@ -359,14 +359,14 @@ class Rtf {
     }
 
     static [string] getColortbl() {
-        return [Rtf]::table.Values | ForEach-Object {
+        return [RtfUtil]::table.Values | ForEach-Object {
             $rgb = $_ -as [array]
             return ("\red{0}\green{1}\blue{2};" -f $rgb)
         } | Join-String -Separator "" -OutputPrefix "{\colortbl;" -OutputSuffix "}"
     }
 
     static [int] getColorIndex([string]$colorName) {
-        $names = [Rtf]::table.Keys
+        $names = [RtfUtil]::table.Keys
         if ($colorName -in $names) {
             return $names.IndexOf($colorName) + 1
         }
@@ -385,9 +385,9 @@ class Rtf {
 
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "ToRtfHighlight" -Value {
     param([string]$color = "Yellow", [bool]$italic = $true, [bool]$bold = $false)
-    $colortbl = [rtf]::getColortbl()
+    $colortbl = [rtfURtfUtil]::getColortbl()
     $rtf = "\cf1"
-    $rtf += "\highlight{0}" -f [Rtf]::getColorIndex($color)
+    $rtf += "\highlight{0}" -f [RtfUtil]::getColorIndex($color)
     if ($italic) {
         $rtf += "\i"
     }
@@ -395,7 +395,7 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
         $rtf += "\b"
     }
     $rtf += " "
-    $t = "{" + $rtf + [Rtf]::escape($this) + "}"
+    $t = "{" + $rtf + [RtfUtil]::escape($this) + "}"
     return -join @("{", $colortbl, $t, "}")
 }
 
@@ -432,14 +432,14 @@ function ConvertTo-RtfInsideSymbol {
         $offset = 0
         foreach($m in @($reg.Matches($inputLine))) {
             $pre = $inputLine.Substring($offset, $m.Index - $offset)
-            $s += [Rtf]::escape($pre)
+            $s += [RtfUtil]::escape($pre)
             $deco = $m.Value.Trim($symbol).ToRtfHighlight("Yellow", $true, $false)
             $s += $deco
             $offset = $m.Index + $m.Length
         }
         if ($offset -lt $inputLine.Length) {
             $rest = $inputLine.Substring($offset)
-            $s += [Rtf]::escape($rest)
+            $s += [RtfUtil]::escape($rest)
         }
         $s | Write-Output
     }
