@@ -207,9 +207,6 @@ function Rename-MacOSFile {
 
 Class Prompter {
 
-    [string]$color
-    [int]$bufferWidth
-    [string]$accentFg
     [string]$accentBg
     [string]$markedFg
     [string]$warningFg
@@ -218,36 +215,13 @@ Class Prompter {
     [string]$stopDeco
 
     Prompter() {
-        $this.color = @{
-            "Sunday" = "Yellow";
-            "Monday" = "BrightBlue";
-            "Tuesday" = "Magenta";
-            "Wednesday" = "BrightCyan";
-            "Thursday" = "Green";
-            "Friday" = "BrightYellow";
-            "Saturday" = "White";
-        }[ ((Get-Date).DayOfWeek -as [string]) ]
-        $this.bufferWidth = [system.console]::BufferWidth
-        $this.accentFg = $Global:PSStyle.Foreground.PSObject.Properties[$this.color].Value
-        $this.accentBg = $Global:PSStyle.Background.PSObject.Properties[$this.color].Value
+        $color = $this.isAdmin()? "Red" : "White"
+        $this.accentBg = $Global:PSStyle.Background.PSObject.Properties[$color].Value
         $this.markedFg = $Global:PSStyle.Foreground.Black
         $this.warningFg = $Global:PSStyle.Foreground.BrightRed
         $this.subMarkerStart = $Global:PSStyle.Background.BrightBlack + $this.markedFg
         $this.underlineStart = $Global:PSStyle.Underline + $Global:PSStyle.Foreground.BrightBlack
         $this.stopDeco = $Global:PSStyle.Reset
-    }
-
-    [string] Fill () {
-        $left = "#"
-        $right = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        $SJIS = [System.Text.Encoding]::GetEncoding("Shift_JIS")
-        $filler = " " * ($this.bufferWidth - $SJIS.GetByteCount($left) - $SJIS.GetByteCount($right))
-        return $($this.underlineStart`
-            + $left `
-            + $filler `
-            + $this.accentFg `
-            + $right `
-            + $this.stopDeco)
     }
 
     [bool] isAdmin() {
@@ -295,7 +269,7 @@ Class Prompter {
     }
 
     [string] GetPrompt() {
-        $prompt = ($this.isAdmin())? ($this.warningFg + "#[SUDO] " + $this.stopDeco) : "# "
+        $prompt = "# "
         if (($pwd.Path | Split-Path -Leaf) -ne "Desktop") {
             return $this.warningFg + $prompt + $this.stopDeco
         }
@@ -303,7 +277,6 @@ Class Prompter {
     }
 
     [void] Display() {
-        Write-Host
         $this.GetWd() | Write-Host
     }
 
