@@ -1,6 +1,6 @@
 # My PowerShell Customize 🐚
 
-This repository is the content of `$env:USERPROFILE\Documents\PowerShell` .
+Place this repository on `$env:USERPROFILE\Documents\PowerShell` .
 
 ## Packages
 
