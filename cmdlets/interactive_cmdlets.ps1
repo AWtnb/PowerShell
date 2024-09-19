@@ -117,7 +117,7 @@ Set-PSReadLineKeyHandler -Key "alt+f,spacebar","ctrl+shift+spacebar" -BriefDescr
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$command ")
     }
     else {
-        [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
     }
 }
 
@@ -132,7 +132,7 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
         $wd = $c.profPath | Split-Path -Parent
         'code -g "{0}:{1}" "{2}"' -f $selected.path, $selected.lineNum, $wd | Invoke-Expression
     }
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
 function Invoke-DayPicker {
@@ -191,7 +191,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {
     $flag = ($key.Modifiers -band [System.ConsoleModifiers]::Control) -as [bool]
     Invoke-FuzzyLauncher -all:$flag | Write-Host
     if ($LASTEXITCODE -ne 0) {
-        [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
+        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
     }
 }
 
@@ -228,8 +228,4 @@ function hinagata {
     $p = $d | Join-Path -ChildPath $n
     Get-Item -Path $p | Get-Content | Set-Clipboard
     Start-Process "https://awtnb.github.io/hinagata/"
-}
-Set-PSReadLineKeyHandler -Key "ctrl+alt+h" -ScriptBlock {
-    hinagata
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 }
