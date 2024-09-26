@@ -148,16 +148,21 @@ function Invoke-PdfExtractWithPython {
         ,[int]$to = -1
         ,[string]$outName = ""
     )
-    begin {}
+    begin {
+        $files = @()
+    }
     process {
         $file = Get-Item -LiteralPath $inputObj
-        if ($file.Extension -ne ".pdf") {
-            return
+        if ($file.Extension -eq ".pdf") {
+            $files += $file
         }
-        $py = [PyPdf]::new("extract.py")
-        $py.RunCommand(@($file.Fullname, $from, $to, $outName))
     }
-    end {}
+    end {
+        $files | ForEach-Object {
+            $py = [PyPdf]::new("extract.py")
+            $py.RunCommand(@($_.Fullname, $from, $to, $outName))
+        }
+    }
 }
 Set-Alias pdfExtractPy Invoke-PdfExtractWithPython
 
