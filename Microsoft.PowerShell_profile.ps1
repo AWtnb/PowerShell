@@ -446,7 +446,7 @@ function c {
         return
     }
     $lines | Set-Clipboard
-    Invoke-Taskswitcher
+    [System.Windows.Forms.SendKeys]::SendWait("%{Tab}")
 }
 
 function cdc {
