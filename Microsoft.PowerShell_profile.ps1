@@ -443,20 +443,10 @@ function Invoke-GodMode () {
 function c {
     $lines = @($input).ForEach({$_ -as [string]})
     if ($lines.length -lt 1) {
-        $lastCmd = ([Microsoft.PowerShell.PSConsoleReadLine]::GetHistoryItems() | Select-Object -SkipLast 1 | Select-Object -Last 1).CommandLine
-        Invoke-Expression $lastCmd | Set-Clipboard
+        return
     }
-    else {
-        $lines | Set-Clipboard
-    }
-    [System.Windows.Forms.SendKeys]::SendWait("%{Tab}")
-}
-
-function cds {
-    $p = "X:\scan"
-    if (Test-Path $p -PathType Container) {
-        Set-Location $p
-    }
+    $lines | Set-Clipboard
+    Invoke-Taskswitcher
 }
 
 function cdc {
@@ -467,10 +457,6 @@ function cdc {
     else {
         "invalid-path!" | Write-Host -ForegroundColor Magenta
     }
-}
-
-function flb {
-    $input | Format-List | Out-String -Stream | bat.exe --plain
 }
 
 function j ($i) {
