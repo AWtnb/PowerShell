@@ -40,27 +40,27 @@ class PSAvailable {
         $this.SetFiles()
     }
 
+    Register([string]$name, [string]$path, [int]$linenum) {
+        $this.sources.Add(
+            [PSCustomObject]@{
+                "name"    = $name;
+                "path"    = $path;
+                "lineNum" = $linenum
+            }
+        ) > $null
+    }
+
     SetFuncs() {
         $this.files | Select-String -Pattern "^function" | ForEach-Object {
-            $this.sources.Add(
-                [PSCustomObject]@{
-                    "name"    = ($_.line -replace "^function *" -replace "[ \(].*$");
-                    "path"    = $_.Path;
-                    "lineNum" = $_.LineNumber;
-                }
-            ) > $null
+            $n = $_.line -replace "^function *" -replace "[ \(].*$"
+            $this.Register($n, $_.Path, $_.LineNumber)
         }
     }
 
     SetClasses() {
         $this.files | Select-String -Pattern "^ *class" | ForEach-Object {
-            $this.sources.Add(
-                [PSCustomObject]@{
-                    "name"    = ($_.line.trim() -replace " *{");
-                    "path"    = $_.Path;
-                    "lineNum" = $_.LineNumber;
-                }
-            ) >$null
+            $n = $_.line.trim() -replace " *{"
+            $this.Register($n, $_.Path, $_.LineNumber)
         }
     }
 
@@ -68,40 +68,18 @@ class PSAvailable {
         $pyDir = $this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets" | Join-Path -ChildPath "python"
         @($pyDir | Get-ChildItem -File -Filter "*.py" -Recurse) | ForEach-Object {
             $rel = [System.IO.Path]::GetRelativePath(($pyDir | Split-Path -Parent), $_.Fullname)
-            $this.sources.Add(
-                [PSCustomObject]@{
-                    "name"    = $rel;
-                    "path"    = $_.Fullname;
-                    "lineNum" = 1;
-                }
-            ) >$null
+            $this.Register($rel, $_.Fulname, 1)
         }
     }
 
     SetFiles() {
         $this.files | ForEach-Object {
-            $this.sources.Add(
-                [PSCustomObject]@{
-                    "name"    = "PS1:$($_.Basename)";
-                    "path"    = $_.Fullname;
-                    "lineNum" = 1;
-                }
-            ) >$null
+            $n = "PS1:$($_.Basename)"
+            $this.Register($n, $_.FullName, 1)
         }
-        $this.sources.Add(
-            [PSCustomObject]@{
-                "name"    = "mdLess";
-                "path"    = ($this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets\python\markdown\markdown.less");
-                "lineNum" = 1;
-            }
-        ) >$null
-        $this.sources.Add(
-            [PSCustomObject]@{
-                "name"    = "PS1:PROFILE";
-                "path"    = $this.profPath;
-                "lineNum" = 1;
-            }
-        ) >$null
+        $p = $this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets\python\markdown\markdown.less"
+        $this.Register("mdLess", $p, 1)
+        $this.Register("PS1:PROFILE", $this.profPath, 1)
     }
 
     static [string[]] getCommands() {
