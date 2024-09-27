@@ -635,8 +635,9 @@ Set-PSReadLineKeyHandler -Key "home" -BriefDescription "smart-home" -LongDescrip
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDescription "smart-paste" -ScriptBlock {
-    $cb = @(Get-Clipboard)
-    $s = ($cb.Count -gt 1)? ($cb | ForEach-Object {($_ -as [string]).TrimEnd()} | Join-String -Separator "`n" -OutputPrefix "@'`n" -OutputSuffix "`n'@") : $cb
+    $cb = (Get-Clipboard -Raw).Trim()
+    $lines = @($cb -split "\r?\n")
+    $s = ($lines.Count -gt 1)? ($lines | ForEach-Object {($_ -as [string]).TrimEnd()} | Join-String -Separator "`n" -OutputPrefix "@'`n" -OutputSuffix "`n'@") : $cb
     if ([PSBufferState]::IsSelecting()) {
         [PSConsoleReadLine]::DeleteChar()
     }
