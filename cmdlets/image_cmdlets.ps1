@@ -89,27 +89,65 @@ function Rename-ExifDate {
     }
 }
 
+class TimestampParser {
+    [System.IO.FileInfo]$file
+    TimestampParser([string]$path) {
+        $this.file = Get-Item $path
+    }
+
+    [string] GetTimestamp([int]$offset) {
+        $bytes = Get-Content $this.file.FullName -AsByteStream -TotalCount ($offset + 19) | Select-Object -Last 19
+        $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
+        $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
+        return $date.ToString("yyyy_MMdd_HHmmss00")
+    }
+
+    [PSCustomObject] ToObject([string]$timestamp) {
+        return [PSCustomObject]@{
+            "Name" = $this.file.Name;
+            "Timestamp" = $timestamp;
+        }
+    }
+
+    [PSCustomObject] RAF() {
+        if ($this.file.Extension -ne ".RAF") {
+            return $this.ToObject("")
+        }
+        $offset = ($this.file.Name.StartsWith("_DSF")) ? 0x19e : 0x17a
+        $ts = $this.GetTimestamp($offset)
+        return $this.ToObject($ts)
+    }
+
+    [PSCustomObject] CR2() {
+        if ($this.file.Extension -ne ".CR2") {
+            return $this.ToObject("")
+        }
+        $ts = $this.GetTimestamp(0x144)
+        return $this.ToObject($ts)
+    }
+
+    [PSCustomObject] IXYMVI() {
+        if ($this.file.Extension -ne ".MP4" -or -not $this.file.Name.StartsWith("MVI_")) {
+            return $this.ToObject("")
+        }
+        $ts = $this.GetTimestamp(0x160)
+        return $this.ToObject($ts)
+    }
+
+}
+
+
+
 function Get-RAFTimestamp {
     param (
         [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
-        $fileObj = Get-Item -LiteralPath $inputObj
-        if ($fileObj.Extension -ne ".RAF") {
-            return [PSCustomObject]@{
-                Name = $fileObj.Name;
-                Timestamp = "";
-            }
-        }
-        $offset = ($fileObj.Name.StartsWith("_DSF")) ? 414 : 378
-        $bytes = Get-Content $fileObj.FullName -AsByteStream -TotalCount ($offset + 19) | Select-Object -Last 19
-        $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
-        $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
-        $timestamp = $date.ToString("yyyy_MMdd_HHmmss00")
-        return [PSCustomObject]@{
-            Name = $fileObj.Name;
-            Timestamp = $timestamp;
+        $path = (Get-Item -LiteralPath $inputObj).FullName
+        if (Test-Path $path -PathType Leaf) {
+            $parser = [TimestampParser]::new($path)
+            $parser.RAF() | Write-Output
         }
     }
     end {}
@@ -118,23 +156,28 @@ function Get-RAFTimestamp {
 function Get-CR2Timestamp {
     param (
         [parameter(ValueFromPipeline)]$inputObj
+        )
+    begin {}
+    process {
+        $path = (Get-Item -LiteralPath $inputObj).FullName
+        if (Test-Path $path -PathType Leaf) {
+            $parser = [TimestampParser]::new($path)
+            $parser.CR2() | Write-Output
+        }
+    }
+    end {}
+}
+
+function Get-IXYMVITimestamp {
+    param (
+        [parameter(ValueFromPipeline)]$inputObj
     )
     begin {}
     process {
-        $fileObj = Get-Item -LiteralPath $inputObj
-        if ($fileObj.Extension -ne ".CR2") {
-            return [PSCustomObject]@{
-                Name = $fileObj.Name;
-                Timestamp = "";
-            }
-        }
-        $bytes = Get-Content $fileObj.FullName -AsByteStream -TotalCount (324 + 19) | Select-Object -Last 19
-        $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
-        $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
-        $timestamp = $date.ToString("yyyy_MMdd_HHmmss00")
-        return [PSCustomObject]@{
-            Name = $fileObj.Name;
-            Timestamp = $timestamp;
+        $path = (Get-Item -LiteralPath $inputObj).FullName
+        if (Test-Path $path -PathType Leaf) {
+            $parser = [TimestampParser]::new($path)
+            $parser.IXYMVI() | Write-Output
         }
     }
     end {}
@@ -171,6 +214,29 @@ function Rename-CR2Timestamp {
     $input | Where-Object Extension -eq ".CR2" | ForEach-Object {
         $itemName = $_.Name
         $timestamp = ($_ | Get-CR2Timestamp).Timestamp
+        if ($timestamp) {
+            $newName = "{0}_{1}" -f $timestamp, $itemName
+            try {
+                "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
+                if ($execute) {
+                    $_ | Rename-Item -NewName $newName -ErrorAction Stop
+                }
+            }
+            catch {
+                "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Error
+            }
+        }
+    }
+}
+
+function Rename-IXYMVITimestamp {
+    param (
+        [switch]$execute
+    )
+    $color = ($execute)? "Cyan" : "White"
+    $input | Where-Object Extension -eq ".MP4" | Where-Object Name -Match "^MVI_" | ForEach-Object {
+        $itemName = $_.Name
+        $timestamp = ($_ | Get-IXYMVITimestamp).Timestamp
         if ($timestamp) {
             $newName = "{0}_{1}" -f $timestamp, $itemName
             try {
