@@ -68,7 +68,7 @@ class PSAvailable {
         $pyDir = $this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets" | Join-Path -ChildPath "python"
         @($pyDir | Get-ChildItem -File -Filter "*.py" -Recurse) | ForEach-Object {
             $rel = [System.IO.Path]::GetRelativePath(($pyDir | Split-Path -Parent), $_.Fullname)
-            $this.Register($rel, $_.Fulname, 1)
+            $this.Register($rel, $_.Fullname, 1)
         }
     }
 
