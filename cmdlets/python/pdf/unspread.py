@@ -43,13 +43,16 @@ class PdfPages:
                 file=sys.stderr,
             )
 
-    def unspread(self, idx: int, to_left: bool):
+    def unspread(self, idx: int, backwards: bool):
         page = self._pages[idx]
         for i in (0, 0.5):
             if self._vertical:
-                rect = (0, i, 1, 0.5)
+                if backwards:
+                    rect = (0, (0.5 - i), 1, 0.5)
+                else:
+                    rect = (0, i, 1, 0.5)
             else:
-                if to_left:
+                if backwards:
                     rect = ((0.5 - i), 0, 0.5, 1)
                 else:
                     rect = (i, 0, 0.5, 1)
@@ -95,8 +98,10 @@ if __name__ == "__main__":
     parser.add_argument("--vertical", action="store_true")
     parser.add_argument("--singleTop", action="store_true")
     parser.add_argument("--singleLast", action="store_true")
-    parser.add_argument("--toLeft", action="store_true")
+    parser.add_argument("--backwards", action="store_true")
     args = parser.parse_args()
 
     ps = PdfPages(args.filePath, args.vertical)
-    ps.unspread_pages("_unspread", args.singleTop, args.singleLast, args.toLeft)
+    ps.unspread_pages(
+        "_unspread", args.singleTop, args.singleLast, args.backwards
+    )

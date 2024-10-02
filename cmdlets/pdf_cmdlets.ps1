@@ -231,7 +231,7 @@ function Invoke-PdfSpreadWithPython {
         [parameter(ValueFromPipeline)]
         $inputObj
         ,[switch]$singleTopPage
-        ,[switch]$toLeft
+        ,[switch]$backwards
         ,[switch]$vertical
     )
     begin {}
@@ -245,8 +245,8 @@ function Invoke-PdfSpreadWithPython {
         if ($singleTopPage) {
             $params += "--singleTopPage"
         }
-        if ($toLeft) {
-            $params += "--toLeft"
+        if ($backwards) {
+            $params += "--backwards"
         }
         if ($vertical) {
             $params += "--vertical"
@@ -281,7 +281,7 @@ function Invoke-PdfUnspreadWithPython {
         ,[switch]$vertical
         ,[switch]$singleTop
         ,[switch]$singleLast
-        ,[switch]$toLeft
+        ,[switch]$backwards
     )
     begin {}
     process {
@@ -300,8 +300,8 @@ function Invoke-PdfUnspreadWithPython {
         if ($singleLast) {
             $params += "--singleLast"
         }
-        if ($toLeft) {
-            $params += "--toLeft"
+        if ($backwards) {
+            $params += "--backwards"
         }
         $py.RunCommand($params)
     }
