@@ -204,6 +204,7 @@ function hinagata {
         return
     }
     $p = $d | Join-Path -ChildPath $n
-    Get-Item -Path $p | Get-Content | Set-Clipboard
-    Start-Process "https://awtnb.github.io/hinagata/"
+    $c = Get-Content -Path $p -Raw
+    $param = [System.Web.HttpUtility]::UrlEncode($c)
+    Start-Process ("https://awtnb.github.io/hinagata/?template={0}" -f $param)
 }
