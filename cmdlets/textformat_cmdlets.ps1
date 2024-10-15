@@ -128,6 +128,7 @@ function Format-InsertIndex {
         [int]$position = 0
         ,[int]$start = 1
         ,[int]$pad = 1
+        ,[string]$fmt = ""
     )
     $idx = $start - 1
     $input | ForEach-Object {
@@ -145,10 +146,12 @@ function Format-InsertIndex {
             $prefix = $_.Substring(0, $maxLen + $pos)
             $suffix = $_.Substring(($maxLen + $pos), [Math]::Abs($pos))
         }
-        return $prefix + ($idx -as [string]).PadLeft($pad, "0") + $suffix
+        $fi = ($idx -as [string]).PadLeft($pad, "0")
+        $f = ($fmt)? ($fmt -f $fi) : $fi
+        return $prefix + $f + $suffix
     }
-
 }
+Set-Alias -Name insind -Value Format-InsertIndex
 
 function Format-ReplaceNth {
     <#
