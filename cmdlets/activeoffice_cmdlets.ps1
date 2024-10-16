@@ -103,6 +103,14 @@ function Get-ActivePptPresentation {
     return ($ppt)? $ppt.ActivePresentation : $null
 }
 
+function Reset-ActiveWordLinkColor {
+    $adoc = Get-ActiveWordDocument
+    if (-not $adoc) { return }
+    $adoc.HyperLinks | ForEach-Object {
+        $_.Address = $_.Address
+    }
+}
+
 function Set-ActiveWordCheckBoxStyle {
     $adoc = Get-ActiveWordDocument
     if (-not $adoc) { return }
