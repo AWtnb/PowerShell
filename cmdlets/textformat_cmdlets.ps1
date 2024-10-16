@@ -125,10 +125,10 @@ Set-Alias toSeq ConvertTo-IncrementalSequence
 
 function Format-InsertIndex {
     param (
-        [int]$position = 0
+        [string]$fmt = ""
+        ,[int]$position = 0
         ,[int]$start = 1
         ,[int]$pad = 1
-        ,[string]$fmt = ""
     )
     $idx = $start - 1
     $input | ForEach-Object {
