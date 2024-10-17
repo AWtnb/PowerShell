@@ -171,6 +171,11 @@ img:has(~ em),
 img:has(~ strong) {
   margin: 2rem auto 0.5rem auto;
 }
+
+.img-wrapper {
+  display: inline-block;
+}
+
 img {
   ~ em,
   ~ strong {
@@ -185,13 +190,14 @@ img {
   }
 }
 
-img[alt~="right"] {
-  margin-right: 0;
-  margin-left: auto;
+.img-container[pos~="center"] {
+  text-align: center;
 }
-img[alt~="left"] {
-  margin-right: auto;
-  margin-left: 0;
+.img-container[pos~="right"] {
+  text-align: right;
+}
+.img-container[pos~="left"] {
+  text-align: left;
 }
 
 p:has(> img) {

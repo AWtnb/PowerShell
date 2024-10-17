@@ -4,14 +4,16 @@ https://lxml.de/apidoc/lxml.html
 
 import lxml.html
 
+
 def decode(elem) -> str:
     return lxml.html.tostring(elem, encoding="unicode")
 
+
 class DomTree:
-    def __init__(self, markup:str="") -> None:
+    def __init__(self, markup: str = "") -> None:
         self._root = lxml.html.fromstring(markup)
 
-    def adjust_index(self, x_path:str) -> None:
+    def adjust_index(self, x_path: str) -> None:
         for elem in self._root.xpath(x_path):
             start_idx = elem.get("start") or 1
             counter = int(start_idx)
@@ -19,7 +21,7 @@ class DomTree:
                 ol.set("start", str(counter))
                 counter += len(ol.xpath("li"))
 
-    def set_heading_id(self, x_path:str) -> None:
+    def set_heading_id(self, x_path: str) -> None:
         elems = self._root.xpath(x_path)
         for i, hd in enumerate(elems):
             hd.set("id", "section-{}".format(i))
@@ -60,12 +62,12 @@ class DomTree:
         elems = self._root.xpath("//pre/code")
         for bl in elems:
             if (cl := bl.classes) and len(cl):
-                n = list(cl)[0][len("language-"):]
+                n = list(cl)[0][len("language-") :]
                 if (p := bl.getparent()) is not None:
                     p.classes.add("codeblock-header")
                     p.set("data-label", n)
 
-    def fix_spacing(self, x_path:str) -> None:
+    def fix_spacing(self, x_path: str) -> None:
         for elem in self._root.xpath(x_path):
             t = elem.text_content()
             if t:
@@ -76,7 +78,16 @@ class DomTree:
     def set_image_container(self) -> None:
         for elem in self._root.xpath("//p"):
             if elem.xpath("img"):
-                elem.classes.add("img-container")
+                alt = elem.xpath("img")[0].get("alt", "center")
+                container = lxml.html.Element("div")
+                container.classes.add("img-container")
+                container.set("pos", alt)
+                wrapper = lxml.html.Element("div")
+                wrapper.classes.add("img-wrapper")
+                for c in elem.getchildren():
+                    wrapper.append(c)
+                container.append(wrapper)
+                self._root.replace(elem, container)
 
     def set_link_target(self) -> None:
         for elem in self._root.xpath("//a"):
@@ -84,7 +95,7 @@ class DomTree:
                 elem.set("target", "_blank")
                 elem.set("rel", "noopener noreferrer")
 
-    def set_timestamp(self, ts:str) -> None:
+    def set_timestamp(self, ts: str) -> None:
         div = lxml.html.Element("div")
         div.classes.add("timestamp")
         div.text = ts
@@ -107,7 +118,7 @@ class DomTree:
         return toc
 
     def get_comments(self) -> list[str]:
-        comments = self._root.xpath('//comment()')
+        comments = self._root.xpath("//comment()")
         return [c.text.strip() for c in comments]
 
     def get_content(self) -> str:
