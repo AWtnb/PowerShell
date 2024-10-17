@@ -78,10 +78,11 @@ class DomTree:
     def set_image_container(self) -> None:
         for elem in self._root.xpath("//p"):
             if elem.xpath("img"):
-                alt = elem.xpath("img")[0].get("alt", "center")
                 container = lxml.html.Element("div")
                 container.classes.add("img-container")
-                container.set("pos", alt)
+                alt = elem.xpath("img")[0].get("alt", "")
+                if alt in ["left", "right"]:
+                    container.set("pos", alt)
                 wrapper = lxml.html.Element("div")
                 wrapper.classes.add("img-wrapper")
                 for c in elem.getchildren():
