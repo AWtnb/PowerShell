@@ -27,7 +27,7 @@ function Invoke-GoPdfConc {
         [string]$outName = "conc"
     )
 
-    $pdfs = @($input | Where-Object Extension -eq ".pdf")
+    $pdfs = @($input | Get-Item | Where-Object Extension -eq ".pdf")
     if ($pdfs.Count -le 1) {
         return
     }
@@ -45,7 +45,7 @@ function Invoke-PdfConcWithPython {
         [string]$outName = "conc"
     )
 
-    $pdfs = @($input | Where-Object Extension -eq ".pdf")
+    $pdfs = @($input | Get-Item | Where-Object Extension -eq ".pdf")
     if ($pdfs.Count -le 1) {
         return
     }
