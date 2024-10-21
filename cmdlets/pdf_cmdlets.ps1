@@ -38,6 +38,7 @@ function Invoke-GoPdfConc {
     }
     $pdfs.FullName | & $gotool "--outname=$outname"
 }
+Set-Alias -Name gopdfconc -Value Invoke-GoPdfConc
 
 function Invoke-PdfConcWithPython {
     param (
