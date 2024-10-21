@@ -22,6 +22,23 @@ class PyPdf {
     }
 }
 
+function Invoke-GoPdfConc {
+    param (
+        [string]$outName = "conc"
+    )
+
+    $pdfs = @($input | Where-Object Extension -eq ".pdf")
+    if ($pdfs.Count -le 1) {
+        return
+    }
+    $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\go-pdfconc.exe"
+    if (-not (Test-Path $gotool)) {
+        "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+        return
+    }
+    $pdfs.FullName | & $gotool "--outname=$outname"
+}
+
 function Invoke-PdfConcWithPython {
     param (
         [string]$outName = "conc"
