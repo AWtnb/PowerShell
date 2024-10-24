@@ -111,7 +111,6 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
     $filtered = $src.Name | fzf.exe
     if ($filtered) {
         $selected = $src | Where-Object name -eq $filtered | Select-Object -First 1
-        $selected | Write-Host
         $wd = $c.baseDir
         'code -g "{0}:{1}" "{2}"' -f $selected.path, $selected.lineNum, $wd | Invoke-Expression
     }
