@@ -22,14 +22,19 @@ Set-PSReadLineKeyHandler -Key "alt+f,d" -BriefDescription "fuzzyDefinition" -Lon
 }
 
 class PSAvailable {
-    [string]$profPath
+    [string]$baseDir
+    [string]$cmdletsDir
     [System.IO.FileInfo[]]$files = @()
     [System.Collections.ArrayList]$sources
 
     PSAvailable() {
-        $this.profPath = $global:PROFILE
-        $this.files = @(Get-Item -LiteralPath $this.profPath)
-        $this.files +=  @($this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets" | Get-ChildItem -File -Filter "*.ps1")
+        $this.baseDir = $Global:Profile | Split-Path -Parent
+        $this.cmdletsDir = $this.baseDir | Join-Path -ChildPath "cmdlets"
+        if ((Get-Item $this.cmdletsDir).LinkType -eq "Junction") {
+            $this.cmdletsDir = (Get-Item $this.cmdletsDir).Target
+            $this.baseDir = $this.cmdletsDir | Split-Path -Parent
+        }
+        $this.files +=  @($this.cmdletsDir | Get-ChildItem -File -Filter "*.ps1")
         $this.sources = New-Object System.Collections.ArrayList
     }
 
@@ -65,7 +70,7 @@ class PSAvailable {
     }
 
     SetPyCodes() {
-        $pyDir = $this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets" | Join-Path -ChildPath "python"
+        $pyDir = $this.cmdletsDir | Join-Path -ChildPath "python"
         @($pyDir | Get-ChildItem -File -Filter "*.py" -Recurse) | ForEach-Object {
             $rel = [System.IO.Path]::GetRelativePath(($pyDir | Split-Path -Parent), $_.Fullname)
             $this.Register($rel, $_.Fullname, 1)
@@ -77,7 +82,7 @@ class PSAvailable {
             $n = "PS1:$($_.Basename)"
             $this.Register($n, $_.FullName, 1)
         }
-        $p = $this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets\python\markdown\markdown.less"
+        $p = $this.cmdletsDir | Join-Path -ChildPath "python\markdown\markdown.less"
         $this.Register("mdLess", $p, 1)
     }
 
@@ -106,7 +111,8 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
     $filtered = $src.Name | fzf.exe
     if ($filtered) {
         $selected = $src | Where-Object name -eq $filtered | Select-Object -First 1
-        $wd = $c.profPath | Split-Path -Parent
+        $selected | Write-Host
+        $wd = $c.baseDir
         'code -g "{0}:{1}" "{2}"' -f $selected.path, $selected.lineNum, $wd | Invoke-Expression
     }
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
