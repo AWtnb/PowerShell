@@ -3,7 +3,7 @@
 ## Install
 
 ```PowerShell
-New-Item $Profile -Force -ErrorAction SilentlyContinue; Get-Content .\profile.ps1 | Out-File -FilePath $PROFILE -Encoding utf8; Copy-Item -Path .\cmdlets\ -Destination ($PROFILE | Split-Path -Parent) -Recurse
+$d = "cmdlets"; New-Item $Profile -Force -ErrorAction SilentlyContinue; Get-Content .\profile.ps1 | Out-File -FilePath $PROFILE -Encoding utf8; New-Item -Path ($PROFILE | Split-Path -Parent | Join-Path -ChildPath $d) -Value ($pwd.Path | Join-Path -ChildPath $d) -ItemType Junction
 ```
 
 

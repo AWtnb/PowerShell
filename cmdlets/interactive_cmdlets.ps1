@@ -79,7 +79,6 @@ class PSAvailable {
         }
         $p = $this.profPath | Split-Path -Parent | Join-Path -ChildPath "cmdlets\python\markdown\markdown.less"
         $this.Register("mdLess", $p, 1)
-        $this.Register("PS1:PROFILE", $this.profPath, 1)
     }
 
     static [string[]] getCommands() {
