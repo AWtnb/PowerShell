@@ -30,8 +30,9 @@ class PSAvailable {
     PSAvailable() {
         $this.baseDir = $Global:Profile | Split-Path -Parent
         $this.cmdletsDir = $this.baseDir | Join-Path -ChildPath "cmdlets"
-        if ((Get-Item $this.cmdletsDir).LinkType -eq "Junction") {
-            $this.cmdletsDir = (Get-Item $this.cmdletsDir).Target
+        $d = Get-Item $this.cmdletsDir
+        if ($d.LinkType -eq "Junction") {
+            $this.cmdletsDir = $d.Target
             $this.baseDir = $this.cmdletsDir | Split-Path -Parent
         }
         $this.files +=  @($this.cmdletsDir | Get-ChildItem -File -Filter "*.ps1")
