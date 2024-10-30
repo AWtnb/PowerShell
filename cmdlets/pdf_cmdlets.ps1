@@ -302,7 +302,7 @@ function Invoke-DenoPdfUnspread {
         ,[switch]$opposite
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdfunspread.exe"
+        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-unspread.exe"
     }
     process {
         $file = Get-Item -LiteralPath $inputObj
