@@ -332,7 +332,7 @@ function Invoke-DenoPdfUnspread {
     }
     end {}
 }
-Set-Alias denoPdfUnspreadPy Invoke-DenoPdfUnspread
+Set-Alias denoPdfUnspread Invoke-DenoPdfUnspread
 
 function Invoke-PdfUnspreadWithPython {
     param (
@@ -389,6 +389,32 @@ function Invoke-PdfTrimGalleyMarginWithPython {
 }
 
 Set-Alias pdfTrimMarginPy Invoke-PdfTrimGalleyMarginWithPython
+
+function Invoke-DenoPdfCropTombow {
+    param (
+        [parameter(ValueFromPipeline)]
+        $inputObj
+    )
+    begin {
+        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-crop.exe"
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        if (-not (Test-Path $denotool)) {
+            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            return
+        }
+        $params = @('--path={0}' -f $file.FullName)
+        & $denotool $params
+    }
+    end {}
+}
+
+Set-Alias denoPdfCropTombow Invoke-DenoPdfCropTombow
+
 
 function Invoke-PdfSwapWithPython {
     param (
