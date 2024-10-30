@@ -292,6 +292,48 @@ function pyGenPdfSpreadImg {
     Invoke-PdfToImageWithPython -inputObj $spreadFilePath -dpi $dpi
 }
 
+function Invoke-DenoPdfUnspread {
+    param (
+        [parameter(ValueFromPipeline)]
+        $inputObj
+        ,[switch]$vertical
+        ,[switch]$centeredTop
+        ,[switch]$centeredLast
+        ,[switch]$opposite
+    )
+    begin {
+        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\unspread.exe"
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+
+        if (-not (Test-Path $denotool)) {
+            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            return
+        }
+
+        $params = @('--path={0}' -f $file.FullName)
+        if ($vertical) {
+            $params += "--vertical"
+        }
+        if ($centeredTop) {
+            $params += "--centeredTop"
+        }
+        if ($centeredLast) {
+            $params += "--centeredLast"
+        }
+        if ($opposite) {
+            $params += "--opposite"
+        }
+        & $denotool $params
+    }
+    end {}
+}
+Set-Alias denoPdfUnspreadPy Invoke-DenoPdfUnspread
+
 function Invoke-PdfUnspreadWithPython {
     param (
         [parameter(ValueFromPipeline)]
