@@ -38,7 +38,7 @@ function Invoke-GoPdfConc {
     }
     $pdfs.FullName | & $gotool "--outname=$outname"
 }
-Set-Alias -Name gopdfconc -Value Invoke-GoPdfConc
+Set-Alias -Name pdfconcGo -Value Invoke-GoPdfConc
 
 function Invoke-PdfConcWithPython {
     param (
@@ -332,7 +332,7 @@ function Invoke-DenoPdfUnspread {
     }
     end {}
 }
-Set-Alias denoPdfUnspread Invoke-DenoPdfUnspread
+Set-Alias PdfUnspreadDeno Invoke-DenoPdfUnspread
 
 function Invoke-PdfUnspreadWithPython {
     param (
@@ -413,7 +413,7 @@ function Invoke-DenoPdfCropTombow {
     end {}
 }
 
-Set-Alias denoPdfCropTombow Invoke-DenoPdfCropTombow
+Set-Alias PdfCropTombowDeno Invoke-DenoPdfCropTombow
 
 
 function Invoke-PdfSwapWithPython {
