@@ -708,7 +708,7 @@ function Invoke-DenoPdfWatermark {
         }
     }
 }
-Set-Alias -Name pdfSwapDeno -Value Invoke-DenoPdfSwap
+Set-Alias -Name pdfWatermarkDeno -Value Invoke-DenoPdfWatermark
 
 function Invoke-DenoPdfRotate {
     param (
