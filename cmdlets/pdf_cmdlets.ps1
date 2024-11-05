@@ -224,26 +224,6 @@ function Invoke-PdfRotateWithPython {
 }
 Set-Alias pdfRotatePy Invoke-PdfRotateWithPython
 
-
-function Invoke-PdfToImageWithPython {
-    param (
-        [parameter(ValueFromPipeline)]
-        $inputObj,
-        [int]$dpi = 300
-    )
-    begin {}
-    process {
-        $file = Get-Item -LiteralPath $inputObj
-        if ($file.Extension -ne ".pdf") {
-            return
-        }
-        $py = [PyPdf]::new("to_image.py")
-        $py.RunCommand(@($file.FullName, $dpi))
-    }
-    end {}
-}
-Set-Alias pdfImagePy Invoke-PdfToImageWithPython
-
 function Invoke-PdfSpreadWithPython {
     param (
         [parameter(ValueFromPipeline)]
