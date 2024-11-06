@@ -58,36 +58,6 @@ function Invoke-DenoPdfConc {
 }
 Set-Alias -Name pdfConcDeno -Value Invoke-DenoPdfConc
 
-function Invoke-PdfConcWithPython {
-    param (
-        [string]$outName = "conc"
-    )
-
-    $pdfs = @($input | Get-Item | Where-Object Extension -eq ".pdf")
-    if ($pdfs.Count -le 1) {
-        return
-    }
-
-    $dirs = @($pdfs | ForEach-Object {$_.Directory.Fullname} | Sort-Object -Unique)
-    $outDir = ($dirs.Count -gt 1)? $pwd.ProviderPath : $dirs[0]
-    $outPath = $outDir | Join-Path -ChildPath "$($outName).pdf"
-
-    if (Test-Path $outPath) {
-        "'{0}.pdf' already exists on '{1}'!" -f $outName, $outDir | Write-Error
-        return
-    }
-
-    $py = [PyPdf]::new("conc.py")
-
-    Use-TempDir {
-        $paths = New-Item -Path ".\paths.txt"
-        $pdfs.Fullname | Out-File -Encoding utf8NoBOM -FilePath $paths
-        $py.RunCommand(@($paths, $outPath))
-    }
-
-}
-Set-Alias pdfConcPy Invoke-PdfConcWithPython
-
 function Invoke-PdfOverlayWithPython {
     param (
         [parameter(ValueFromPipeline)]
