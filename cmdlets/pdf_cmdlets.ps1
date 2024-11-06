@@ -105,6 +105,30 @@ function Invoke-PdfFilenameWatermarkWithPython {
     }
 }
 
+function denoSearchPdf {
+    param (
+        [string]$outName = "search"
+    )
+    $files = $input | Where-Object {$_.Extension -eq ".pdf"}
+    "Cropping..." | Write-Host -ForegroundColor Blue
+    $files | Invoke-DenoPdfCropTombow -ErrorAction Stop
+    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -notmatch "_crop$"} | Remove-Item -ErrorAction Stop
+    "Unspreading..." | Write-Host -ForegroundColor Blue
+    Get-ChildItem "*_crop.pdf" | Invoke-DenoPdfUnspread -ErrorAction Stop
+    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -notmatch "_crop_unspread$"} | Remove-Item -ErrorAction Stop
+    Get-ChildItem "*.pdf" | Rename-Item -NewName {($_.BaseName -replace "_crop_unspread$", "") + ".pdf"} -ErrorAction Stop
+    "Watermarking..." | Write-Host -ForegroundColor Blue
+    $count = 1
+    Get-ChildItem "*.pdf" | ForEach-Object {
+        $count += (Invoke-DenoPdfWatermark -inputObj $_ -start $count -nombre -ErrorAction Stop)
+    }
+    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -notmatch "_watermark"} | Remove-Item -ErrorAction Stop
+    "Concatenating..." | Write-Host -ForegroundColor Blue
+    Get-ChildItem "*.pdf" | Sort-Object {$_.Name} | Invoke-DenoPdfConc -outName $outName -ErrorAction Stop
+    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -ne $outName} | Remove-Item -ErrorAction Stop
+    "Finished!" | Write-Host -ForegroundColor Blue
+}
+
 function pyGenSearchPdf {
     param (
         [string]$outName = "search_"
@@ -307,8 +331,6 @@ function Invoke-DenoPdfUnspread {
         [parameter(ValueFromPipeline)]
         $inputObj
         ,[switch]$vertical
-        ,[switch]$centeredTop
-        ,[switch]$centeredLast
         ,[switch]$opposite
     )
     begin {
@@ -331,12 +353,6 @@ function Invoke-DenoPdfUnspread {
             $params = @('--path={0}' -f $_.FullName)
             if ($vertical) {
                 $params += "--vertical"
-            }
-            if ($centeredTop) {
-                $params += "--centeredTop"
-            }
-            if ($centeredLast) {
-                $params += "--centeredLast"
             }
             if ($opposite) {
                 $params += "--opposite"
