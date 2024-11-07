@@ -134,6 +134,14 @@ class TimestampParser {
         return $this.ToObject($ts)
     }
 
+    [PSCustomObject] IXYJPG() {
+        if ($this.file.Extension -ne ".JPG") {
+            return $this.ToObject("")
+        }
+        $ts = $this.GetTimestamp(0xe2)
+        return $this.ToObject($ts)
+    }
+
 }
 
 
@@ -252,6 +260,19 @@ function Rename-IXYMVITimestamp {
     }
 }
 
+function ixy650Rename {
+    param (
+        [switch]$execute
+    )
+    $input | ForEach-Object {
+        if ($_.Name.StartsWith("MVI_") -and $_.Extension -eq ".mp4") {
+            $_ | Rename-IXYMVITimestamp -execute:$execute
+        }
+        elseif ($_.Extension -eq ".jpg") {
+            $_ | Rename-ExifDate -execute:$execute
+        }
+     }
+}
 
 function xf10Rename {
     param (
