@@ -22,18 +22,15 @@ Set-PSReadLineKeyHandler -Key "alt+f,d" -BriefDescription "fuzzyDefinition" -Lon
 }
 
 class PSAvailable {
-    [string]$baseDir
     [string]$cmdletsDir
     [System.IO.FileInfo[]]$files = @()
     [System.Collections.ArrayList]$sources
 
     PSAvailable() {
-        $this.baseDir = $Global:Profile | Split-Path -Parent
-        $this.cmdletsDir = $this.baseDir | Join-Path -ChildPath "cmdlets"
+        $this.cmdletsDir = $Global:Profile | Split-Path -Parent | Join-Path -ChildPath "cmdlets"
         $d = Get-Item $this.cmdletsDir
         if ($d.LinkType -eq "Junction") {
             $this.cmdletsDir = $d.Target
-            $this.baseDir = $this.cmdletsDir | Split-Path -Parent
         }
         $this.files +=  @($this.cmdletsDir | Get-ChildItem -File -Filter "*.ps1")
         $this.sources = New-Object System.Collections.ArrayList
@@ -112,7 +109,7 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
     $filtered = $src.Name | fzf.exe
     if ($filtered) {
         $selected = $src | Where-Object name -eq $filtered | Select-Object -First 1
-        $wd = $c.baseDir
+        $wd = $c.cmdletsDir | Split-Path -Parent
         'code -g "{0}:{1}" "{2}"' -f $selected.path, $selected.lineNum, $wd | Invoke-Expression
     }
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
