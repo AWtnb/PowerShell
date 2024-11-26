@@ -47,23 +47,60 @@ function denoSearchPdf {
         [string]$outName = "search"
     )
     $files = $input | Where-Object {$_.Extension -eq ".pdf"}
-    "Cropping..." | Write-Host -ForegroundColor Blue
-    $files | Invoke-DenoPdfCropTombow -ErrorAction Stop
-    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -notmatch "_crop$"} | Remove-Item -ErrorAction Stop
-    "Unspreading..." | Write-Host -ForegroundColor Blue
-    Get-ChildItem "*_crop.pdf" | Invoke-DenoPdfUnspread -ErrorAction Stop
-    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -notmatch "_crop_unspread$"} | Remove-Item -ErrorAction Stop
-    Get-ChildItem "*.pdf" | Rename-Item -NewName {($_.BaseName -replace "_crop_unspread$", "") + ".pdf"} -ErrorAction Stop
-    "Watermarking..." | Write-Host -ForegroundColor Blue
-    $count = 1
-    Get-ChildItem "*.pdf" | ForEach-Object {
-        $count += (Invoke-DenoPdfWatermark -inputObj $_ -start $count -nombre -ErrorAction Stop)
+
+    try {
+        "Cropping..." | Write-Host
+        $files | Invoke-DenoPdfCropTombow
     }
-    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -notmatch "_watermark"} | Remove-Item -ErrorAction Stop
-    "Concatenating..." | Write-Host -ForegroundColor Blue
-    Get-ChildItem "*.pdf" | Sort-Object {$_.Name} | Invoke-DenoPdfConc -outName $outName -ErrorAction Stop
-    Get-ChildItem "*.pdf" | Where-Object {$_.BaseName -ne $outName} | Remove-Item -ErrorAction Stop
-    "Finished!" | Write-Host -ForegroundColor Blue
+    catch {
+        Write-Host "Error: failed to crop files."
+        return
+    }
+
+    try {
+        "Unspreading..." | Write-Host
+        Get-ChildItem "*_crop.pdf" | Invoke-DenoPdfUnspread
+    }
+    catch {
+        Write-Host "Error: failed to unspread files."
+        return
+    }
+    $o = "out"
+    New-Item -Path $o -ItemType Directory -Force > $null
+    Get-ChildItem "*_crop_unspread.pdf" | Copy-Item -Destination $o
+
+    try {
+        Push-Location -Path $o
+        Get-ChildItem | Rename-Item -NewName {($_.BaseName -replace "_crop_unspread$", "") + ".pdf"}
+        "Watermarking..." | Write-Host
+        $count = 1
+        Get-ChildItem "*.pdf" | ForEach-Object {
+            $count += [int](Invoke-DenoPdfWatermark -inputObj $_ -start $count -nombre)
+        }
+    }
+    catch {
+        Write-Host "Error: failed to watermark files."
+        return
+    }
+    finally { Pop-Location }
+
+    try {
+        Push-Location -Path $o
+        "Concatenating..." | Write-Host
+        Get-ChildItem "*_watermarked.pdf" | Invoke-DenoPdfConc -outName $outName
+        Get-Item "$outName.pdf" | Copy-Item -Destination ..
+    }
+    catch {
+        Write-Host "Error: failed to concatenate files."
+        return
+    }
+    finally { Pop-Location }
+
+    "Cleaning..." | Write-Host
+    Get-ChildItem -Directory | Remove-Item -Recurse
+    Get-ChildItem "*_crop*.pdf" | Remove-Item
+
+    "Finished!" | Write-Host -ForegroundColor Yellow
 }
 
 function Invoke-DenoPdfSpread {
