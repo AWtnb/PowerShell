@@ -181,8 +181,8 @@ class HeadElem:
         ]
 
         if not no_default_css:
-            css_path = Path(__file__).with_name("markdown.css")
-            self.append_style(css_path)
+            self.lines.append('<link rel="stylesheet/less" type="text/css" href="https://cdn.jsdelivr.net/gh/Awtnb/md-less/style.less" />')
+            self.lines.append('<script src="https://cdn.jsdelivr.net/npm/less" ></script>')
 
         self.append_elem(
             "<style>td.left{text-align:left;}td.center{text-align:center;}td.right{text-align:right;}</style>"

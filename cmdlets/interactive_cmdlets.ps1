@@ -80,8 +80,6 @@ class PSAvailable {
             $n = "PS1:$($_.Basename)"
             $this.Register($n, $_.FullName, 1)
         }
-        $p = $this.cmdletsDir | Join-Path -ChildPath "python\markdown\markdown.less"
-        $this.Register("mdLess", $p, 1)
     }
 
     static [string[]] getCommands() {
