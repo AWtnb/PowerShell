@@ -65,12 +65,13 @@ function denoSearchPdf {
         Write-Host "Error: failed to unspread files."
         return
     }
-    $o = "out"
-    New-Item -Path $o -ItemType Directory -Force > $null
-    Get-ChildItem "*_crop_unspread.pdf" | Copy-Item -Destination $o
+
+    $outDir = "out"
+    New-Item -Path $outDir -ItemType Directory -Force > $null
+    Get-ChildItem "*_crop_unspread.pdf" | Copy-Item -Destination $outDir
 
     try {
-        Push-Location -Path $o
+        Push-Location -Path $outDir
         Get-ChildItem | Rename-Item -NewName {($_.BaseName -replace "_crop_unspread$", "") + ".pdf"}
         "Watermarking..." | Write-Host
         $count = 1
@@ -85,7 +86,7 @@ function denoSearchPdf {
     finally { Pop-Location }
 
     try {
-        Push-Location -Path $o
+        Push-Location -Path $outDir
         "Concatenating..." | Write-Host
         Get-ChildItem "*_watermarked.pdf" | Invoke-DenoPdfConc -outName $outName
         Get-Item "$outName.pdf" | Copy-Item -Destination ..
@@ -97,7 +98,7 @@ function denoSearchPdf {
     finally { Pop-Location }
 
     "Cleaning..." | Write-Host
-    Get-ChildItem -Directory | Remove-Item -Recurse
+    Get-ChildItem -Directory -Filter $outDir | Remove-Item -Recurse
     Get-ChildItem "*_crop*.pdf" | Remove-Item
 
     "Finished!" | Write-Host -ForegroundColor Yellow
