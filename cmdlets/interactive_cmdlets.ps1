@@ -208,3 +208,33 @@ function hinagata {
     $param = [System.Web.HttpUtility]::UrlEncode($c)
     Start-Process ("https://awtnb.github.io/hinagata/?template={0}" -f $param)
 }
+
+function ghRemote {
+    param (
+        [switch]$clone
+    )
+    try {
+        gh.exe --version > $null
+    }
+    catch {
+        Write-Host "gf.exe (github-cli) not found!"
+        return
+    }
+    try {
+        fzf.exe --version > $null
+    }
+    catch {
+        Write-Host "fzf.exe not found!"
+        return
+    }
+    $n = gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe
+    $n = $n.trim()
+    if ($n.Length -lt 1) { return }
+    if ($clone) {
+        $u = "https://github.com/AWtnb/{0}.git" -f $n
+        git clone $u
+    } else {
+        $u = "https://github.com/AWtnb/" + $n
+        Start-Process $u
+    }
+}
