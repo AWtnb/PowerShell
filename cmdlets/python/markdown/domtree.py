@@ -96,12 +96,6 @@ class DomTree:
                 elem.set("target", "_blank")
                 elem.set("rel", "noopener noreferrer")
 
-    def set_timestamp(self, ts: str) -> None:
-        div = lxml.html.Element("div")
-        div.classes.add("timestamp")
-        div.text = ts
-        self._root.insert(0, div)
-
     def get_toc(self) -> str:
         toc = ""
         headers = self._root.xpath("h2 | h3 | h4 | h5 | h6")
@@ -123,7 +117,7 @@ class DomTree:
         return [c.text.strip() for c in comments]
 
     def get_content(self) -> str:
-        self._root.classes.add("main")
+        self._root.set("id", "main")
         return decode(self._root)
 
     def get_top_heading(self) -> str:
@@ -145,3 +139,10 @@ class DomTree:
                 elem.getparent().drop_tree()
                 break
         return css
+
+    @staticmethod
+    def get_timestamp(ts: str) -> str:
+        div = lxml.html.Element("div")
+        div.set("id", "timestamp")
+        div.text = ts
+        return decode(div)

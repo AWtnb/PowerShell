@@ -32,9 +32,9 @@ class RawMd:
     def last_modified(self) -> str:
         date_fmt = r"%Y-%m-%d"
         file_epoch_time = Path(self._file_path).stat().st_mtime
-        last_timestamp = datetime.datetime.fromtimestamp(
-            file_epoch_time
-        ).strftime(date_fmt)
+        last_timestamp = datetime.datetime.fromtimestamp(file_epoch_time).strftime(
+            date_fmt
+        )
         today = datetime.datetime.today().strftime(date_fmt)
         if last_timestamp == today:
             return "update: {}".format(last_timestamp)
@@ -63,14 +63,9 @@ class Frontmatter:
     """
     ---
     title: title of document
-    styles:
-    - p:
-        color: red
-        border: 1px solid yellow
-    - h1:
-        color: blue
-    css-vars:
-      width-container: 42rem
+    load:
+        - style.css
+        - style2.css
     ---
     """
 
@@ -87,31 +82,16 @@ class Frontmatter:
         except:
             return ""
 
-    def get_styles(self) -> str:
+    def get_styles(self, dir_path: str) -> str:
         try:
             lines = []
-            styles = self.yaml_data.get("styles") or self.yaml_data.get("style")
-            if styles:
-                for style in styles:
-                    for sel, rules in style.items():
-                        val = ";".join(
-                            [f"{prop}:{v}" for prop, v in rules.items()]
-                        )
-                        line = sel + "{" + val + "}"
-                        lines.append(line)
-            return "\n".join(lines)
-        except:
-            return ""
-
-    def get_css_variables(self) -> str:
-        try:
-            lines = [":root {"]
-            vs = self.yaml_data.get("css-vars") or self.yaml_data.get("css-var")
-            if vs:
-                for k, v in vs.items():
-                    line = f"--{k}:{v};"
-                    lines.append(line)
-            lines.append("}")
+            loads = self.yaml_data.get("load")
+            if loads:
+                for name in loads:
+                    p = Path(dir_path, name)
+                    if p.exists():
+                        t = "<style>\n{}\n</style>".format(p.read_text().strip())
+                        lines.append(t)
             return "\n".join(lines)
         except:
             return ""
@@ -130,7 +110,6 @@ class MdHtml:
         tree.set_heading_id("h2 | h3 | h4 | h5 | h6")
         tree.fix_spacing("h2 | h3 | h4 | h5")
         tree.set_link_target()
-        tree.set_timestamp(raw_md.last_modified)
         tree.render_pagebreak()
         tree.render_arrow_list()
         tree.render_blank_list()
@@ -140,13 +119,9 @@ class MdHtml:
         tree.set_image_container()
 
         self._tree = tree
+        self.timestmap = tree.get_timestamp(raw_md.last_modified)
 
-    @property
-    def additional_style(self) -> str:
-        return "<style>\n{}\n{}\n</style>".format(
-            self._frontmatter.get_styles(),
-            self._frontmatter.get_css_variables(),
-        )
+        self.additional_style = self._frontmatter.get_styles(Path(file_path).parent)
 
     @property
     def content(self) -> str:
@@ -154,7 +129,7 @@ class MdHtml:
 
     @property
     def toc(self) -> str:
-        return '<div class="toc">{}</div>'.format(self._tree.get_toc())
+        return '<div id="toc">{}</div>'.format(self._tree.get_toc())
 
     @property
     def title(self) -> str:
@@ -181,16 +156,16 @@ class HeadElem:
         ]
 
         if not no_default_css:
-            self.lines.append('<link rel="stylesheet/less" type="text/css" href="https://cdn.jsdelivr.net/gh/Awtnb/md-less/style.less" />')
-            self.lines.append('<script src="https://cdn.jsdelivr.net/npm/less" ></script>')
+            self.lines.append(
+                '<link rel="stylesheet/less" type="text/css" href="https://cdn.jsdelivr.net/gh/Awtnb/md-less/style.less" />'
+            )
+            self.lines.append(
+                '<script src="https://cdn.jsdelivr.net/npm/less" ></script>'
+            )
 
         self.append_elem(
             "<style>td.left{text-align:left;}td.center{text-align:center;}td.right{text-align:right;}</style>"
         )
-
-    def append_style(self, css_path: pathlib.Path) -> None:
-        elem = "<style>\n{}\n</style>".format(css_path.read_text("utf-8"))
-        self.lines.append(elem)
 
     def append_elem(self, markup: str) -> None:
         self.lines.append(markup)
@@ -211,16 +186,7 @@ def main(
 
     md_html = MdHtml(str(md_path))
 
-    head = HeadElem(
-        (md_html.title or md_path.stem), favicon_unicode, no_default_css
-    )
-    extra_css_files = list(Path(md_path.parent).glob("*.css"))
-    for css_path in extra_css_files:
-        print("  + external style sheet: '{}'".format(css_path.name))
-        head.append_elem(
-            '<!-- from additional style sheet: "{}" -->'.format(css_path.name)
-        )
-        head.append_style(css_path)
+    head = HeadElem((md_html.title or md_path.stem), favicon_unicode, no_default_css)
 
     head.append_elem(md_html.additional_style)
 
@@ -232,8 +198,9 @@ def main(
             "<body>",
             "\n".join(
                 [
-                    '<div class="container">',
+                    '<div id="container">',
                     md_html.toc,
+                    md_html.timestmap,
                     md_html.content,
                     "</div>",
                 ]

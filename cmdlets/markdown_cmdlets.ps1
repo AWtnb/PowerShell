@@ -63,25 +63,3 @@ Set-PSReadLineKeyHandler -Key "ctrl+M" -BriefDescription "render-as-markdown" -L
     [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory("mdRenderPy $path -invoke")
 }
 
-
-function mdFrontmatter {
-@"
----
-title:
-styles:
-  - h1:
-      font-size: 2rem
-  - blockquote > p:
-      text-indent: -2em
-      margin-left: 2.5em
-      line-height: 1.5
-  - blockquote p:
-      text-wrap: pretty
-      word-break: break-all
-  - blockquote > p > em:
-      background-color: "#d0ee23"
-css-vars:
-  # width-container: 50rem
----
-"@ | Write-Output
-}
