@@ -6,7 +6,7 @@ cmdlets for treating markdown
                 encoding: utf8bom
 ============================== #>
 
-function Invoke-MarkdownRenderPython {
+function Invoke-Markdown2Html {
     param (
         [parameter(Mandatory)]
         [ArgumentCompleter({
@@ -17,10 +17,8 @@ function Invoke-MarkdownRenderPython {
                 return $_
             }
         })][string]$path
+        ,[string]$css = "https://cdn.jsdelivr.net/gh/Awtnb/md-less/style.less"
         ,[switch]$invoke
-        ,[switch]$noDefaultCss
-        ,[switch]$openDir
-        ,[string]$faviconUnicode = "1F4DD"
     )
 
     if ($path -match "[\r\n]") {
@@ -29,37 +27,37 @@ function Invoke-MarkdownRenderPython {
     if (-not (Test-Path $path)) {
         return
     }
-    $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\markdown\md.py"
-    $mdPath = (Get-Item -LiteralPath $path).FullName
-    $params = @(
-        "-B",
-        $pyCodePath,
-        $mdPath
-    ) | ForEach-Object {
-        if ($_ -match "\s") {
-            return $_ | Join-String -DoubleQuote
-        }
-        return $_
-    }
-    $params += "--faviconUnicode $faviconUnicode"
-    if ($noDefaultCss) {
-        $params += "--noDefaultCss"
-    }
-    if ($invoke) {
-        $params += "--invoke"
-    }
-    Start-Process -path python.exe -wait -NoNewWindow -ArgumentList $params
 
-    if ($openDir) {
-        $path | Split-Path -Parent | Invoke-Item
+    $exe = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\m2h.exe"
+    if (-not (Test-Path $exe)) {
+        "Not found: {0}" -f $exe | Write-Host -ForegroundColor Magenta
+        return
     }
+
+    $md = Get-Item -LiteralPath $path
+    $suf = Get-Date -Format "_yyyyMMdd"
+    $params = @(
+        "-src",
+        $md.FullName,
+        "-css",
+        $css,
+        "-suffix",
+        $suf
+    )
+    Start-Process -path $exe -wait -NoNewWindow -ArgumentList $params
+
+    if ($invoke) {
+        $outPath = $md.Directory.FullName | Join-Path -ChildPath ($md.BaseName + $suf + ".html")
+        Invoke-Item $outPath
+    }
+
 }
-Set-Alias mdRenderPy Invoke-MarkdownRenderPython
+Set-Alias m2hgo Invoke-Markdown2Html
 
 Set-PSReadLineKeyHandler -Key "ctrl+M" -BriefDescription "render-as-markdown" -LongDescription "Render-as-markdown" -ScriptBlock {
     $cbFile = [Windows.Forms.Clipboard]::GetFileDropList() | Get-Item
     $path = ($cbFile)? $cbFile.FullName : (Get-Clipboard | Select-Object -First 1).Replace('"', "")
-    mdRenderPy $path -invoke
-    [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory("mdRenderPy $path -invoke")
+    m2hgo $path -invoke
+    [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory("m2hgo $path -invoke")
 }
 
