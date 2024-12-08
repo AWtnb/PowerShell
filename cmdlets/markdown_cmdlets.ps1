@@ -17,7 +17,7 @@ function Invoke-Markdown2Html {
                 return $_
             }
         })][string]$path
-        ,[string]$css = "https://cdn.jsdelivr.net/gh/Awtnb/md-less/style.less"
+        ,[switch]$plain
         ,[switch]$invoke
     )
 
@@ -39,11 +39,13 @@ function Invoke-Markdown2Html {
     $params = @(
         "-src",
         $md.FullName,
-        "-css",
-        $css,
         "-suffix",
         $suf
     )
+    if ($plain) {
+        $params += "-plain"
+    }
+
     Start-Process -path $exe -wait -NoNewWindow -ArgumentList $params
 
     if ($invoke) {
