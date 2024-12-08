@@ -18,6 +18,8 @@ function Invoke-GoPdfConc {
     $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\go-pdfconc.exe"
     if (-not (Test-Path $gotool)) {
         "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+        $repo = "https://github.com/AWtnb/go-pdfconc"
+        "=> Clone and build from {0}" -f $repo | Write-Host
         return
     }
     $pdfs.FullName | & $gotool "--outname=$outname"
@@ -36,6 +38,8 @@ function Invoke-DenoPdfConc {
     $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-conc.exe"
     if (-not (Test-Path $denotool)) {
         "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+        $repo = "https://github.com/AWtnb/deno-pdf-conc"
+        "=> Clone and build from {0}" -f $repo | Write-Host
         return
     }
     $pdfs.FullName | & $denotool "--outname=$outname"
@@ -124,7 +128,9 @@ function Invoke-DenoPdfSpread {
     }
     end {
         if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-spread"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $params = @()
@@ -166,6 +172,8 @@ function Invoke-DenoPdfUnspread {
     end {
         if (-not (Test-Path $denotool)) {
             "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-unspread"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $files | ForEach-Object {
@@ -200,6 +208,8 @@ function Invoke-DenoPdfCropTombow {
     end {
         if (-not (Test-Path $denotool)) {
             "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-crop"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $files | ForEach-Object {
@@ -230,7 +240,9 @@ function Invoke-DenoPdfExtract {
     }
     end {
         if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-extract"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $params = @("--frompage=$from", "--topage=$to")
@@ -261,7 +273,9 @@ function Invoke-DenoPdfInsert {
     }
     end {
         if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-insert"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $insertPath = (Get-Item -Path $insertPdf).FullName
@@ -293,7 +307,9 @@ function Invoke-DenoPdfSwap {
     }
     end {
         if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-swap"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $embedPath = (Get-Item -Path $embedPdf).FullName
@@ -326,7 +342,9 @@ function Invoke-DenoPdfWatermark {
     }
     end {
         if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-watermark"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $params = @("--text=$text", "--start=$start")
@@ -360,7 +378,9 @@ function Invoke-DenoPdfRotate {
     }
     end {
         if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-rotate"
+            "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
         $p = $pages -join ","

@@ -31,6 +31,8 @@ function Invoke-Markdown2Html {
     $exe = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\m2h.exe"
     if (-not (Test-Path $exe)) {
         "Not found: {0}" -f $exe | Write-Host -ForegroundColor Magenta
+        $repo = "https://github.com/AWtnb/m2h"
+        "=> Clone and build from {0}" -f $repo | Write-Host
         return
     }
 
