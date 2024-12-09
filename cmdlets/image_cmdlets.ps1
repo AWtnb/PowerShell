@@ -23,8 +23,12 @@ function Get-ExifDate {
     #>
     param (
         [parameter(ValueFromPipeline)]$inputObj
+        ,[string]$format = "yyyy_MMdd_HHmmss00"
     )
     begin {
+
+        $filler = (Get-Date -Format $format -Year 1111 -Month 11 -Day 11 -Hour 11 -Minute 11 -Second 11 -Millisecond 111) -replace "1", "0"
+
         # https://www.84kure.com/blog/2014/07/10/
         [scriptblock]$getExifByteArray = {
             param([string]$path)
@@ -41,29 +45,32 @@ function Get-ExifDate {
             }
             return $b[0..($b.Length - 2)]
         }
+
+        [scriptblock]$makeObject = {
+            param([string]$name, [string]$timestamp)
+            return [PSCustomObject]@{
+                Name = $name;
+                Timestamp = $timestamp;
+            }
+        }
     }
     process {
         $fileObj = Get-Item -LiteralPath $inputObj
         if ($fileObj.Extension -notmatch "jpe?g$") {
-            return
+            return $makeObject.Invoke($fileObj.Name, $filler)
         }
         $byteArray = $getExifByteArray.Invoke($fileObj.FullName)
         if (-not $byteArray) {
-            $timestamp = "0000_0000_00000000"
+            return $makeObject.Invoke($fileObj.Name, $filler)
         }
-        else {
-            $decoded = [System.Text.Encoding]::ASCII.GetString($byteArray)
-            $date = [Datetime]::ParseExact($decoded.Trim(), "yyyy:MM:dd HH:mm:ss", $null)
-            try {
-                $timestamp = $date.ToString("yyyy_MMdd_HHmmss00")
-            }
-            catch {
-                $timestamp = "0000_0000_00000000"
-            }
+        $decoded = [System.Text.Encoding]::ASCII.GetString($byteArray)
+        $date = [Datetime]::ParseExact($decoded.Trim(), "yyyy:MM:dd HH:mm:ss", $null)
+        try {
+            $timestamp = $date.ToString($format)
+            return $makeObject.Invoke($fileObj.Name, $timestamp)
         }
-        return [PSCustomObject]@{
-            Name = $fileObj.Name;
-            Timestamp = $timestamp;
+        catch {
+            return $makeObject.Invoke($fileObj.Name, $filler)
         }
     }
     end {}
