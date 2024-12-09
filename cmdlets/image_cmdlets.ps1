@@ -79,11 +79,12 @@ function Get-ExifDate {
 function Rename-ExifDate {
     param (
         [switch]$execute
+        ,[string]$format = "yyyy_MMdd_HHmmss00"
     )
     $color = ($execute)? "Cyan" : "White"
     $input | Where-Object Extension -Match "\.jpe?g$" | ForEach-Object {
         $itemName = $_.Name
-        $newName = "{0}_{1}" -f ($_ | Get-ExifDate).Timestamp, $itemName
+        $newName = "{0}_{1}" -f ($_ | Get-ExifDate -format $format).Timestamp, $itemName
         try {
             "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
             if ($execute) {
@@ -98,15 +99,20 @@ function Rename-ExifDate {
 
 class TimestampParser {
     [System.IO.FileInfo]$file
-    TimestampParser([string]$path) {
+    [string]$format
+    [string]$filler
+
+    TimestampParser([string]$path, [string]$format) {
         $this.file = Get-Item $path
+        $this.format = $format
+        $this.filler = (Get-Date -Format $format -Year 1111 -Month 11 -Day 11 -Hour 11 -Minute 11 -Second 11 -Millisecond 111) -replace "1", "0"
     }
 
     [string] GetTimestamp([int]$offset) {
         $bytes = Get-Content $this.file.FullName -AsByteStream -TotalCount ($offset + 19) | Select-Object -Last 19
         $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
         $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
-        return $date.ToString("yyyy_MMdd_HHmmss00")
+        return $date.ToString($this.format)
     }
 
     [PSCustomObject] ToObject([string]$timestamp) {
@@ -118,7 +124,7 @@ class TimestampParser {
 
     [PSCustomObject] RAF() {
         if ($this.file.Extension -ne ".RAF") {
-            return $this.ToObject("")
+            return $this.ToObject($this.filler)
         }
         $offset = ($this.file.Name.StartsWith("_DSF")) ? 0x19e : 0x17a
         $ts = $this.GetTimestamp($offset)
@@ -127,7 +133,7 @@ class TimestampParser {
 
     [PSCustomObject] CR2() {
         if ($this.file.Extension -ne ".CR2") {
-            return $this.ToObject("")
+            return $this.ToObject($this.filler)
         }
         $ts = $this.GetTimestamp(0x144)
         return $this.ToObject($ts)
@@ -135,7 +141,7 @@ class TimestampParser {
 
     [PSCustomObject] IXYMVI() {
         if ($this.file.Extension -ne ".MP4" -or -not $this.file.Name.StartsWith("MVI_")) {
-            return $this.ToObject("")
+            return $this.ToObject($this.filler)
         }
         $ts = $this.GetTimestamp(0x160)
         return $this.ToObject($ts)
@@ -143,7 +149,7 @@ class TimestampParser {
 
     [PSCustomObject] IXYJPG() {
         if ($this.file.Extension -ne ".JPG") {
-            return $this.ToObject("")
+            return $this.ToObject($this.filler)
         }
         $ts = $this.GetTimestamp(0xe2)
         return $this.ToObject($ts)
@@ -161,7 +167,7 @@ function Get-RAFTimestamp {
     process {
         $path = (Get-Item -LiteralPath $inputObj).FullName
         if (Test-Path $path -PathType Leaf) {
-            $parser = [TimestampParser]::new($path)
+            $parser = [TimestampParser]::new($path, "yyyy_MMdd_HHmmss00")
             $parser.RAF() | Write-Output
         }
     }
@@ -176,7 +182,7 @@ function Get-CR2Timestamp {
     process {
         $path = (Get-Item -LiteralPath $inputObj).FullName
         if (Test-Path $path -PathType Leaf) {
-            $parser = [TimestampParser]::new($path)
+            $parser = [TimestampParser]::new($path, "yyyy_MMdd_HHmmss00")
             $parser.CR2() | Write-Output
         }
     }
@@ -191,7 +197,7 @@ function Get-IXYMVITimestamp {
     process {
         $path = (Get-Item -LiteralPath $inputObj).FullName
         if (Test-Path $path -PathType Leaf) {
-            $parser = [TimestampParser]::new($path)
+            $parser = [TimestampParser]::new($path, "yyyy_MMdd_HHmmss00")
             $parser.IXYMVI() | Write-Output
         }
     }
@@ -231,6 +237,29 @@ function Rename-CR2Timestamp {
         $timestamp = ($_ | Get-CR2Timestamp).Timestamp
         if ($timestamp) {
             $newName = "{0}_{1}" -f $timestamp, $itemName
+            try {
+                "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
+                if ($execute) {
+                    $_ | Rename-Item -NewName $newName -ErrorAction Stop
+                }
+            }
+            catch {
+                "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Error
+            }
+        }
+    }
+}
+
+function Rename-MiteneTimestamp {
+    param (
+        [switch]$execute
+    )
+    $color = ($execute)? "Cyan" : "White"
+    $input | Where-Object Extension -Match "jpe?g$" | ForEach-Object {
+        $itemName = $_.Name
+        $timestamp = ($_ | Get-ExifDate -format "yyyy-MM-ddThhmmss+0900").Timestamp
+        if ($timestamp) {
+            $newName = "{0}-{1}" -f $timestamp, $itemName
             try {
                 "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
                 if ($execute) {
