@@ -34,16 +34,17 @@ function Get-ExifDate {
             param([string]$path)
             $fs = [System.IO.File]::OpenRead($path)
             $img = [System.Drawing.Bitmap]::FromStream($fs, $false, $false)
-            $b = $null
             try {
                 $b = $img.GetPropertyItem(0x9003).value
+                return $b[0..($b.Length - 2)]
             }
-            catch {}
+            catch {
+                return $null
+            }
             finally {
                 $img.Dispose()
                 $fs.Close()
             }
-            return $b[0..($b.Length - 2)]
         }
 
         [scriptblock]$makeObject = {
