@@ -12,6 +12,31 @@ foreach ($assembly in @("System.Drawing", "System.Windows.Forms")) {
     }
 }
 
+function Get-Mp4Property {
+    param (
+        [parameter(ValueFromPipeline)]$inputObj
+        ,[string]$format = "yyyy_MMdd_HHmmss00"
+    )
+    begin {
+        $sh = New-Object -ComObject Shell.Application
+        $filler = (Get-Date -Format $format -Year 1111 -Month 11 -Day 11 -Hour 11 -Minute 11 -Second 11 -Millisecond 111) -replace "1", "0"
+    }
+    process {
+        $fileObj = Get-Item -LiteralPath $inputObj
+        if ($fileObj.Extension -eq ".mp4") {
+            $nameSpace = $sh.NameSpace($fileObj.Directory.FullName)
+            $props = $nameSpace.ParseName($fileObj.Name)
+            $d = $nameSpace.GetDetailsOf($props, 208) -replace "[\u200e\u200f]", ""
+            $ts = ($d.length -lt 1)? $filler : [Datetime]::ParseExact($d, "yyyy/MM/dd H:mm", $null).ToString($format)
+            return [PSCustomObject]@{
+                "Name" = $fileObj.Name;
+                "FullName" = $fileObj.FullName;
+                "Timestamp" = $ts
+            }
+        }
+    }
+    end {}
+}
 
 function Get-ExifDate {
     <#
@@ -256,9 +281,10 @@ function Rename-MiteneTimestamp {
         [switch]$execute
     )
     $color = ($execute)? "Cyan" : "White"
-    $input | Where-Object Extension -Match "jpe?g$" | ForEach-Object {
+    $format = "yyyy-MM-ddThhmmss+0900"
+    $input | Where-Object Extension -Match "jpe?g$|mp4$" | ForEach-Object {
         $itemName = $_.Name
-        $timestamp = ($_ | Get-ExifDate -format "yyyy-MM-ddThhmmss+0900").Timestamp
+        $timestamp = ($_.Extension -eq ".mp4")? ($_ | Get-Mp4Property -format $format).Timestamp : ($_ | Get-ExifDate -format $format).Timestamp
         if ($timestamp) {
             $newName = "{0}-{1}" -f $timestamp, $itemName
             try {
