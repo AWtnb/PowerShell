@@ -991,6 +991,15 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         [parameter(Mandatory)][string]$originalFile
         ,[string]$outName = ""
     )
+
+    $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\go-ppdiff.exe"
+    if (-not (Test-Path $gotool)) {
+        "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+        $repo = "https://github.com/AWtnb/go-ppdiff"
+        "=> Clone and build from {0}" -f $repo | Write-Host
+        return
+    }
+
     $curDoc = Get-ActiveWordDocument
     if (-not $curDoc) {
         return
@@ -1035,7 +1044,7 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
     if ($outName.Length -lt 1) {
         $outName = "{0}_diff_from_{1}.html" -f ($toName -replace "\.docx?$"), ($fromName -replace "\.docx?$")
     }
-    elseif(-not $outName.EndsWith(".html")) {
+    if(-not $outName.EndsWith(".html")) {
         $outName = $outName + ".html"
     }
 
@@ -1045,9 +1054,13 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
         $orgLines | Out-File -Encoding utf8NoBOM -FilePath $fromItem.FullName
         $toItem = New-Item -Path $toName
         $curLines | Out-File -Encoding utf8NoBOM -FilePath $toItem.FullName
-        $pyCodePath = $PSScriptRoot | Join-Path -ChildPath "python\diff_as_html\inline\diff.py"
-        $cmd = 'python -B "{0}" "{1}" "{2}" "{3}"' -f $pyCodePath, $fromItem.FullName, $toItem.FullName, $outPath
-        $cmd | Invoke-Expression
+
+        $params = @(
+            ('--origin={0}' -f $fromItem.FullName),
+            ('--revised={0}' -f $toItem.FullName),
+            ('--out={0}' -f $outPath)
+        )
+        & $gotool $params
     }
 }
 Set-Alias pyDiffActiveDoc Invoke-DiffOnActiveWordDocumntWithPython

@@ -472,20 +472,26 @@ function Invoke-DiffAsHtml {
         [parameter(Mandatory)][string]$from
         ,[parameter(Mandatory)][string]$to
         ,[string]$outName = "out"
-        ,[switch]$horizontal
-        ,[switch]$compress
     )
+
+    $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\go-ppdiff.exe"
+    if (-not (Test-Path $gotool)) {
+        "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+        $repo = "https://github.com/AWtnb/go-ppdiff"
+        "=> Clone and build from {0}" -f $repo | Write-Host
+        return
+    }
+
     $outName = ($outName.EndsWith(".html"))? $outName : $outName + ".html"
     $fromPath = Resolve-Path -Path $from
     $toPath = Resolve-Path -Path $to
     $outPath = $pwd.Path | Join-Path -ChildPath $outName
-    $childPath = ($horizontal)? "python\diff_as_html\horizontal\diff.py" : "python\diff_as_html\inline\diff.py"
-    $pyCodePath = $PSScriptRoot | Join-Path -ChildPath $childPath
-    $cmd = 'python -B "{0}" "{1}" "{2}" "{3}"' -f $pyCodePath, $fromPath, $toPath, $outPath
-    if ($compress) {
-        $cmd += " --compress"
-    }
-    $cmd | Invoke-Expression
+    $params = @(
+        ('--origin={0}' -f $fromPath),
+        ('--revised={0}' -f $toPath),
+        ('--out={0}' -f $outPath)
+    )
+    & $gotool $params
 }
 
 function Invoke-RecycleBin {
