@@ -281,7 +281,7 @@ function Rename-MiteneTimestamp {
         [switch]$execute
     )
     $color = ($execute)? "Cyan" : "White"
-    $format = "yyyy-MM-ddThhmmss+0900"
+    $format = "yyyy-MM-ddTHHmmss+0900"
     $input | Where-Object Extension -Match "jpe?g$|mp4$" | ForEach-Object {
         $itemName = $_.Name
         $timestamp = ($_.Extension -eq ".mp4")? ($_ | Get-Mp4Property -format $format).Timestamp : ($_ | Get-ExifDate -format $format).Timestamp
