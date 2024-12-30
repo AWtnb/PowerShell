@@ -82,7 +82,7 @@ function Get-ExifDate {
     }
     process {
         $fileObj = Get-Item -LiteralPath $inputObj
-        if ($fileObj.Extension -notmatch "jpe?g$") {
+        if ($fileObj.Extension -notin @(".jpeg", ".jpg", ".webp")) {
             return $makeObject.Invoke($fileObj.Name, $filler)
         }
         $byteArray = $getExifByteArray.Invoke($fileObj.FullName)
@@ -108,7 +108,7 @@ function Rename-ExifDate {
         ,[string]$format = "yyyy_MMdd_HHmmss00"
     )
     $color = ($execute)? "Cyan" : "White"
-    $input | Where-Object Extension -Match "\.jpe?g$" | ForEach-Object {
+    $input | Where-Object Extension -in @(".jpeg", ".jpg", ".webp") | ForEach-Object {
         $itemName = $_.Name
         $newName = "{0}_{1}" -f ($_ | Get-ExifDate -format $format).Timestamp, $itemName
         try {
@@ -282,7 +282,7 @@ function Rename-MiteneTimestamp {
     )
     $color = ($execute)? "Cyan" : "White"
     $format = "yyyy-MM-ddTHHmmss+0900"
-    $input | Where-Object Extension -Match "jpe?g$|mp4$" | ForEach-Object {
+    $input | Where-Object Extension -in @(".jpeg", ".jpg", ".webp", ".mp4") | ForEach-Object {
         $itemName = $_.Name
         $timestamp = ($_.Extension -eq ".mp4")? ($_ | Get-Mp4Property -format $format).Timestamp : ($_ | Get-ExifDate -format $format).Timestamp
         if ($timestamp) {
