@@ -761,6 +761,7 @@ function Invoke-Monolith {
     param (
         [parameter(ValueFromPipeline)][string]$inputLine
         ,[string]$outDir
+        ,[switch]$flatten
     )
     begin {
         if(-not $outDir) {
@@ -768,30 +769,31 @@ function Invoke-Monolith {
         }
         else {
             if (-not (Test-Path $outDir)) {
-                New-Item -Path $outDir -ItemType Directory
+                New-Item -Path $outDir -ItemType Directory > $null
             }
         }
     }
     process {
-        if ($inputLine.Length -gt 0) {
-            $childPath = [uri]::new($inputLine).Segments | Select-Object -Skip 1 | ForEach-Object {$_ -replace "/"} | Join-String -Separator "\"
-            $outPath = (Resolve-Path $outDir).Path | Join-Path -ChildPath $childPath
-            if ($outPath -notmatch "htm(l)?$") {
-                $outPath = $outPath | Join-Path -ChildPath "index.html"
-            }
-            if (Test-Path $outPath){
-                "same name '{0}' exists!" -f $outPath | Write-Host -ForegroundColor Magenta
-            }
-            else {
-                $d = $outPath | Split-Path -Parent
-                (Resolve-Path $d -ErrorAction SilentlyContinue || New-Item -Path $d -ItemType Directory) > $null
-                "archiving as '{0}'..." -f $outPath | Write-Host
-                "monolith {0} --no-video --silent --output '{1}'" -f $inputLine, $outPath | Invoke-Expression
-                Start-Sleep -Seconds 1
-            }
+        if ($inputLine.Trim().Length -lt 1) {
+            return
         }
+        $segs = [uri]::new($inputLine).Segments | ForEach-Object {$_ -replace "/"}
+        $childPath = (($flatten)? ($segs | Select-Object -Last 1) : ($segs | Select-Object -Skip 1)) -join "\"
+        $outPath = (Resolve-Path $outDir).Path | Join-Path -ChildPath $childPath
+        if ($outPath -notmatch "htm(l)?$") {
+            $outPath = $outPath | Join-Path -ChildPath "index.html"
+        }
+        if (Test-Path $outPath){
+            "SKIP: '{0}' already exists!" -f $outPath | Write-Host -ForegroundColor Magenta
+            return
+        }
+        New-Item -ItemType Directory -Path ($outPath | Split-Path -Parent)  -ErrorAction SilentlyContinue > $null
+        "archiving as '{0}'..." -f $outPath | Write-Host
+        "monolith {0} --no-video --silent --output '{1}'" -f $inputLine, $outPath | Invoke-Expression
+        Start-Sleep -Seconds 1
     }
-        end {}
+    end {
+    }
 }
 
 function akitablogConsole {
