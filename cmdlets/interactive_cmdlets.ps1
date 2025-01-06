@@ -227,9 +227,10 @@ function ghRemote {
         Write-Host "fzf.exe not found!"
         return
     }
-    $n = gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe
-    $n = $n.trim()
-    if ($n.Length -lt 1) { return }
+    $names = gh.exe repo list --json name --jq ".[] | .name" --limit 200
+    if ($names.Length -lt 1) { return }
+    $n = $names | fzf.exe
+    if ($LASTEXITCODE -ne 0 -or $n.Length -lt 1) { return }
     if ($clone) {
         $u = "https://github.com/AWtnb/{0}.git" -f $n
         git clone $u
