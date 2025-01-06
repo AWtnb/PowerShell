@@ -1019,4 +1019,5 @@ function Invoke-Anchoco {
 
 Set-PSReadLineKeyHandler -Key "alt+0" -BriefDescription "anchoco" -LongDescription "anchoco" -ScriptBlock {
     Invoke-Anchoco
+    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
 }
