@@ -217,7 +217,7 @@ function ghRemote {
         gh.exe --version > $null
     }
     catch {
-        Write-Host "gf.exe (github-cli) not found!"
+        Write-Host "gh.exe (github-cli) not found!"
         return
     }
     try {
