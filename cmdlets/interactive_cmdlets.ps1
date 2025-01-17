@@ -39,7 +39,6 @@ class PSAvailable {
     SetData() {
         $this.SetFuncs()
         $this.SetClasses()
-        $this.SetPyCodes()
         $this.SetFiles()
     }
 
@@ -67,19 +66,13 @@ class PSAvailable {
         }
     }
 
-    SetPyCodes() {
-        $pyDir = $this.cmdletsDir | Join-Path -ChildPath "python"
-        @($pyDir | Get-ChildItem -File -Filter "*.py" -Recurse) | ForEach-Object {
-            $rel = [System.IO.Path]::GetRelativePath(($pyDir | Split-Path -Parent), $_.Fullname)
-            $this.Register($rel, $_.Fullname, 1)
-        }
-    }
-
     SetFiles() {
         $this.files | ForEach-Object {
             $n = "PS1:$($_.Basename)"
             $this.Register($n, $_.FullName, 1)
         }
+        $p = $this.cmdletsDir | Split-Path -Parent | Join-Path -ChildPath "profile.ps1"
+        $this.Register("PS1:Profile", $p, 1)
     }
 
     static [string[]] getCommands() {
