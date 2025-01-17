@@ -10,14 +10,14 @@ $d = "cmdlets"; New-Item $Profile -Force -ErrorAction SilentlyContinue; Get-Cont
 
 [scoop-completion](https://github.com/Moeologist/scoop-completion)
 
-```PowerShell
+```
 scoop bucket add extras
 
 scoop install scoop-completion
 ```
 
-[ZLocation](https://www.powershellgallery.com/packages/ZLocation/)
+[zoxide](https://github.com/ajeetdsouza/zoxide)
 
-```PowerShell
-Install-Module -Name ZLocation
+```
+scoop install zoxide
 ```

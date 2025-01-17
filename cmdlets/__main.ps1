@@ -1,6 +1,3 @@
-# https://github.com/Moeologist/scoop-completion
-Import-Module "$($(Get-Item $(Get-Command scoop.ps1).Path).Directory.Parent.FullName)\modules\scoop-completion"
-
 # disble progress bar
 $progressPreference = "silentlyContinue"
 
@@ -286,7 +283,6 @@ function prompt {
 
     return $p.GetPrompt()
 }
-Import-Module ZLocation
 
 #################################################################
 # variable / alias / function
