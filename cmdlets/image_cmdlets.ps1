@@ -83,20 +83,20 @@ function Get-ExifDate {
     process {
         $fileObj = Get-Item -LiteralPath $inputObj
         if ($fileObj.Extension -notin @(".jpeg", ".jpg", ".webp")) {
-            return $makeObject.Invoke($fileObj.Name, $filler)
+            return $makeObject.InvokeReturnAsIs($fileObj.Name, $filler)
         }
-        $byteArray = $getExifByteArray.Invoke($fileObj.FullName)
+        $byteArray = $getExifByteArray.InvokeReturnAsIs($fileObj.FullName)
         if (-not $byteArray) {
-            return $makeObject.Invoke($fileObj.Name, $filler)
+            return $makeObject.InvokeReturnAsIs($fileObj.Name, $filler)
         }
         $decoded = [System.Text.Encoding]::ASCII.GetString($byteArray)
         $date = [Datetime]::ParseExact($decoded.Trim(), "yyyy:MM:dd HH:mm:ss", $null)
         try {
             $timestamp = $date.ToString($format)
-            return $makeObject.Invoke($fileObj.Name, $timestamp)
+            return $makeObject.InvokeReturnAsIs($fileObj.Name, $timestamp)
         }
         catch {
-            return $makeObject.Invoke($fileObj.Name, $filler)
+            return $makeObject.InvokeReturnAsIs($fileObj.Name, $filler)
         }
     }
     end {}
@@ -608,7 +608,7 @@ function Invoke-ImageMagickWatermarkSignature {
             "magick composite '{0}' -gravity SouthEast -quality 100 '{1}' '{2}'" -f $watermark, $file.Fullname, $savePath | Invoke-Expression
         }
 
-        $tmpDirPath = $tempDirMake.Invoke()
+        $tmpDirPath = $tempDirMake.InvokeReturnAsIs()
 
     }
     process {

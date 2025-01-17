@@ -83,11 +83,11 @@ function Format-MatchLine {
     @($input).ForEach({$lines.Add($_) > $null})
 
     $lines | ForEach-Object {
-        if ($matchBlock.Invoke()){
-            $formatBlock.Invoke() | Write-Output
+        if ($matchBlock.InvokeReturnAsIs()){
+            $formatBlock.InvokeReturnAsIs() | Write-Output
         }
         else {
-            $elseBlock.Invoke() | Write-Output
+            $elseBlock.InvokeReturnAsIs() | Write-Output
         }
     }
 }
