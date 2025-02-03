@@ -233,7 +233,7 @@ function ghRemote {
     }
 }
 
-function Get-RemovableDrive {
+function Get-EjectableDrive {
     [OutputType([System.Management.Automation.PSDriveInfo])]
     param()
     return Get-PSDrive -PSProvider FileSystem | Where-Object {$_.Name -ne "C"} | Where-Object {-not $_.Root.StartsWith("C:")} | Where-Object {-not $_.DisplayRoot}
@@ -247,7 +247,7 @@ function Invoke-DriveEject {
         Write-Host "fzf.exe not found!"
         return
     }
-    $roots = Get-RemovableDrive | ForEach-Object {"{0} ({1})" -f $_.Root, $_.Description}
+    $roots = Get-EjectableDrive | ForEach-Object {"{0} ({1})" -f $_.Root, $_.Description}
     if ($roots.Length -lt 1) {
         return
     }
