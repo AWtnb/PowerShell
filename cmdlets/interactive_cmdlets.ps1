@@ -232,3 +232,30 @@ function ghRemote {
         Start-Process $u
     }
 }
+
+function Get-RemovableDrive {
+    [OutputType([System.Management.Automation.PSDriveInfo])]
+    param()
+    return Get-PSDrive -PSProvider FileSystem | Where-Object {$_.Name -ne "C"} | Where-Object {-not $_.Root.StartsWith("C:")} | Where-Object {-not $_.DisplayRoot}
+}
+
+function Invoke-DriveEject {
+    try {
+        fzf.exe --version > $null
+    }
+    catch {
+        Write-Host "fzf.exe not found!"
+        return
+    }
+    $roots = Get-RemovableDrive | ForEach-Object {"{0} ({1})" -f $_.Root, $_.Description}
+    if ($roots.Length -lt 1) {
+        return
+    }
+    $root = $roots | fzf.exe
+    if (-not $root) {
+        return
+    }
+    $sh = (New-Object -comObject Shell.Application)
+    $name = $root.Substring(0, $root.IndexOf("\"))
+    $sh.NameSpace(17).parsename($name).invokeverb("Eject")
+}
