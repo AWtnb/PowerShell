@@ -21,6 +21,7 @@ function Invoke-Markdown2Html {
         ,[switch]$invoke
     )
 
+    $path = $path.Trim()
     if ($path -match "[\r\n]") {
         return
     }
