@@ -234,9 +234,9 @@ function ghRemote {
 }
 
 function Get-EjectableDrive {
-    [OutputType([System.Management.Automation.PSDriveInfo])]
+    [OutputType([System.IO.DriveInfo])]
     param()
-    return Get-PSDrive -PSProvider FileSystem | Where-Object {-not $_.Root.StartsWith("C:")} | Where-Object {-not $_.DisplayRoot}
+    return [System.IO.DriveInfo]::GetDrives() | Where-Object {$_.DriveType -eq [System.IO.DriveType]::Removable}
 }
 
 function Invoke-DriveEject {
@@ -247,16 +247,21 @@ function Invoke-DriveEject {
         Write-Host "fzf.exe not found!"
         return
     }
-    $roots = Get-EjectableDrive | ForEach-Object {"{0} ({1})" -f $_.Root, $_.Description}
-    if ($roots.Length -lt 1) {
+    $drives = Get-EjectableDrive | ForEach-Object {
+        if ($_.VolumeLabel) {
+            return "{0} ({1})" -f $_.Name, $_.VolumeLabel
+        }
+        return $_.Name
+    }
+    if ($drives.Length -lt 1) {
         "No ejectable drive found" | Write-Host
         return
     }
-    $root = $roots | fzf.exe
-    if (-not $root) {
+    $d = $drives | fzf.exe
+    if (-not $d) {
         return
     }
     $sh = New-Object -comObject Shell.Application
-    $name = $root.Substring(0, $root.IndexOf("\"))
+    $name = $d.Substring(0, $d.IndexOf("\"))
     $sh.NameSpace(17).ParseName($name).InvokeVerb("Eject")
 }
