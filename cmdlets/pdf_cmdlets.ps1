@@ -113,7 +113,7 @@ function Invoke-DenoPdfSpread {
         [parameter(ValueFromPipeline)]$inputObj
         ,[switch]$vertical
         ,[switch]$opposite
-        ,[switch]$asbook
+        ,[switch]$singleTopPage
     )
     begin {
         $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-spread.exe"
@@ -140,8 +140,8 @@ function Invoke-DenoPdfSpread {
         if ($opposite) {
             $params += "--opposite"
         }
-        if ($asbook) {
-            $params += "--asbook"
+        if ($singleTopPage) {
+            $params += "--singleTopPage"
         }
         $files | ForEach-Object {
             $params += ('--path={0}' -f $_.FullName)
