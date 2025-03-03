@@ -426,13 +426,15 @@ function Rename-Index {
         $ent = [IndexRenameEntry]::new($_.Fullname, $cur, $altName, $i, $pad, $tail)
         $ent.execute = $execute
         if ($ent.isRenamable()) {
-            $renamer.setEntry($ent)
-            $i += $step
-            if ($skips.Length) {
+            if ($i -in $skips) {
                 while ($i -in $skips) {
                     $i += $step
                 }
+                $ent = [IndexRenameEntry]::new($_.Fullname, $cur, $altName, $i, $pad, $tail)
+                $ent.execute = $execute
             }
+            $renamer.setEntry($ent)
+            $i += $step
         }
     }
     $renamer.run()
