@@ -29,26 +29,32 @@ function ConvertTo-WordDocument {
     param (
         [parameter(ValueFromPipeline = $true)]$inputObj
     )
-    begin {}
+    begin {
+        $files = @()
+    }
     process {
-        $fileObj = Get-Item -LiteralPath $inputObj
-        $outPath = $fileObj.FullName | Split-Path -Parent | Join-Path -ChildPath ($fileObj.BaseName + ".docx")
-        if (Test-Path $outPath) {
-            "ERROR: File already exists -> '{0}'" -f $outPath | Write-Host -ForegroundColor Magenta
-            return
-        }
-        $content = $fileObj | Get-Content -Raw
+        $files += (Get-Item -LiteralPath $inputObj)
+    }
+    end {
         $cc = [ComController]::new()
         $cc.Run({
             $word = New-Object -ComObject Word.Application
             $word.Visible = $false
-            $doc = $word.Documents.Add()
-            $doc.Range(0, 0).Text = $content
-            $doc.SaveAs2($outPath)
-            $doc.Close($false)
+            foreach ($file in $files) {
+                $outPath = $file.FullName | Split-Path -Parent | Join-Path -ChildPath ($file.BaseName + ".docx")
+                if (Test-Path $outPath) {
+                    "ERROR: File already exists -> '{0}'" -f $outPath | Write-Host -ForegroundColor Magenta
+                    continue
+                }
+                $content = $file | Get-Content -Raw
+                $doc = $word.Documents.Add()
+                $doc.Range(0, 0).Text = $content
+                $doc.SaveAs2($outPath)
+                $doc.Close($false)
+            }
+            $word.Quit()
         })
     }
-    end {}
 }
 
 function Convert-WordDocument2PDF {
