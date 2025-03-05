@@ -25,6 +25,32 @@ class ComController {
 }
 
 
+function ConvertTo-WordDocument {
+    param (
+        [parameter(ValueFromPipeline = $true)]$inputObj
+    )
+    begin {}
+    process {
+        $fileObj = Get-Item -LiteralPath $inputObj
+        $outPath = $fileObj.FullName | Split-Path -Parent | Join-Path -ChildPath ($fileObj.BaseName + ".docx")
+        if (Test-Path $outPath) {
+            "ERROR: File already exists -> '{0}'" -f $outPath | Write-Host -ForegroundColor Magenta
+            return
+        }
+        $content = $fileObj | Get-Content -Raw
+        $cc = [ComController]::new()
+        $cc.Run({
+            $word = New-Object -ComObject Word.Application
+            $word.Visible = $false
+            $doc = $word.Documents.Add()
+            $doc.Range(0, 0).Text = $content
+            $doc.SaveAs2($outPath)
+            $doc.Close($false)
+        })
+    }
+    end {}
+}
+
 function Convert-WordDocument2PDF {
     param (
         [parameter(ValueFromPipeline)]$inputObj
