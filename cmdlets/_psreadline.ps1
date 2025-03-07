@@ -462,22 +462,17 @@ Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE
 
 # load clipboard
 Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
-    $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() -split "`n"|sv CLIPPING'
+    $command = '<#SKIPHISTORY#> gcb|%{$_.Replace("`r","")}|sv CLIPPING'
     [PSBufferState]::new().RevertLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
 }
-Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "setClipStringWithHistory" -LongDescription "setClipStringWithHistory" -ScriptBlock {
-    $command = '(gcb -Raw).Replace("`r","").Trim() -split "`n"|'
+
+Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "readClipboardOnTerminal" -LongDescription "readClipboardOnTerminal" -ScriptBlock {
+    $command = 'gcb|bat -p'
     [PSBufferState]::new().RevertLine()
     [PSConsoleReadLine]::Insert($command)
-}
-Set-PSReadLineKeyHandler -Key "ctrl+alt+V" -BriefDescription "setClipStringAsSingleText" -LongDescription "setClipStringAsSingleText" -ScriptBlock {
-    $command = '<#SKIPHISTORY#> (gcb -Raw).Replace("`r","").Trim() |sv CLIPPING # ==> copied as single line'
-    [PSBufferState]::new().RevertLine()
-    [PSConsoleReadLine]::Insert($command)
-    [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
 }
 
@@ -863,13 +858,6 @@ Set-PSReadLineKeyHandler -Key "alt+b" -BriefDescription "bat-plain" -LongDescrip
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "oss |bat -p")
-}
-
-Set-PSReadLineKeyHandler -Key "ctrl+alt+b" -BriefDescription "review-last-result-with-bat" -LongDescription "review-last-result-with-bat" -ScriptBlock {
-    [PSBufferState]::new().RevertLine()
-    $lastCmd = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
-    $newCmd = "<#SKIPHISTORY#>" + $lastCmd + "| oss |bat -p"
-    [PSConsoleReadLine]::Insert($newCmd)
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object" -LongDescription "insert-Select-Object" -ScriptBlock {
