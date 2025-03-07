@@ -78,15 +78,19 @@ class Base26 {
     }
 
     static [string] FromDecimal ([int]$intData) {
-        if ($intData -le 0) {
-            return ""
+        [scriptblock]$conv = {
+            param([int]$i)
+            if ($i -le 0) {
+                return ""
+            }
+            if ($i -le 26) {
+                return ([char]($i + 64)).ToString()
+            }
+            $alphabetIndex = ($i % 26)? $i % 26 : 26
+            $nCycle = [math]::Floor(($i - $alphabetIndex) / 26)
+            return [string]$conv.InvokeReturnAsIs($nCycle) + ([char]($alphabetIndex + 64)).ToString()
         }
-        if ($intData -le 26) {
-            return $([char]($intData + 64)).ToString()
-        }
-        $alphabetIndex = ($intData % 26)? $intData % 26 : 26
-        $nCycle = [math]::Floor(($intData - $alphabetIndex) / 26)
-        return $("{0}{1}" -f [Base26]::FromDecimal($nCycle), ([char]($alphabetIndex + 64)).ToString())
+        return $conv.InvokeReturnAsIs($intData)
     }
 
 }

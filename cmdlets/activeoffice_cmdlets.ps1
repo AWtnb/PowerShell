@@ -904,7 +904,7 @@ function Set-FilenameToHeaderOnActiveWordDocument {
 
     for ($i = 1; $i -le $doc.Sections.Count; $i++) {
         $sec = $doc.Sections($i)
-        $s = $getHeaderText.Invoke($sec)
+        $s = $getHeaderText.InvokeReturnAsIs($sec)
         if ($s.Length -gt 1 -and (-not $force)) {
             "[SKIP] Header on section {0} is non-empty!" -f $i | Write-Host
             continue
