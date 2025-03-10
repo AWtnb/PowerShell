@@ -102,6 +102,13 @@ function Get-ActivePptPresentation {
     $ppt = Get-ActivePPtApp
     return ($ppt)? $ppt.ActivePresentation : $null
 }
+function Get-ActivePptSlide {
+    $ppt = Get-ActivePptPresentation
+    if (-not $ppt) {
+        return $null
+    }
+    return $ppt.Slides.FindBySlideID($ppt.Windows(1).Selection.SlideRange.SlideID)
+}
 
 function Reset-ActiveWordLinkColor {
     $adoc = Get-ActiveWordDocument
@@ -1182,6 +1189,35 @@ function Get-EmbeddedDataOnActiveWordDocument {
         }
     }
 
+}
+
+function Get-EmbeddedDataOnActivePowerPointSlide {
+    $activeSlide = Get-ActivePptSlide
+    if (-not $activeSlide) { return }
+    if ($activeSlide.Shapes.Count -lt 1) {
+        "No shapes..." | Write-Host -ForegroundColor Magenta
+        return
+    }
+
+    1..$activeSlide.Shapes.Count | ForEach-Object {
+        $chart = $activeSlide.Shapes($_).Chart
+        if (-not $chart) {return}
+        1..$chart.SeriesCollection().Count |ForEach-Object {
+            $label = $chart.SeriesCollection($_).Name
+            $xVals = $chart.SeriesCollection($_).XValues
+            $vals = $chart.SeriesCollection($_).Values
+            $data = 1..$xVals.Count | ForEach-Object {
+                return [PSCustomObject]@{
+                    "X"     = $xVals.get($_);
+                    "Value" = $vals.get($_);
+                }
+            }
+            return [PSCustomObject]@{
+                "Label" = $label;
+                "Data"  = $data;
+            }
+        }
+    }
 }
 
 function Invoke-BatchReplaceOnActiveWordDocument {
