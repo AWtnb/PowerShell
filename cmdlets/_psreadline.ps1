@@ -81,7 +81,20 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     [PSConsoleReadLine]::AcceptLine()
 }
 
-# history
+# convert multiline command to single line add to history
+Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "custom-accept-and-add-history" -LongDescription "custom-accept-and-add-history" -ScriptBlock {
+    $bs = [PSBufferState]::new()
+    $single = ($bs.Commandline -split "`n" | ForEach-Object {
+        $l = $_.Trim()
+        if ($l.EndsWith("{")) {
+            return $l
+        }
+        return $l + ";"
+    }) -join "" -replace ";}", "}" -replace ";$", ""
+    [PSConsoleReadLine]::AddToHistory($single)
+    [PSConsoleReadLine]::AcceptLine()
+}
+
 Set-PSReadLineKeyHandler -Key "ctrl+H" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $line = $bs.CursorLine.Text
