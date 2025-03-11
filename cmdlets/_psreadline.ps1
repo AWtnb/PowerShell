@@ -12,7 +12,6 @@ using namespace Microsoft.PowerShell
 # you can search keychar with `[Console]::ReadKey()`
 
 Set-PSReadlineOption -HistoryNoDuplicates `
-    -PredictionViewStyle ListView `
     -PredictionSource History `
     -BellStyle None `
     -ContinuationPrompt ($Global:PSStyle.Foreground.BrightBlack + "# " + $Global:PSStyle.Reset) `
@@ -38,6 +37,8 @@ Set-PSReadLineOption -colors @{
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
+Set-PSReadLineKeyHandler -Key "ctrl+p" -Function SwitchPredictionView
+
 # search
 Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearch
 Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearchBackward
@@ -61,7 +62,7 @@ Set-PSReadLineKeyHandler -Key "alt+i" -BriefDescription "insert-invoke" -LongDes
     [PSConsoleReadLine]::Insert("Invoke*")
 }
 
-Set-PSReadLineKeyHandler -Key "alt+0","alt+-" -BriefDescription "insertAsterisk(star)" -LongDescription "insertAsterisk(star)" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+-" -BriefDescription "insertAsterisk(star)" -LongDescription "insertAsterisk(star)" -ScriptBlock {
     [PSConsoleReadLine]::Insert("*")
 }
 
@@ -88,9 +89,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+H" -BriefDescription "fuzzy-history-search" 
     if ($c) {
         $bs.RevertLine()
         [PSConsoleReadLine]::Insert($c)
-    }
-    else {
-        [PSConsoleReadLine]::InvokePrompt()
     }
 }
 
@@ -544,11 +542,6 @@ function ccat ([string]$encoding = "utf8") {
         "invalid-path!" | Write-Host -ForegroundColor Magenta
     }
 }
-Set-PSReadLineKeyHandler -Key "ctrl+p" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
-    [PSBufferState]::new().RevertLine()
-    [PSConsoleReadLine]::Insert("ccat ")
-}
-
 
 Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWordCustom" -LongDescription "backwardKillWordCustom" -ScriptBlock {
     if ([PSBufferState]::IsSelecting()) {
