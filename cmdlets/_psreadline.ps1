@@ -403,18 +403,6 @@ class PSBufferState {
         }
     }
 
-    [void] RevertLine() {
-        $limit = 100
-        while ($this.GetState().line) {
-            $limit -= 1
-            if ($limit -lt 0) {
-                "Aborted due to infinite loop." | Write-Error
-                return
-            }
-            [PSConsoleReadLine]::RevertLine()
-        }
-    }
-
     static [bool] IsSelecting() {
         $start = $length = $null
         [PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$length)
@@ -511,7 +499,7 @@ Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescr
 
 # reload
 Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
-    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::DeleteLine()
     [PSConsoleReadLine]::Insert('<#SKIPHISTORY#> . $PROFILE')
     [PSConsoleReadLine]::AcceptLine()
 }
@@ -519,7 +507,7 @@ Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE
 # load clipboard
 Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
     $command = '<#SKIPHISTORY#> gcb|%{$_.Replace("`r","")}|sv CLIPPING'
-    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::DeleteLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
@@ -527,7 +515,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDe
 
 Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "readClipboardOnTerminal" -LongDescription "readClipboardOnTerminal" -ScriptBlock {
     $command = 'gcb|bat -p'
-    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::DeleteLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AcceptLine()
 }
@@ -673,7 +661,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
 ##############################
 
 Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDescription "redoLastCommand" -ScriptBlock {
-    [PSBufferState]::new().RevertLine()
+    [PSConsoleReadLine]::DeleteLine()
     $lastCmd = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
     [PSConsoleReadLine]::Insert($lastCmd)
     [PSConsoleReadLine]::AcceptLine()
