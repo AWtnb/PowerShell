@@ -306,10 +306,6 @@ function Convert-LetterToUnicode {
     end {}
 }
 
-function uni {
-    & ("C:\Users\{0}\Sync\portable_app\uni\uni.exe" -f $env:USERNAME) $args
-}
-
 function Get-LinesDelta {
     param(
         [int]$charsPerLine = 35,

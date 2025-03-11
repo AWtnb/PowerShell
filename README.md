@@ -21,3 +21,9 @@ scoop install scoop-completion
 ```
 scoop install zoxide
 ```
+
+[uni](https://github.com/arp242/uni) (with [chocolatey](https://chocolatey.org/install#individual))
+
+```
+choco install uni
+```
