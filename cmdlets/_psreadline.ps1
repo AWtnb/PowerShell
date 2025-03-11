@@ -690,14 +690,12 @@ Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDesc
 # yank-last-argument cutomize
 ##############################
 
-Set-PSReadLineKeyHandler -Key "alt+a" -Function YankLastArg
-Set-PSReadLineKeyHandler -Key "alt+A" -BriefDescription "toggleVariable" -LongDescription "toggleVariable" -ScriptBlock {
-    $a = [ASTer]::new()
-    if ($a.tokens.Count -lt 1) { return }
-    $t = $a.GetActiveToken()
-    if (-not $t -or $t.Text.Length -lt 1) { return }
-    $newText =  ($t.Kind -eq "Variable") ? $t.Text.Substring(1) : "$" + $t.Text
-    [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
+Set-PSReadLineKeyHandler -Key "alt+a" -BriefDescription "smartYankLastArg" -LongDescription "smartYankLastArg" -ScriptBlock {
+    $bs = [PSBufferState]::new()
+    if ($bs.CursorLine.Index -eq 0 -and $bs.CursorLine.BeforeCursor.Trim().Length -lt 1) {
+        [PSConsoleReadLine]::Insert("$")
+    }
+    [PSConsoleReadLine]::YankLastArg()
 }
 
 ##############################
@@ -869,19 +867,10 @@ Set-PSReadLineKeyHandler -Key "alt+c" -BriefDescription "copyToClipboard" -LongD
     [PSConsoleReadLine]::Insert($prefix + "c")
 }
 
-function Set-VariableUtil {
-    param(
-        [string]$name
-    )
-    $input | Set-Variable -Name $name -Scope 1 # One level outer scope from this block
-    [PSConsoleReadLine]::AddToHistory("$" + $name)
-}
-Set-Alias -Name svu -Value Set-VariableUtil
-
 Set-PSReadLineKeyHandler -Key "alt+v" -BriefDescription "asVariable" -LongDescription "asVariable" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
-    [PSConsoleReadLine]::Insert($prefix + "svu ")
+    [PSConsoleReadLine]::Insert($prefix + "sv ")
 }
 
 Set-PSReadLineKeyHandler -Key "alt+t" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
