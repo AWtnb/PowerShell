@@ -81,20 +81,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     [PSConsoleReadLine]::AcceptLine()
 }
 
-# convert multiline command to single line add to history
-Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "custom-accept-and-add-history" -LongDescription "custom-accept-and-add-history" -ScriptBlock {
-    $bs = [PSBufferState]::new()
-    $single = ($bs.Commandline -split "`n" | ForEach-Object {
-        $l = $_.Trim()
-        if ($l.EndsWith("{")) {
-            return $l
-        }
-        return $l + ";"
-    }) -join "" -replace ";}", "}" -replace ";$", ""
-    [PSConsoleReadLine]::AddToHistory($single)
-    [PSConsoleReadLine]::AcceptLine()
-}
-
 Set-PSReadLineKeyHandler -Key "ctrl+H" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $line = $bs.CursorLine.Text
@@ -356,6 +342,8 @@ class PSBufferState {
     [PSCursorLine]$CursorLine
     [int]$SelectionStart
     [int]$SelectionLength
+    [bool]$isMultiline
+    [int]$lastLineIndex
 
     PSBufferState() {
         $stat = $this.GetState()
@@ -366,6 +354,13 @@ class PSBufferState {
         [PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$length)
         $this.SelectionStart = $start
         $this.SelectionLength = $length
+        $this.isMultiline = $this.Commandline.IndexOf("`n") -ne -1
+        if ($this.isMultiline) {
+            $this.lastLineIndex = ($this.Commandline -split "`n").Length - 1
+        }
+        else {
+            $this.lastLineIndex = 0
+        }
     }
 
     [PSCustomObject] GetState() {
@@ -466,6 +461,56 @@ class PSBufferState {
 
 }
 
+class ReadlineUtil {
+    ReadlineUtil() {}
+
+    static NewLine() {
+        $bs = [PSBufferState]::new()
+        $line = $bs.CommandLine
+        $pos = $bs.CursorPos
+        $indent = $bs.CursorLine.Indent
+        $filler = " " * $indent
+        if ($line[$pos] -eq "}") {
+            if ($line[$pos - 1] -eq "{") {
+                [PSConsoleReadLine]::Insert("`n" + $filler + "  `n" + $filler)
+                [PSConsoleReadLine]::SetCursorPosition($pos + 1 + $filler.Length + 2)
+                return
+            }
+            [PSConsoleReadLine]::Insert("`n" + $filler)
+            return
+        }
+        if ($line[$pos - 1] -eq "{") {
+            [PSConsoleReadLine]::Insert("`n" + "  " + $filler)
+            return
+        }
+        [PSConsoleReadLine]::Insert("`n" + $filler)
+    }
+}
+
+Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-indent" -LongDescription "addline-and-indent" -ScriptBlock {
+    [ReadlineUtil]::NewLine()
+}
+
+Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescription "smart-enter" -ScriptBlock {
+    $bs = [PSBufferState]::new()
+    if ($bs.isMultiline) {
+        $cursorLine = $bs.CursorLine
+        if ($cursorLine.AfterCursor.Length -ne 0 -or $cursorLine.Index -lt $bs.lastLineIndex) {
+            [ReadlineUtil]::NewLine()
+            return
+        }
+        $single = ($bs.Commandline -split "`n" | ForEach-Object {
+            $l = $_.Trim()
+            if ($l.EndsWith("{")) {
+                return $l
+            }
+            return $l + ";"
+        }) -join "" -replace ";}", "}" -replace ";$", "" -replace ";+", ";"
+        [PSConsoleReadLine]::AddToHistory($single)
+    }
+    [PSConsoleReadLine]::AcceptLine()
+}
+
 # reload
 Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
     [PSBufferState]::new().RevertLine()
@@ -556,28 +601,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+J" -Description "smart-InsertLineAbove" -Scr
     $indent = $bs.CursorLine.Indent
     [PSConsoleReadLine]::InsertLineAbove()
     [PSConsoleReadLine]::Insert(" " * $indent)
-}
-
-Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-indent" -LongDescription "addline-and-indent" -ScriptBlock {
-    $bs = [PSBufferState]::new()
-    $line = $bs.CommandLine
-    $pos = $bs.CursorPos
-    $indent = $bs.CursorLine.Indent
-    $filler = " " * $indent
-    if ($line[$pos] -eq "}") {
-        if ($line[$pos - 1] -eq "{") {
-            [PSConsoleReadLine]::Insert("`n" + $filler + "  `n" + $filler)
-            [PSConsoleReadLine]::SetCursorPosition($pos + 1 + $filler.Length + 2)
-            return
-        }
-        [PSConsoleReadLine]::Insert("`n" + $filler)
-        return
-    }
-    if ($line[$pos - 1] -eq "{") {
-        [PSConsoleReadLine]::Insert("`n" + "  " + $filler)
-        return
-    }
-    [PSConsoleReadLine]::Insert("`n" + $filler)
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+j" -BriefDescription "dupl-down" -LongDescription "duplicate-currentline-down" -ScriptBlock {
