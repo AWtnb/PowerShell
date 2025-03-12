@@ -496,7 +496,7 @@ Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE
 
 # load clipboard
 Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
-    $command = '<#SKIPHISTORY#> gcb|%{$_.Replace("`r","")}|sv CLIPPING'
+    $command = '<#SKIPHISTORY#> (gcb) -split "`n"|%{$_.Replace("`r","")}|sv CLIPPING'
     [PSConsoleReadLine]::DeleteLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
