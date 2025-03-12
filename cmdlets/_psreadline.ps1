@@ -105,16 +105,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "c
 }
 
 
-
-# open draft
-Set-PSReadLineKeyHandler -Key "alt+d" -BriefDescription "openDraft" -LongDescription "openDraft" -ScriptBlock {
-    $draft = $env:USERPROFILE | Join-Path -ChildPath "Personal\draft.txt"
-    if (Test-Path $draft -PathType Leaf) {
-        Start-Process $draft
-        Hide-ConsoleWindow
-    }
-}
-
 # cursor jump
 Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」（）『』『』［］、，。：；／　"
 @{
