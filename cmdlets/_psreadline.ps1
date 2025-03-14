@@ -485,6 +485,9 @@ Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescr
         [PSConsoleReadLine]::AddToHistory($single)
     }
     [PSConsoleReadLine]::AcceptLine()
+    if ((Get-PSReadLineOption).PredictionViewStyle -eq [PredictionViewStyle]::ListView) {
+        Set-PSReadLineOption -PredictionViewStyle InlineView
+    }
 }
 
 # reload
