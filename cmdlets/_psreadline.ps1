@@ -39,15 +39,19 @@ Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
 Set-PSReadLineKeyHandler -Key "ctrl+p" -Function SwitchPredictionView
 
+Set-PSReadLineKeyHandler -Key "ctrl+K" -Function DeleteLine
+
 # search
 Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearch
 Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearchBackward
 
 # Shell cursor jump
-Set-PSReadLineKeyHandler -Key "alt+j" -Function "ShellForwardWord"
-Set-PSReadLineKeyHandler -Key "alt+k" -Function "ShellBackwardWord"
-Set-PSReadLineKeyHandler -Key "alt+J" -Function "SelectShellForwardWord"
-Set-PSReadLineKeyHandler -Key "alt+K" -Function "SelectShellBackwardWord"
+Set-PSReadLineKeyHandler -Key "alt+j" -Function ShellForwardWord
+Set-PSReadLineKeyHandler -Key "alt+k" -Function ShellBackwardWord
+Set-PSReadLineKeyHandler -Key "alt+J" -Function SelectShellForwardWord
+Set-PSReadLineKeyHandler -Key "alt+K" -Function SelectShellBackwardWord
+Set-PSReadLineKeyHandler -Key "ctrl+backspace" -Function ShellBackwardKillWord
+Set-PSReadLineKeyHandler -Key "ctrl+delete" -Function ShellKillWord
 
 # exit
 Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription "exit" -ScriptBlock {
@@ -393,6 +397,27 @@ class PSBufferState {
         }
     }
 
+    [void] NewLine() {
+        $line = $this.CommandLine
+        $pos = $this.CursorPos
+        $indent = $this.CursorLine.Indent
+        $filler = " " * $indent
+        if ($line[$pos] -eq "}") {
+            if ($line[$pos - 1] -eq "{") {
+                [PSConsoleReadLine]::Insert("`n" + $filler + "  `n" + $filler)
+                [PSConsoleReadLine]::SetCursorPosition($pos + 1 + $filler.Length + 2)
+                return
+            }
+            [PSConsoleReadLine]::Insert("`n" + $filler)
+            return
+        }
+        if ($line[$pos - 1] -eq "{") {
+            [PSConsoleReadLine]::Insert("`n" + "  " + $filler)
+            return
+        }
+        [PSConsoleReadLine]::Insert("`n" + $filler)
+    }
+
     static [bool] IsSelecting() {
         $start = $length = $null
         [PSConsoleReadLine]::GetSelectionState([ref]$start, [ref]$length)
@@ -437,34 +462,9 @@ class PSBufferState {
 
 }
 
-class ReadlineUtil {
-    ReadlineUtil() {}
-
-    static NewLine() {
-        $bs = [PSBufferState]::new()
-        $line = $bs.CommandLine
-        $pos = $bs.CursorPos
-        $indent = $bs.CursorLine.Indent
-        $filler = " " * $indent
-        if ($line[$pos] -eq "}") {
-            if ($line[$pos - 1] -eq "{") {
-                [PSConsoleReadLine]::Insert("`n" + $filler + "  `n" + $filler)
-                [PSConsoleReadLine]::SetCursorPosition($pos + 1 + $filler.Length + 2)
-                return
-            }
-            [PSConsoleReadLine]::Insert("`n" + $filler)
-            return
-        }
-        if ($line[$pos - 1] -eq "{") {
-            [PSConsoleReadLine]::Insert("`n" + "  " + $filler)
-            return
-        }
-        [PSConsoleReadLine]::Insert("`n" + $filler)
-    }
-}
-
 Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-indent" -LongDescription "addline-and-indent" -ScriptBlock {
-    [ReadlineUtil]::NewLine()
+    $bs = [PSBufferState]::new()
+    $bs.NewLine()
 }
 
 Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescription "smart-enter" -ScriptBlock {
@@ -472,11 +472,14 @@ Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescr
     if ($bs.isMultiline) {
         $cursorLine = $bs.CursorLine
         if ($cursorLine.AfterCursor.Length -ne 0 -or $cursorLine.Index -lt $bs.lastLineIndex) {
-            [ReadlineUtil]::NewLine()
+            $bs.NewLine()
             return
         }
         $single = ($bs.Commandline -split "`n" | ForEach-Object {
             $l = $_.Trim()
+            if ($l.StartsWith("#")) {
+                return ""
+            }
             if ($l.EndsWith("{")) {
                 return $l
             }
@@ -492,7 +495,7 @@ Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescr
 
 # reload
 Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
-    [PSConsoleReadLine]::DeleteLine()
+    [PSConsoleReadLine]::RevertLine()
     [PSConsoleReadLine]::Insert('<#SKIPHISTORY#> . $PROFILE')
     [PSConsoleReadLine]::AcceptLine()
 }
@@ -500,7 +503,7 @@ Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE
 # load clipboard
 Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
     $command = '<#SKIPHISTORY#> (gcb) -split "`n"|%{$_.Replace("`r","")}|sv CLIPPING'
-    [PSConsoleReadLine]::DeleteLine()
+    [PSConsoleReadLine]::RevertLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
     [PSConsoleReadLine]::AcceptLine()
@@ -508,7 +511,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDe
 
 Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "readClipboardOnTerminal" -LongDescription "readClipboardOnTerminal" -ScriptBlock {
     $command = 'gcb|bat -p'
-    [PSConsoleReadLine]::DeleteLine()
+    [PSConsoleReadLine]::RevertLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AcceptLine()
 }
@@ -523,37 +526,6 @@ function ccat ([string]$encoding = "utf8") {
         "invalid-path!" | Write-Host -ForegroundColor Magenta
     }
 }
-
-Set-PSReadLineKeyHandler -Key "ctrl+backspace" -BriefDescription "backwardKillWordCustom" -LongDescription "backwardKillWordCustom" -ScriptBlock {
-    if ([PSBufferState]::IsSelecting()) {
-        [PSConsoleReadLine]::BackwardDeleteChar()
-        return
-    }
-
-    $a = [ASTer]::new()
-    $i = $a.GetActiveTokenIndex()
-    if($i -eq 0) {
-        [PSConsoleReadLine]::BackwardKillWord()
-        return
-    }
-
-    $t = $a.GetActiveToken()
-    $s = $t.Extent.StartOffset
-    $len = $a.cursor - $s
-    if ($len -lt 1) {
-        [PSConsoleReadLine]::BackwardDeleteChar()
-    }
-    else {
-        [PSConsoleReadLine]::Replace($s, $len, "")
-    }
-}
-Set-PSReadLineKeyHandler -Key "ctrl+delete" -ScriptBlock {
-    if ([PSBufferState]::IsSelecting()) {
-        [PSConsoleReadLine]::DeleteChar()
-    }
-    [PSConsoleReadLine]::KillWord()
-}
-
 
 Set-PSReadLineKeyHandler -Key "alt+[" -BriefDescription "insert-multiline-brace" -LongDescription "insert-multiline-brace" -ScriptBlock {
     $bs = [PSBufferState]::new()
@@ -654,7 +626,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
 ##############################
 
 Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDescription "redoLastCommand" -ScriptBlock {
-    [PSConsoleReadLine]::DeleteLine()
+    [PSConsoleReadLine]::RevertLine()
     $lastCmd = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
     [PSConsoleReadLine]::Insert($lastCmd)
     [PSConsoleReadLine]::AcceptLine()
