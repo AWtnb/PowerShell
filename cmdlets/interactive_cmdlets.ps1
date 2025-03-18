@@ -82,7 +82,7 @@ class PSAvailable {
 }
 
 
-Set-PSReadLineKeyHandler -Key "alt+f,spacebar","ctrl+shift+spacebar" -BriefDescription "fuzzyfind-command" -LongDescription "search-cmdlets-with-fuzzyfinder" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+f,spacebar" -BriefDescription "fuzzyfind-command" -LongDescription "search-cmdlets-with-fuzzyfinder" -ScriptBlock {
     $command = [PSAvailable]::getCommands() | fzf.exe
     if ($command) {
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$command ")

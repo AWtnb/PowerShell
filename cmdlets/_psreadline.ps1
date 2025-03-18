@@ -37,7 +37,7 @@ Set-PSReadLineOption -colors @{
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
-Set-PSReadLineKeyHandler -Key "ctrl+p" -Function SwitchPredictionView
+Set-PSReadLineKeyHandler -Key "ctrl+p","ctrl+shift+spacebar" -Function SwitchPredictionView
 
 Set-PSReadLineKeyHandler -Key "ctrl+K" -Function DeleteLine
 
