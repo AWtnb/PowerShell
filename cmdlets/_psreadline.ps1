@@ -661,6 +661,11 @@ Set-PSReadLineKeyHandler -Key "(","{","[" -BriefDescription "InsertPairedBraces"
     $line = $bs.CommandLine
     $pos = $bs.CursorPos
 
+    if ($pos -eq 0) {
+        [PSConsoleReadLine]::Insert($openChar)
+        return
+    }
+
     if ($bs.SelectionLength -gt 0) {
         [PSConsoleReadLine]::Replace($bs.SelectionStart, $bs.selectionLength, $openChar + $line.SubString($bs.selectionStart, $bs.selectionLength) + $closeChar)
         [PSConsoleReadLine]::SetCursorPosition($bs.selectionStart + $bs.selectionLength + 2)
