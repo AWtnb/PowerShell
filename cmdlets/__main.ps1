@@ -1,6 +1,4 @@
-if (-not $env:DOTNET_CLI_UI_LANGUAGE) {
-    $env:DOTNET_CLI_UI_LANGUAGE = "en"
-}
+$env:DOTNET_CLI_UI_LANGUAGE = "en"
 
 # disble progress bar
 $progressPreference = "silentlyContinue"
