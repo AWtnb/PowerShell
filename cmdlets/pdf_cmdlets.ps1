@@ -190,12 +190,12 @@ function Invoke-DenoPdfUnspread {
 }
 Set-Alias PdfUnspreadDeno Invoke-DenoPdfUnspread
 
-function Invoke-DenoPdfCropTombow {
+function Invoke-DenoPdfApplyTrimbox {
     param (
         [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-crop.exe"
+        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-apply-trimbox.exe"
         $files = @()
     }
     process {
@@ -208,7 +208,7 @@ function Invoke-DenoPdfCropTombow {
     end {
         if (-not (Test-Path $denotool)) {
             "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-crop"
+            $repo = "https://github.com/AWtnb/deno-pdf-apply-trimbox"
             "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
@@ -219,7 +219,7 @@ function Invoke-DenoPdfCropTombow {
     }
 }
 
-Set-Alias PdfCropTombowDeno Invoke-DenoPdfCropTombow
+Set-Alias PdfApplyTrimboxDeno Invoke-DenoPdfApplyTrimbox
 
 function Invoke-DenoPdfExtract {
     param (
