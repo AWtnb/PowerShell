@@ -54,7 +54,7 @@ function denoSearchPdf {
 
     try {
         "Cropping..." | Write-Host
-        $files | Invoke-DenoPdfCropTombow
+        $files | Invoke-DenoPdfApplyTrimbox
     }
     catch {
         Write-Host "Error: failed to crop files."
