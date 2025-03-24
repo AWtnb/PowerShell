@@ -514,7 +514,7 @@ function Invoke-RecycleBin {
         }
     }
     end {
-        if ($target.Length -lt 1) {
+        if ($target.Count -lt 1) {
             Start-Process shell:RecycleBinFolder
             return
         }

@@ -564,7 +564,7 @@ function Invoke-TarExtract {
         $outname = $target.BaseName
     }
     if (Test-Path $outname -PathType Container) {
-        if ((Get-ChildItem -Path $outname).Length -gt 0) {
+        if ((Get-ChildItem -Path $outname).Count -gt 0) {
             "'{0}' already exists and has some contents!" -f $outname | Write-Host -ForegroundColor Magenta
             return
         }

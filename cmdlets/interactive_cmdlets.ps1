@@ -221,7 +221,7 @@ function ghRemote {
         return
     }
     $names = gh.exe repo list --json name --jq ".[] | .name" --limit 200
-    if ($names.Length -lt 1) { return }
+    if ($names.Count -lt 1) { return }
     $n = $names | fzf.exe
     if ($LASTEXITCODE -ne 0 -or $n.Length -lt 1) { return }
     if ($clone) {
@@ -253,7 +253,7 @@ function Invoke-DriveEject {
         }
         return $_.Name
     }
-    if ($drives.Length -lt 1) {
+    if ($drives.Count -lt 1) {
         "No ejectable drive found" | Write-Host
         return
     }

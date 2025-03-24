@@ -58,7 +58,7 @@ class Repo {
 
 function Find-RemoteRepository {
     $paths = $input | ForEach-Object {Get-Item $_.Fullname}
-    if ($paths.Length -lt 1) {
+    if ($paths.Count -lt 1) {
         $paths = (Get-ChildItem -Directory).FullName
     }
     return $paths | Where-Object { [Repo]::new($_).IsRemote() } | ForEach-Object { Get-Item $_ }
@@ -66,7 +66,7 @@ function Find-RemoteRepository {
 
 function Find-LocalRepository {
     $paths = $input | ForEach-Object {Get-Item $_.Fullname}
-    if ($paths.Length -lt 1) {
+    if ($paths.Count -lt 1) {
         $paths = (Get-ChildItem -Directory).FullName
     }
     return $paths | Where-Object { -not [Repo]::new($_).IsRemote() } | ForEach-Object { Get-Item $_ }

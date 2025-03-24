@@ -313,7 +313,7 @@ class PSCursorLine {
 
     PSCursorLine([string]$line, [int]$pos) {
         $lines = $line -split "`n"
-        $this.Index = ($line.Substring(0, $pos) -split "`n").Length - 1
+        $this.Index = ($line.Substring(0, $pos) -split "`n").Count - 1
         $this.Text = $lines[$this.Index]
         $this.Indent = $this.Text.Length - $this.Text.TrimStart().Length
         if ($this.Index -gt 0) {
@@ -348,7 +348,7 @@ class PSBufferState {
         $this.SelectionLength = $length
         $this.isMultiline = $this.Commandline.IndexOf("`n") -ne -1
         if ($this.isMultiline) {
-            $this.lastLineIndex = ($this.Commandline -split "`n").Length - 1
+            $this.lastLineIndex = ($this.Commandline -split "`n").Count - 1
         }
         else {
             $this.lastLineIndex = 0
