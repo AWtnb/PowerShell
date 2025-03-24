@@ -98,7 +98,17 @@ Set-PSReadLineKeyHandler -Key "ctrl+H" -BriefDescription "fuzzy-history-search" 
 
 
 # accept suggestion
-Set-PSReadLineKeyHandler -Key "ctrl+n" -Function AcceptNextSuggestionWord
+Set-PSReadLineKeyHandler -Key "ctrl+n" -ScriptBlock {
+    $oldLine = [PSBufferState]::new().Commandline
+    [PSConsoleReadLine]::AcceptNextSuggestionWord()
+    $newLine = [PSBufferState]::new().Commandline
+    $offset = $newLine.Length - $oldLine.Length
+    if ($offset -gt 0) {
+        if ($newLine[$oldLine.Length] -eq "|") {
+            [PSConsoleReadLine]::Replace($oldLine.Length + 1, $offset - 1, "")
+        }
+    }
+}
 
 
 # format string
