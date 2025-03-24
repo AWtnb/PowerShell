@@ -433,7 +433,7 @@ function Invoke-GodMode () {
 
 function c {
     $lines = @($input).ForEach({$_ -as [string]})
-    if ($lines.length -lt 1) {
+    if ($lines.Count -lt 1) {
         return
     }
     $lines | Set-Clipboard
