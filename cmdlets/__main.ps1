@@ -511,7 +511,7 @@ function Restart-CorvusSKK {
 function Get-CorvusSKKUserFunctionExamples {
     $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\init.lua"
     if (Test-Path $p) {
-        $pattern = "^usage: "
+        $pattern = "^- usage: "
         Get-Content -Path $p | Select-String -Pattern $pattern | ForEach-Object {$_.Line -replace $pattern, ""} | Write-Output
     }
 }
