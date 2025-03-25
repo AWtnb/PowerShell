@@ -104,7 +104,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+n" -ScriptBlock {
     $newLine = [PSBufferState]::new().Commandline
     $offset = $newLine.Length - $oldLine.Length
     if ($offset -gt 0) {
-        if ($newLine[$oldLine.Length] -eq "|") {
+        $c = $newLine[$oldLine.Length]
+        if ("|([".IndexOf($c) -ne -1) {
             [PSConsoleReadLine]::Replace($oldLine.Length + 1, $offset - 1, "")
         }
     }

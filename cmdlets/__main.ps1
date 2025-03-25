@@ -511,8 +511,8 @@ function Restart-CorvusSKK {
 function Get-CorvusSKKUserFunctionExamples {
     $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\init.lua"
     if (Test-Path $p) {
-        $pattern = "-- usage: "
-        Get-Content -Path $p | Where-Object {$_.StartsWith($pattern)} | ForEach-Object {$_.Substring($pattern.Length)} | Write-Output
+        $pattern = "^usage: "
+        Get-Content -Path $p | Select-String -Pattern $pattern | ForEach-Object {$_.Line -replace $pattern, ""} | Write-Output
     }
 }
 
@@ -528,13 +528,6 @@ function Get-CorvusSKKLuaFunctionsInUserdict {
 }
 
 
-
-# pip
-
-function pipinst {
-    Start-Process -Path python.exe -Wait -ArgumentList @("-m","pip","install","--upgrade","pip") -NoNewWindow
-    Start-Process -Path python.exe -Wait -ArgumentList @("-m","pip","install","--upgrade",$args[0]) -NoNewWindow
-}
 
 # wezterm
 
