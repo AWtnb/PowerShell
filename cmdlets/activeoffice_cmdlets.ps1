@@ -524,6 +524,27 @@ function Invoke-AcceptFormatRevisionOnActiveWordDocument {
 
 }
 
+function Invoke-ActiveWordDocumentWindowDuplicate {
+    $wd = Get-ActiveWordApp
+    if (-not $wd) {
+        return
+    }
+    $wd.NewWindow() > $null
+}
+
+function Switch-ActiveWordDocumentRevision {
+    $wd = Get-ActiveWordApp
+    if (-not $wd) {
+        return
+    }
+    @(
+        "ReviewShowInsertionsAndDeletions",
+        "ReviewShowFormatting"
+    ) | ForEach-Object {
+        $wd.CommandBars.ExecuteMso($_)
+    }
+}
+
 function Get-ActiveWordDocumentInsertedText {
     <#
         .SYNOPSIS
