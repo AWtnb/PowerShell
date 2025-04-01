@@ -45,14 +45,6 @@ Set-PSReadLineKeyHandler -Key "ctrl+K" -Function DeleteLine
 Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearch
 Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearchBackward
 
-# Shell cursor jump
-Set-PSReadLineKeyHandler -Key "alt+j" -Function ShellForwardWord
-Set-PSReadLineKeyHandler -Key "alt+k" -Function ShellBackwardWord
-Set-PSReadLineKeyHandler -Key "alt+J" -Function SelectShellForwardWord
-Set-PSReadLineKeyHandler -Key "alt+K" -Function SelectShellBackwardWord
-Set-PSReadLineKeyHandler -Key "ctrl+backspace" -Function ShellBackwardKillWord
-Set-PSReadLineKeyHandler -Key "ctrl+delete" -Function ShellKillWord
-
 # exit
 Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription "exit" -ScriptBlock {
     [PSConsoleReadLine]::Insert("<#SKIPHISTORY#>exit")
@@ -120,9 +112,17 @@ Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」
     "ctrl+shift+DownArrow"  = "SelectForwardWord";
     "ctrl+shift+LeftArrow"  = "SelectBackwardWord";
     "ctrl+shift+UpArrow"    = "SelectBackwardWord";
+    "ctrl+backspace"  = "SelectBackwardWord";
+    "ctrl+delete"    = "SelectBackwardWord";
 }.GetEnumerator() | ForEach-Object {
     Set-PSReadLineKeyHandler -Key $_.Key -Function $_.Value
 }
+
+# shell cursor jump
+Set-PSReadLineKeyHandler -Key "alt+j" -Function ShellForwardWord
+Set-PSReadLineKeyHandler -Key "alt+k" -Function ShellBackwardWord
+Set-PSReadLineKeyHandler -Key "alt+J" -Function SelectShellForwardWord
+Set-PSReadLineKeyHandler -Key "alt+K" -Function SelectShellBackwardWord
 
 # https://github.com/pecigonzalo/Oh-My-Posh/blob/master/plugins/psreadline/psreadline.ps1
 class ASTer {
@@ -130,6 +130,8 @@ class ASTer {
     [System.Management.Automation.Language.Token[]]$tokens
     $errors
     $cursor
+    static $PipeKind = [System.Management.Automation.Language.TokenKind]::Pipe
+
     ASTer() {
         $a = $t = $e = $c = $null
         [PSConsoleReadLine]::GetBufferState([ref]$a, [ref]$t, [ref]$e, [ref]$c)
@@ -198,13 +200,13 @@ class ASTer {
 
     [bool] IsAfterPipe() {
         if ($this.IsEndOfToken()) {
-            return $this.GetActiveToken().Kind -eq "Pipe"
+            return $this.GetActiveToken().Kind -eq $this.PipeKind
         }
-        return $this.GetPreviousToken().Kind -eq "Pipe"
+        return $this.GetPreviousToken().Kind -eq $this.PipeKind
     }
 
     [bool] IsBeforePipe() {
-        return $this.GetActiveToken().Kind -eq "Pipe"
+        return $this.GetActiveToken().Kind -eq $this.PipeKind
     }
 
     ReplaceTokenByIndex([int]$index, [string]$newText) {
@@ -218,7 +220,6 @@ class ASTer {
     }
 
 }
-
 
 Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debugActiveToken" -LongDescription "debugActiveToken" -ScriptBlock {
     $a = [Aster]::new()
@@ -235,14 +236,14 @@ Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debugActiveToken
 
 Set-PSReadlineKeyHandler -Key "ctrl+alt+k" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
     $a = [ASTer]::new()
-    $lastPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.EndOffset -lt $a.cursor} | Select-Object -Last 1
+    $lastPipe = $a.tokens | Where-Object {$_.Kind -eq [Aster]::PipeKind} | Where-Object {$_.Extent.EndOffset -le $a.cursor} | Select-Object -Last 1
     if ($lastPipe) {
         [PSConsoleReadLine]::SetCursorPosition($lastPipe.Extent.EndOffset - 1)
     }
 }
 Set-PSReadlineKeyHandler -Key "ctrl+alt+j" -BriefDescription "toNextPipe" -LongDescription "toNextPipe" -ScriptBlock {
     $a = [ASTer]::new()
-    $nextPipe = $a.tokens | Where-Object {$_.Kind -eq "Pipe"} | Where-Object {$_.Extent.StartOffset -gt $a.cursor} | Select-Object -First 1
+    $nextPipe = $a.tokens | Where-Object {$_.Kind -eq [Aster]::PipeKind} | Where-Object {$_.Extent.StartOffset -ge $a.cursor} | Select-Object -First 1
     if ($nextPipe) {
         [PSConsoleReadLine]::SetCursorPosition($nextPipe.Extent.StartOffset + 1)
     }
