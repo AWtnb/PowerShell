@@ -221,15 +221,16 @@ class ASTer {
 
 # smart-backward-word
 Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
+    $targets = @([System.Management.Automation.Language.TokenKind]::Parameter, [System.Management.Automation.Language.TokenKind]::EndOfInput)
     $a = [Aster]::new()
     $t = $a.GetActiveToken()
-    if ($t.Kind -eq [System.Management.Automation.Language.TokenKind]::Parameter) {
-        if ($a.cursor -gt $t.Extent.StartOffset) {
-            [PSConsoleReadLine]::SelectShellBackwardWord()
+    if ($t.Kind -in $targets -or $a.cursor -eq $t.Extent.StartOffset) {
+        if ($a.GetPreviousToken().Text.IndexOf("-") -eq -1) {
+            [PSConsoleReadLine]::ShellBackwardKillWord()
             return
         }
     }
-    [PSConsoleReadLine]::SelectBackwardWord()
+    [PSConsoleReadLine]::BackwardKillWord()
 }
 
 Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debugActiveToken" -LongDescription "debugActiveToken" -ScriptBlock {
@@ -488,15 +489,15 @@ Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescr
             return
         }
         $single = ($bs.Commandline -split "`n" | ForEach-Object {
-            $l = $_.Trim()
-            if ($l.StartsWith("#")) {
-                return ""
-            }
-            if ($l.EndsWith("{")) {
-                return $l
-            }
-            return $l + ";"
-        }) -join "" -replace ";}", "}" -replace ";$", "" -replace ";+", ";"
+                $l = $_.Trim()
+                if ($l.StartsWith("#")) {
+                    return ""
+                }
+                if ($l.EndsWith("{")) {
+                    return $l
+                }
+                return $l + ";"
+            }) -join "" -replace ";}", "}" -replace ";$", "" -replace ";+", ";"
         [PSConsoleReadLine]::AddToHistory($single)
     }
     [PSConsoleReadLine]::AcceptLine()
