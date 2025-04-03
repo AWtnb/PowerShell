@@ -221,11 +221,29 @@ class ASTer {
 
 # smart-backward-word
 Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
+    $isCommand = [scriptblock]{
+        param($s)
+        foreach ($t in @(
+            [System.Management.Automation.CommandTypes]::Alias,
+            [System.Management.Automation.CommandTypes]::Function,
+            [System.Management.Automation.CommandTypes]::Cmdlet,
+            [System.Management.Automation.CommandTypes]::ExternalScript
+        )) {
+            try {
+                Get-Command $t -CommandType  -ErrorAction Stop
+            }
+            catch {
+                return $false
+            }
+        }
+        return $true
+    }
+
     $targets = @([System.Management.Automation.Language.TokenKind]::Parameter, [System.Management.Automation.Language.TokenKind]::EndOfInput)
     $a = [Aster]::new()
     $t = $a.GetActiveToken()
     if ($t.Kind -in $targets -or $a.cursor -eq $t.Extent.StartOffset) {
-        if ($a.GetPreviousToken().Text.IndexOf("-") -eq -1) {
+        if (-not $isCommand.InvokeReturnAsIs($a.GetPreviousToken().Text)) {
             [PSConsoleReadLine]::ShellBackwardKillWord()
             return
         }
