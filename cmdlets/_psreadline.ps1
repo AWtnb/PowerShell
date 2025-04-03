@@ -112,8 +112,6 @@ Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」
     "ctrl+shift+DownArrow"  = "SelectForwardWord";
     "ctrl+shift+LeftArrow"  = "SelectBackwardWord";
     "ctrl+shift+UpArrow"    = "SelectBackwardWord";
-    "ctrl+backspace"  = "SelectBackwardWord";
-    "ctrl+delete"    = "SelectBackwardWord";
 }.GetEnumerator() | ForEach-Object {
     Set-PSReadLineKeyHandler -Key $_.Key -Function $_.Value
 }
@@ -219,6 +217,19 @@ class ASTer {
         [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
     }
 
+}
+
+# smart-backward-word
+Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
+    $a = [Aster]::new()
+    $t = $a.GetActiveToken()
+    if ($t.Kind -eq [System.Management.Automation.Language.TokenKind]::Parameter) {
+        if ($a.cursor -gt $t.Extent.StartOffset) {
+            [PSConsoleReadLine]::SelectShellBackwardWord()
+            return
+        }
+    }
+    [PSConsoleReadLine]::SelectBackwardWord()
 }
 
 Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debugActiveToken" -LongDescription "debugActiveToken" -ScriptBlock {
