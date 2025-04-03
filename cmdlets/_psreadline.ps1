@@ -100,6 +100,10 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "c
     [PSConsoleReadLine]::Insert($str)
 }
 
+Set-PSReadLineKeyHandler -Key "ctrl+alt+enter" -ScriptBlock {
+    [PSConsoleReadLine]::Insert("return ")
+}
+
 
 # cursor jump
 Set-PSReadLineOption -WordDelimiters ";:,.[]{}()/\|^&*-=+'`" !?@#`$%&_<>``「」（）『』『』［］、，。：；／　"
@@ -198,13 +202,13 @@ class ASTer {
 
     [bool] IsAfterPipe() {
         if ($this.IsEndOfToken()) {
-            return $this.GetActiveToken().Kind -eq $this.PipeKind
+            return $this.GetActiveToken().Kind -eq [ASTer]::PipeKind
         }
-        return $this.GetPreviousToken().Kind -eq $this.PipeKind
+        return $this.GetPreviousToken().Kind -eq [ASTer]::PipeKind
     }
 
     [bool] IsBeforePipe() {
-        return $this.GetActiveToken().Kind -eq $this.PipeKind
+        return $this.GetActiveToken().Kind -eq [ASTer]::PipeKind
     }
 
     ReplaceTokenByIndex([int]$index, [string]$newText) {
