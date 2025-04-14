@@ -42,8 +42,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+p","ctrl+shift+spacebar" -Function SwitchPre
 Set-PSReadLineKeyHandler -Key "ctrl+K" -Function DeleteLine
 
 # search
-Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearch
-Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearchBackward
+Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearch
+Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearchBackward
 
 # exit
 Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription "exit" -ScriptBlock {
