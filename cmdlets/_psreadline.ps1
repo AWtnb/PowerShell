@@ -46,19 +46,19 @@ Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearch
 Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearchBackward
 
 # exit
-Set-PSReadLineKeyHandler -Key "ctrl+Q" -BriefDescription "exit" -LongDescription "exit" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+Q" -ScriptBlock {
     [PSConsoleReadLine]::Insert("<#SKIPHISTORY#>exit")
 }
 
 # completion
-Set-PSReadLineKeyHandler -Key "alt+i" -BriefDescription "insert-invoke" -LongDescription "insert-invoke" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+i" -ScriptBlock {
     if ([PSBufferState]::IsSelecting()) {
         [PSConsoleReadLine]::DeleteChar()
     }
     [PSConsoleReadLine]::Insert("Invoke*")
 }
 
-Set-PSReadLineKeyHandler -Key "alt+-" -BriefDescription "insertAsterisk(star)" -LongDescription "insertAsterisk(star)" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+-" -ScriptBlock {
     [PSConsoleReadLine]::Insert("*")
 }
 
@@ -78,7 +78,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     [PSConsoleReadLine]::AcceptLine()
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+H" -BriefDescription "fuzzy-history-search" -LongDescription "fuzzy-history-search" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+H" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $line = $bs.CursorLine.Text
     $c = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 100).CommandLine | fzf.exe --query=$line
@@ -255,7 +255,7 @@ Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
     [PSConsoleReadLine]::BackwardKillWord()
 }
 
-Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debugActiveToken" -LongDescription "debugActiveToken" -ScriptBlock {
+Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -ScriptBlock {
     $a = [Aster]::new()
     $t = $a.GetActiveToken()
     $o = [PSCustomObject]@{
@@ -268,14 +268,14 @@ Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -BriefDescription "debugActiveToken
     [PSConsoleReadLine]::SetCursorPosition($a.cursor)
 }
 
-Set-PSReadlineKeyHandler -Key "ctrl+alt+k" -BriefDescription "toPreviousPipe" -LongDescription "toPreviousPipe" -ScriptBlock {
+Set-PSReadlineKeyHandler -Key "ctrl+alt+k" -ScriptBlock {
     $a = [ASTer]::new()
     $lastPipe = $a.tokens | Where-Object {$_.Kind -eq [Aster]::PipeKind} | Where-Object {$_.Extent.EndOffset -le $a.cursor} | Select-Object -Last 1
     if ($lastPipe) {
         [PSConsoleReadLine]::SetCursorPosition($lastPipe.Extent.EndOffset - 1)
     }
 }
-Set-PSReadlineKeyHandler -Key "ctrl+alt+j" -BriefDescription "toNextPipe" -LongDescription "toNextPipe" -ScriptBlock {
+Set-PSReadlineKeyHandler -Key "ctrl+alt+j" -ScriptBlock {
     $a = [ASTer]::new()
     $nextPipe = $a.tokens | Where-Object {$_.Kind -eq [Aster]::PipeKind} | Where-Object {$_.Extent.StartOffset -ge $a.cursor} | Select-Object -First 1
     if ($nextPipe) {
@@ -283,7 +283,7 @@ Set-PSReadlineKeyHandler -Key "ctrl+alt+j" -BriefDescription "toNextPipe" -LongD
     }
 }
 
-Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescription "insert-pipe" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+l" -ScriptBlock {
     $a = [ASTer]::new()
     [PSConsoleReadLine]::Insert("|")
     if ($a.IsAfterPipe()) {
@@ -291,7 +291,7 @@ Set-PSReadLineKeyHandler -Key "alt+l" -BriefDescription "insert-pipe" -LongDescr
     }
 }
 
-Set-PSReadLineKeyHandler -Key "alt+n" -BriefDescription "complete-next-param" -LongDescription "complete-next-param" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+n" -ScriptBlock {
     $a = [ASTer]::new()
     if ($a.IsAfterPipe()) {
         return
@@ -304,7 +304,7 @@ Set-PSReadLineKeyHandler -Key "alt+n" -BriefDescription "complete-next-param" -L
     }
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,l" -BriefDescription "insert-pipe-to-head" -LongDescription "insert-pipe-to-head" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,l" -ScriptBlock {
     $a = [ASTer]::new()
     $activeCmd = $a.GetActiveAst("CommandAst")
     if ($activeCmd) {
@@ -321,7 +321,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,l" -BriefDescription "insert-pipe-to-head"
     [PSConsoleReadLine]::BackwardChar()
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -BriefDescription "insert-pipe-to-tail" -LongDescription "insert-pipe-to-tail" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -ScriptBlock {
     $a = [ASTer]::new()
     $activeCmd = $a.GetActiveAst("CommandAst")
     if ($activeCmd) {
@@ -497,12 +497,13 @@ class PSBufferState {
 
 }
 
-Set-PSReadLineKeyHandler -Key "Shift+Enter" -BriefDescription "addline-and-indent" -LongDescription "addline-and-indent" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "Shift+Enter" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $bs.NewLine()
 }
 
-Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescription "smart-enter" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+enter" -Function AcceptLine
+Set-PSReadLineKeyHandler -Key "enter" -ScriptBlock {
     $bs = [PSBufferState]::new()
     if ($bs.isMultiline) {
         $cursorLine = $bs.CursorLine
@@ -529,25 +530,18 @@ Set-PSReadLineKeyHandler -Key "enter" -BriefDescription "smart-enter" -LongDescr
 }
 
 # reload
-Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -BriefDescription "reloadPROFILE" -LongDescription "reloadPROFILE" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -ScriptBlock {
     [PSConsoleReadLine]::RevertLine()
     [PSConsoleReadLine]::Insert('<#SKIPHISTORY#> . $PROFILE')
     [PSConsoleReadLine]::AcceptLine()
 }
 
 # load clipboard
-Set-PSReadLineKeyHandler -Key "ctrl+V" -BriefDescription "setClipString" -LongDescription "setClipString" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+V" -ScriptBlock {
     $command = '<#SKIPHISTORY#> (gcb) -split "`n"|%{$_.Replace("`r","")}|sv CLIPPING'
     [PSConsoleReadLine]::RevertLine()
     [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
-    [PSConsoleReadLine]::AcceptLine()
-}
-
-Set-PSReadLineKeyHandler -Key "alt+V" -BriefDescription "readClipboardOnTerminal" -LongDescription "readClipboardOnTerminal" -ScriptBlock {
-    $command = 'gcb|bat -p'
-    [PSConsoleReadLine]::RevertLine()
-    [PSConsoleReadLine]::Insert($command)
     [PSConsoleReadLine]::AcceptLine()
 }
 
@@ -562,7 +556,7 @@ function ccat ([string]$encoding = "utf8") {
     }
 }
 
-Set-PSReadLineKeyHandler -Key "alt+[" -BriefDescription "insert-multiline-brace" -LongDescription "insert-multiline-brace" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+[" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $pos = $bs.CursorPos
     $indent = $bs.CursorLine.Indent
@@ -584,13 +578,13 @@ Set-PSReadLineKeyHandler -Key "ctrl+J" -Description "smart-InsertLineAbove" -Scr
     [PSConsoleReadLine]::Insert(" " * $indent)
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+j" -BriefDescription "dupl-down" -LongDescription "duplicate-currentline-down" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+j" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $curLine = $bs.CursorLine.Text
     $curLineStart = $bs.CursorLine.StartPos
     [PSConsoleReadLine]::Replace($curLineStart, $curLine.Length, $curLine+"`n"+$curLine)
 }
-Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+k" -BriefDescription "dupl-up" -LongDescription "duplicate-currentline-up" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+k" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $curLine = $bs.CursorLine.Text
     $curLineStart = $bs.CursorLine.StartPos
@@ -601,28 +595,28 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,ctrl+k" -BriefDescription "dupl-up" -LongD
 
 
 # ctrl+]
-Set-PSReadLineKeyHandler -Key "ctrl+Oem6" -BriefDescription "indent" -LongDescription "indent" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+Oem6" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $bs.IndentLine()
 }
 # ctrl+[
-Set-PSReadLineKeyHandler -Key "ctrl+Oem4" -BriefDescription "outdent" -LongDescription "outdent" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+Oem4" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $bs.OutdentLine()
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+/" -BriefDescription "toggle-comment" -LongDescription "toggle-comment" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+/" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $bs.ToggleLineComment()
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+|" -BriefDescription "find-matching-bracket" -LongDescription "find-matching-bracket" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+|" -ScriptBlock {
     $pos = [PSBufferState]::FindMatchingPairPos()
     if ($pos -ge 0) {
         [PSConsoleReadLine]::SetCursorPosition($pos)
     }
 }
-Set-PSReadLineKeyHandler -Key "alt+P" -BriefDescription "remove-matchingBraces" -LongDescription "remove-matchingBraces" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+P" -ScriptBlock {
     $pos = [PSBufferState]::FindMatchingPairPos()
     if ($pos -ge 0) {
         $start = [math]::Min($pos, $bs.CursorPos)
@@ -633,7 +627,7 @@ Set-PSReadLineKeyHandler -Key "alt+P" -BriefDescription "remove-matchingBraces" 
     }
 }
 
-Set-PSReadLineKeyHandler -Key "home" -BriefDescription "smart-home" -LongDescription "smart-home" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "home" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $pos = $bs.CursorPos
     $indent = $bs.CursorLine.Indent
@@ -646,7 +640,7 @@ Set-PSReadLineKeyHandler -Key "home" -BriefDescription "smart-home" -LongDescrip
     }
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDescription "smart-paste" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,v" -ScriptBlock {
     $cb = (Get-Clipboard -Raw).Trim()
     $lines = @($cb -split "\r?\n")
     $s = ($lines.Count -gt 1)? ($lines | ForEach-Object {($_ -as [string]).TrimEnd()} | Join-String -Separator "`n" -OutputPrefix "@'`n" -OutputSuffix "`n'@") : $cb
@@ -660,7 +654,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,v" -BriefDescription "smart-paste" -LongDe
 # redo-last-command
 ##############################
 
-Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDescription "redoLastCommand" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "F4" -ScriptBlock {
     [PSConsoleReadLine]::RevertLine()
     $lastCmd = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 1).CommandLine
     [PSConsoleReadLine]::Insert($lastCmd)
@@ -671,7 +665,7 @@ Set-PSReadLineKeyHandler -Key "F4" -BriefDescription "redoLastCommand" -LongDesc
 # yank-last-argument cutomize
 ##############################
 
-Set-PSReadLineKeyHandler -Key "alt+a" -BriefDescription "smartYankLastArg" -LongDescription "smartYankLastArg" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+a" -ScriptBlock {
     $bs = [PSBufferState]::new()
     if ($bs.CursorLine.Index -eq 0 -and $bs.CursorLine.BeforeCursor.Trim().Length -lt 1) {
         [PSConsoleReadLine]::Insert("$")
@@ -746,7 +740,7 @@ Set-PSReadLineKeyHandler -Key "alt+w","alt+(" -BriefDescription "WrapLineByParen
     [PSConsoleReadLine]::Replace($curLineStart, $curLine.Length, $prefix + $curLine + $suffix)
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,t" -BriefDescription "cast-as-type" -LongDescription "cast-as-type" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,t" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $line = $bs.CommandLine
     if (-not $bs.SelectionLength -gt 0) {
@@ -818,7 +812,7 @@ Set-PSReadLineKeyHandler -Key "`"","'" -BriefDescription "smartQuotation" -LongD
 # snippets
 ##############################
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,f", "ctrl+k,w", "ctrl+k,alt+f","ctrl+k,alt+w", "ctrl+k,alt+F","ctrl+k,alt+W" -BriefDescription "insert-alias" -LongDescription "insert-alias" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,f", "ctrl+k,w", "ctrl+k,alt+f","ctrl+k,alt+w", "ctrl+k,alt+F","ctrl+k,alt+W" -ScriptBlock {
     param ($key, $arg)
     $alias = switch ($key.KeyChar) {
         "f" { "% "; break }
@@ -841,37 +835,37 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,f", "ctrl+k,w", "ctrl+k,alt+f","ctrl+k,alt
     }
 }
 
-Set-PSReadLineKeyHandler -Key "alt+m" -BriefDescription "measure" -LongDescription "measure" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+m" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "measure")
 }
 
-Set-PSReadLineKeyHandler -Key "alt+c" -BriefDescription "copyToClipboard" -LongDescription "copyToClipboard" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+c" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "c")
 }
 
-Set-PSReadLineKeyHandler -Key "alt+v" -BriefDescription "asVariable" -LongDescription "asVariable" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+v" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "sv ")
 }
 
-Set-PSReadLineKeyHandler -Key "alt+t" -BriefDescription "teeVariable" -LongDescription "teeVariable" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+t" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "tee -Variable ")
 }
 
-Set-PSReadLineKeyHandler -Key "alt+b" -BriefDescription "bat-plain" -LongDescription "bat-plain" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "alt+b" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "oss |bat -p")
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object" -LongDescription "insert-Select-Object" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+k,s" -ScriptBlock {
     $a = [ASTer]::new()
     $prefix = ($a.IsAfterPipe())? "" : "|"
     [PSConsoleReadLine]::Insert($prefix + "select -")
@@ -883,7 +877,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,s" -BriefDescription "insert-Select-Object
 # ls
 ##############################
 
-Set-PSReadLineKeyHandler -Key "ctrl+b,s", "ctrl+b,e", "ctrl+b,c", "ctrl+b,S", "ctrl+b,E", "ctrl+b,C" -BriefDescription "basename-file-match" -LongDescription "basename-file-match" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+b,s", "ctrl+b,e", "ctrl+b,c", "ctrl+b,S", "ctrl+b,E", "ctrl+b,C" -ScriptBlock {
     param($key, $arg)
     $opr = ($key.keychar -cin @("S", "E", "C"))? "-notlike" : "-like"
     $cmd = "ls |? Basename {0} *" -f $opr
