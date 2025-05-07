@@ -210,6 +210,17 @@ function New-ShortCutOnMyDataSources {
     }
 }
 
+function New-VSCodeShortcut {
+    param (
+        [string]$path
+    )
+    $shortcutPath = $pwd.ProviderPath | Join-Path -ChildPath (($path | Split-Path -Leaf) + ".lnk")
+    $wsShell = New-Object -ComObject WScript.Shell
+    $shortcut = $WsShell.CreateShortcut($shortcutPath)
+    $shortcut.TargetPath = "$env:USERPROFILE\scoop\apps\vscode\current\Code.exe"
+    $shortcut.Arguments = '"{0}"' -f $path
+    $shortcut.Save()
+}
 
 function Set-ShortcutFiler {
     param (
