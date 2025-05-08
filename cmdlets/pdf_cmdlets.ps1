@@ -221,6 +221,37 @@ function Invoke-DenoPdfApplyTrimbox {
 
 Set-Alias PdfApplyTrimboxDeno Invoke-DenoPdfApplyTrimbox
 
+function Invoke-DenoPdfUnzipPages {
+    param (
+        [parameter(ValueFromPipeline)]$inputObj
+    )
+    begin {
+        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-unzip.exe"
+        $files = @()
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $files += $file
+    }
+    end {
+        if (-not (Test-Path $denotool)) {
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-unzip"
+            "=> Clone and build from {0}" -f $repo | Write-Host
+            return
+        }
+        $files | ForEach-Object {
+            $params = @('--path={0}' -f $_.FullName)
+            & $denotool $params
+        }
+    }
+}
+
+Set-Alias PdfUnzipPagesDeno Invoke-DenoPdfUnzipPages
+
 function Invoke-DenoPdfExtract {
     param (
         [parameter(ValueFromPipeline)]$inputObj
