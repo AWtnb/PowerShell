@@ -9,14 +9,7 @@ cmdlets for treating markdown
 function Invoke-Markdown2Html {
     param (
         [parameter(Mandatory)]
-        [ArgumentCompleter({
-            return (Get-ChildItem "*.md").Name | ForEach-Object {".\" + $_} | ForEach-Object {
-                if ($_ -match "\s") {
-                    return $_ | Join-String -DoubleQuote
-                }
-                return $_
-            }
-        })][string]$path
+        [string]$path
         ,[switch]$plain
         ,[switch]$invoke
     )
@@ -29,9 +22,11 @@ function Invoke-Markdown2Html {
         return
     }
 
-    $exe = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\m2h.exe"
-    if (-not (Test-Path $exe)) {
-        "Not found: {0}" -f $exe | Write-Host -ForegroundColor Magenta
+    try {
+        Get-Command m2h.exe -ErrorAction Stop > $null
+    }
+    catch {
+        "Exe not found" | Write-Host -ForegroundColor Magenta
         $repo = "https://github.com/AWtnb/m2h"
         "=> Clone and build from {0}" -f $repo | Write-Host
         return
@@ -40,16 +35,14 @@ function Invoke-Markdown2Html {
     $md = Get-Item -LiteralPath $path
     $suf = Get-Date -Format "_yyyyMMdd"
     $params = @(
-        "-src",
-        $md.FullName,
-        "-suffix",
-        $suf
+        ("--src={0}" -f $md.FullName),
+        ("--suffix={0}" -f $suf)
     )
     if ($plain) {
-        $params += "-plain"
+        $params += "--plain"
     }
 
-    Start-Process -path $exe -wait -NoNewWindow -ArgumentList $params
+    m2h.exe $params
 
     if ($invoke) {
         $outPath = $md.Directory.FullName | Join-Path -ChildPath ($md.BaseName + $suf + ".html")

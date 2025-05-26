@@ -120,7 +120,7 @@ function Invoke-DayPicker {
     if ($weekday) {
         $opt += "--weekday"
     }
-    & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\fuzzy-daypick.exe") $opt | Write-Output
+    & fuzzy-daypick.exe $opt | Write-Output
 }
 function Invoke-DayPickerClipper {
     param (
@@ -154,7 +154,7 @@ function Invoke-FuzzyLauncher {
     if ($all) {
         $opt += "--all"
     }
-    & ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\zyl.exe") $opt
+    & zyl.exe $opt
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {

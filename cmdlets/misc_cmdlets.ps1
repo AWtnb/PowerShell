@@ -478,9 +478,11 @@ function Invoke-DiffAsHtml {
         ,[string]$outName = "out"
     )
 
-    $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\go-ppdiff.exe"
-    if (-not (Test-Path $gotool)) {
-        "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+    try {
+        Get-Command go-ppdiff.exe -ErrorAction Stop > $null
+    }
+    catch {
+        "Exe not found" | Write-Host -ForegroundColor Magenta
         $repo = "https://github.com/AWtnb/go-ppdiff"
         "=> Clone and build from {0}" -f $repo | Write-Host
         return
@@ -495,7 +497,7 @@ function Invoke-DiffAsHtml {
         ('--revised={0}' -f $toPath),
         ('--out={0}' -f $outPath)
     )
-    & $gotool $params
+    & go-ppdiff.exe $params
 }
 
 function Invoke-RecycleBin {
@@ -1006,14 +1008,16 @@ function Get-VBAGistZen2han {
 }
 
 function Invoke-Anchoco {
-    $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\anchoco.exe"
-    if (-not (Test-Path $gotool)) {
-        "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+    try {
+        Get-Command anchoco.exe -ErrorAction Stop > $null
+    }
+    catch {
+        "Exe not found" | Write-Host -ForegroundColor Magenta
         $repo = "https://github.com/AWtnb/anchoco"
         "=> Clone and build from {0}" -f $repo | Write-Host
         return
     }
-    $result = & $gotool ('--src={0}' -f ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\prompts.yaml"))
+    $result = & anchoco.exe ('--src={0}' -f ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\prompts.yaml"))
     if ($LASTEXITCODE -ne 0) {
         return
     }

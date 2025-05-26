@@ -15,14 +15,16 @@ function Invoke-GoPdfConc {
     if ($pdfs.Count -le 1) {
         return
     }
-    $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\go-pdfconc.exe"
-    if (-not (Test-Path $gotool)) {
-        "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+    try {
+        Get-Command go-pdfconc.exe -ErrorAction Stop > $null
+    }
+    catch {
+        "Exe not found" | Write-Host -ForegroundColor Magenta
         $repo = "https://github.com/AWtnb/go-pdfconc"
         "=> Clone and build from {0}" -f $repo | Write-Host
         return
     }
-    $pdfs.FullName | & $gotool "--outname=$outname"
+    $pdfs.FullName | & go-pdfconc.exe "--outname=$outname"
 }
 Set-Alias -Name pdfConcGo -Value Invoke-GoPdfConc
 

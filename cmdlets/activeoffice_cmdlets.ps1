@@ -1014,15 +1014,17 @@ class DocDiff {
 }
 
 
-function Invoke-DiffOnActiveWordDocumntWithPython {
+function Invoke-GoDiffOnActiveWordDocumnt {
     param (
         [parameter(Mandatory)][string]$originalFile
         ,[string]$outName = ""
     )
 
-    $gotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\go-ppdiff.exe"
-    if (-not (Test-Path $gotool)) {
-        "Not found: {0}" -f $gotool | Write-Host -ForegroundColor Magenta
+    try {
+        Get-Command go-ppdiff.exe -ErrorAction Stop > $null
+    }
+    catch {
+        "Exe not found" | Write-Host -ForegroundColor Magenta
         $repo = "https://github.com/AWtnb/go-ppdiff"
         "=> Clone and build from {0}" -f $repo | Write-Host
         return
@@ -1088,10 +1090,9 @@ function Invoke-DiffOnActiveWordDocumntWithPython {
             ('--revised={0}' -f $toItem.FullName),
             ('--out={0}' -f $outPath)
         )
-        & $gotool $params
+        & go-ppdiff.exe $params
     }
 }
-Set-Alias pyDiffActiveDoc Invoke-DiffOnActiveWordDocumntWithPython
 
 function Invoke-DiffFromActiveWordDocumnt {
     <#
