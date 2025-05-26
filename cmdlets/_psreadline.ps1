@@ -7,6 +7,7 @@ PSReadLine Configuration
 ============================== #>
 
 using namespace Microsoft.PowerShell
+using namespace System.Management.Automation.Language
 
 # https://github.com/PowerShell/PSReadLine/blob/dc38b451be/PSReadLine/SamplePSReadLineProfile.ps1
 # you can search keychar with `[Console]::ReadKey()`
@@ -132,7 +133,6 @@ class ASTer {
     [System.Management.Automation.Language.Token[]]$tokens
     $errors
     $cursor
-    static $PipeKind = [System.Management.Automation.Language.TokenKind]::Pipe
 
     ASTer() {
         $a = $t = $e = $c = $null
@@ -143,23 +143,23 @@ class ASTer {
         $this.cursor = $c
     }
 
-    [System.Management.Automation.Language.Ast[]] Listup([string]$name) {
+    [Ast[]] Listup([string]$name) {
         return $this.ast.FindAll({
                 return $args[0].GetType().Name.EndsWith($name)
             }, $true)
     }
 
-    [System.Management.Automation.Language.Ast] GetActiveAst([string]$name) {
+    [Ast] GetActiveAst([string]$name) {
         return $this.Listup($name) | Where-Object {
             return ($_.Extent.StartOffset -le $this.cursor) -and ($this.cursor -le $_.Extent.EndOffset)
         } | Select-Object -Last 1
     }
 
-    [System.Management.Automation.Language.Ast] GetPreviousAst([string]$name) {
+    [Ast] GetPreviousAst([string]$name) {
         return $this.Listup($name) | Where-Object { $_.Extent.EndOffset -lt $this.cursor } | Select-Object -Last 1
     }
 
-    [System.Management.Automation.Language.Ast] GetNextAst([string]$name) {
+    [Ast] GetNextAst([string]$name) {
         return $this.Listup($name) | Where-Object { $_.Extent.StartOffset -gt $this.cursor } | Select-Object -First 1
     }
 
@@ -175,18 +175,18 @@ class ASTer {
         return $idx
     }
 
-    [System.Management.Automation.Language.Token] GetActiveToken() {
+    [Token] GetActiveToken() {
         $i = $this.GetActiveTokenIndex()
         return $this.tokens[$i]
     }
 
-    [System.Management.Automation.Language.Token] GetPreviousToken() {
+    [Token] GetPreviousToken() {
         $i = $this.GetActiveTokenIndex()
         $pos = $i - 1
         return $this.tokens[$pos]
     }
 
-    [System.Management.Automation.Language.Token] GetNextToken() {
+    [Token] GetNextToken() {
         $i = $this.GetActiveTokenIndex()
         $pos = $i + 1
         return $this.tokens[$pos]
@@ -202,13 +202,13 @@ class ASTer {
 
     [bool] IsAfterPipe() {
         if ($this.IsEndOfToken()) {
-            return $this.GetActiveToken().Kind -eq [ASTer]::PipeKind
+            return $this.GetActiveToken().Kind -eq [TokenKind]::Pipe
         }
-        return $this.GetPreviousToken().Kind -eq [ASTer]::PipeKind
+        return $this.GetPreviousToken().Kind -eq [TokenKind]::Pipe
     }
 
     [bool] IsBeforePipe() {
-        return $this.GetActiveToken().Kind -eq [ASTer]::PipeKind
+        return $this.GetActiveToken().Kind -eq [TokenKind]::Pipe
     }
 
     ReplaceTokenByIndex([int]$index, [string]$newText) {
@@ -243,7 +243,7 @@ Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
         return $true
     }
 
-    $targets = @([System.Management.Automation.Language.TokenKind]::Parameter, [System.Management.Automation.Language.TokenKind]::EndOfInput)
+    $targets = @([TokenKind]::Parameter, [TokenKind]::EndOfInput)
     $a = [Aster]::new()
     $t = $a.GetActiveToken()
     if ($t.Kind -in $targets -or $a.cursor -eq $t.Extent.StartOffset) {
@@ -270,14 +270,14 @@ Set-PSReadlineKeyHandler -Key "ctrl+alt+I,t" -ScriptBlock {
 
 Set-PSReadlineKeyHandler -Key "ctrl+alt+k" -ScriptBlock {
     $a = [ASTer]::new()
-    $lastPipe = $a.tokens | Where-Object {$_.Kind -eq [Aster]::PipeKind} | Where-Object {$_.Extent.EndOffset -le $a.cursor} | Select-Object -Last 1
+    $lastPipe = $a.tokens | Where-Object {$_.Kind -eq [TokenKind]::Pipe} | Where-Object {$_.Extent.EndOffset -le $a.cursor} | Select-Object -Last 1
     if ($lastPipe) {
         [PSConsoleReadLine]::SetCursorPosition($lastPipe.Extent.EndOffset - 1)
     }
 }
 Set-PSReadlineKeyHandler -Key "ctrl+alt+j" -ScriptBlock {
     $a = [ASTer]::new()
-    $nextPipe = $a.tokens | Where-Object {$_.Kind -eq [Aster]::PipeKind} | Where-Object {$_.Extent.StartOffset -ge $a.cursor} | Select-Object -First 1
+    $nextPipe = $a.tokens | Where-Object {$_.Kind -eq [TokenKind]::Pipe} | Where-Object {$_.Extent.StartOffset -ge $a.cursor} | Select-Object -First 1
     if ($nextPipe) {
         [PSConsoleReadLine]::SetCursorPosition($nextPipe.Extent.StartOffset + 1)
     }
@@ -297,7 +297,7 @@ Set-PSReadLineKeyHandler -Key "alt+n" -ScriptBlock {
         return
     }
     $t = $a.GetActiveToken()
-    if ($t.Kind -eq "EndOfInput" -or $a.IsEndOfToken() -or $a.IsBeforePipe()) {
+    if ($t.Kind -eq [TokenKind]::EndOfInput -or $a.IsEndOfToken() -or $a.IsBeforePipe()) {
         $s = ($a.IsEndOfToken())? " -" : "-"
         [PSConsoleReadLine]::Insert($s)
         [PSConsoleReadLine]::MenuComplete()
@@ -761,9 +761,16 @@ Set-PSReadLineKeyHandler -Key "tab" -BriefDescription "smartCompletion" -LongDes
         [PSConsoleReadLine]::TabCompleteNext()
     }
     $a = [ASTer]::new()
-    if ($a.GetActiveToken().Kind -eq "LParen" -and $a.GetNextToken().Kind -ne "RParen") {
+    $active = $a.GetActiveToken()
+    $next = $a.GetNextToken()
+
+    if ($active.Kind -eq [TokenKind]::LParen -and $next.Kind -ne [TokenKind]::RParen) {
         [PSConsoleReadLine]::Insert(")")
         [PSConsoleReadLine]::BackwardChar()
+        return
+    }
+    if ($active.Kind -eq [TokenKind]::Identifier -and $next.Kind -eq [TokenKind]::RParen) {
+        [PSConsoleReadLine]::DeleteChar()
         return
     }
 }
@@ -793,7 +800,7 @@ Set-PSReadLineKeyHandler -Key "`"","'" -BriefDescription "smartQuotation" -LongD
 
     $a = [ASTer]::new()
     $token = $a.GetActiveToken()
-    if ( ($token.Kind -eq "StringLiteral" -and $mark -eq '"') -or ($token.Kind -eq "StringExpandable" -and $mark -eq "'") ) {
+    if ( ($token.Kind -eq [TokenKind]::StringLiteral -and $mark -eq '"') -or ($token.Kind -eq [TokenKind]::StringExpandable -and $mark -eq "'") ) {
         [PSConsoleReadLine]::Insert($mark)
         return
     }
