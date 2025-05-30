@@ -532,6 +532,11 @@ function Invoke-ActiveWordDocumentWindowDuplicate {
     $wd.NewWindow() > $null
 }
 
+function wordDuplicateForRevise {
+    Invoke-ActiveWordDocumentWindowDuplicate
+    Switch-ActiveWordDocumentRevision
+}
+
 function Switch-ActiveWordDocumentRevision {
     $wd = Get-ActiveWordApp
     if (-not $wd) {
