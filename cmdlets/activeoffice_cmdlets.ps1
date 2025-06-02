@@ -549,6 +549,16 @@ function Switch-ActiveWordDocumentRevision {
         $wd.CommandBars.ExecuteMso($_)
     }
 }
+Set-Alias -Name toggleWordRevision -Value Switch-ActiveWordDocumentRevision
+
+function Switch-ActiveWordDocumentComment {
+    $wd = Get-ActiveWordApp
+    if (-not $wd) {
+        return
+    }
+    $wd.CommandBars.ExecuteMso("ReviewShowComments")
+}
+Set-Alias -Name toggleWordComment -Value Switch-ActiveWordDocumentComment
 
 function Get-ActiveWordDocumentInsertedText {
     <#
