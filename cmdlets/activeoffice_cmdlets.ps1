@@ -467,6 +467,17 @@ function Invoke-GrepOnActiveWordDocumentComment {
 }
 
 
+function Invoke-RemoveUnDisplayableCommentOnActiveWord {
+    $doc = Get-ActiveWordDocument
+    if (-not $doc) { return }
+    $doc.Comments | ForEach-Object {
+        if (-not $_.Scope.Text) {
+            "Removed comment with no target text:`n{0}" -f $_.Range.Text | Write-Host
+            $_.Delete()
+        }
+    }
+}
+
 function Invoke-AcceptFormatRevisionOnActiveWordDocument {
     <#
         .SYNOPSIS
