@@ -275,6 +275,24 @@ Class Prompter {
 }
 
 
+# restart keyhac
+function Restart-Keyhac {
+    $procs = Get-Process -Name "keyhac" -ErrorAction SilentlyContinue
+    if ($procs) {
+        $path = ($procs | Select-Object -First 1).Path
+        $procs | Stop-Process -Force
+        (Start-Process -FilePath $path -PassThru).PriorityClass = "High"
+    }
+}
+
+
+function Set-KeyhacPriority {
+    Get-Process -Name "keyhac" -ErrorAction SilentlyContinue | Where-Object {$_.PriorityClass -ne "High"} | ForEach-Object {
+        $_.PriorityClass = "High"
+    }
+}
+
+
 function prompt {
     $p = [Prompter]::New()
     $p.Display()
@@ -282,6 +300,8 @@ function prompt {
     if (-not (Reset-ConsoleIME)) {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
     }
+
+    Set-KeyhacPriority
 
     return $p.GetPrompt()
 }
@@ -473,12 +493,6 @@ function Stop-PsStyleRendering {
 }
 function Start-PsStyleRendering {
     $global:PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::Ansi
-}
-
-# restart keyhac
-function Restart-Keyhac {
-    Get-Process | Where-Object {$_.Name -eq "keyhac"} | Stop-Process -Force
-    Start-Process ("C:\Users\{0}\Sync\portable_app\keyhac\keyhac.exe" -f $env:USERNAME)
 }
 
 # restart corvusskk server
