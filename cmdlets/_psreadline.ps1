@@ -21,8 +21,8 @@ Set-PSReadlineOption -HistoryNoDuplicates `
     switch -regex ($command) {
         "SKIPHISTORY" {return $false}
         "^dsk$" {return $false}
-        " -execute" {return $false}
-        " -force" {return $false}
+        " -execute *$" {return $false}
+        " -force *$" {return $false}
     }
     return $true
 }
