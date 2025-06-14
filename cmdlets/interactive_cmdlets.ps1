@@ -208,14 +208,16 @@ function ghRemote {
     )
     $names = gh.exe repo list --json name --jq ".[] | .name" --limit 200
     if ($names.Count -lt 1) { return }
-    $n = $names | fzf.exe
-    if ($LASTEXITCODE -ne 0 -or $n.Length -lt 1) { return }
-    if ($clone) {
-        $u = "https://github.com/AWtnb/{0}.git" -f $n
-        git clone $u
-    } else {
-        $u = "https://github.com/AWtnb/" + $n
-        Start-Process $u
+    $selected = @($names | fzf.exe --multi --layout=reverse --height=50%)
+    if ($LASTEXITCODE -ne 0 -or $selected.Count -lt 1) { return }
+    $selected | ForEach-Object {
+        if ($clone) {
+            $u = "https://github.com/AWtnb/{0}.git" -f $_
+            git clone $u
+        } else {
+            $u = "https://github.com/AWtnb/" + $_
+            Start-Process $u
+        }
     }
 }
 
