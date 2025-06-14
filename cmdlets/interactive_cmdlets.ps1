@@ -206,20 +206,6 @@ function ghRemote {
     param (
         [switch]$clone
     )
-    try {
-        gh.exe --version > $null
-    }
-    catch {
-        Write-Host "gh.exe (github-cli) not found!"
-        return
-    }
-    try {
-        fzf.exe --version > $null
-    }
-    catch {
-        Write-Host "fzf.exe not found!"
-        return
-    }
     $names = gh.exe repo list --json name --jq ".[] | .name" --limit 200
     if ($names.Count -lt 1) { return }
     $n = $names | fzf.exe
