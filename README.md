@@ -4,7 +4,7 @@
 
 Run [`install.ps1`](./install.ps1) .
 
-Running [`set-startmenu.ps1`] makes start menu to edit this repository on VSCode.
+Running [`set-startmenu.ps1`](./set-startmenu.ps1) makes start menu to edit this repository on VSCode.
 
 ### Additional tools
 
