@@ -282,6 +282,8 @@ function Restart-Keyhac {
         $path = ($procs | Select-Object -First 1).Path
         $procs | Stop-Process -Force
         (Start-Process -FilePath $path -PassThru).PriorityClass = "High"
+    } else {
+        (Start-Process -FilePath $($env:USERPROFILE | Join-Path -ChildPath "Sync\portable_app\keyhac\keyhac.exe") -PassThru).PriorityClass = "High"
     }
 }
 
