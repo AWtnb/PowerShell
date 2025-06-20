@@ -281,14 +281,14 @@ function Restart-Keyhac {
     if ($procs) {
         $path = ($procs | Select-Object -First 1).Path
         $procs | Stop-Process -Force
-        (Start-Process -FilePath $path -PassThru).PriorityClass = "High"
+        Start-Process -FilePath $path
     } else {
-        (Start-Process -FilePath $($env:USERPROFILE | Join-Path -ChildPath "Sync\portable_app\keyhac\keyhac.exe") -PassThru).PriorityClass = "High"
+        Start-Process -FilePath $($env:USERPROFILE | Join-Path -ChildPath "Sync\portable_app\keyhac\keyhac.exe") -PassThru
     }
 }
 
 
-function Set-KeyhacPriority {
+function Set-KeyhacPriorityHigh {
     Get-Process -Name "keyhac" -ErrorAction SilentlyContinue | Where-Object {$_.PriorityClass -ne "High"} | ForEach-Object {
         $_.PriorityClass = "High"
     }
@@ -302,8 +302,6 @@ function prompt {
     if (-not (Reset-ConsoleIME)) {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
     }
-
-    Set-KeyhacPriority
 
     return $p.GetPrompt()
 }
