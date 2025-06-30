@@ -212,11 +212,18 @@ function ghRemote {
     if ($LASTEXITCODE -ne 0 -or $selected.Count -lt 1) { return }
     $selected | ForEach-Object {
         if ($clone) {
-            $u = "https://github.com/AWtnb/{0}.git" -f $_
-            git clone $u
-        } else {
-            $u = "https://github.com/AWtnb/" + $_
-            Start-Process $u
+            $url = "https://github.com/AWtnb/{0}.git" -f $_
+            git clone $url
+            if ($LASTEXITCODE -eq 0) {
+                $cmd = Get-Command code -ErrorAction SilentlyContinue
+                if ($cmd) {
+                    Start-Process code -ArgumentList $selected
+                }
+            }
+        }
+        else {
+            $url = "https://github.com/AWtnb/" + $_
+            Start-Process $url
         }
     }
 }
