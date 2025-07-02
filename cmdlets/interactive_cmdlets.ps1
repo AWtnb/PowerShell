@@ -217,7 +217,7 @@ function ghRemote {
             if ($LASTEXITCODE -eq 0) {
                 $cmd = Get-Command code -ErrorAction SilentlyContinue
                 if ($cmd) {
-                    Start-Process code -ArgumentList $selected
+                    Start-Process code -ArgumentList $selected -NoNewWindow
                 }
             }
         }
