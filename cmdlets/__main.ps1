@@ -12,7 +12,23 @@ function Reset-OutputEncodingToSJIS {
     "Output encoding: reset to default (shift_jis)" | Write-Host -ForegroundColor Yellow
 }
 
-$env:TABLACUS_PATH = $env:USERPROFILE | Join-Path -ChildPath "Sync\portable_app\tablacus\TE64.exe"
+function Update-Repositories {
+    param (
+        [parameter(Mandatory)][string]$root
+    )
+    Get-ChildItem -Path $root -Directory | Where-Object {
+        $p = ($_.FullName | Join-Path -ChildPath ".git")
+        return (Test-Path $p -PathType Container)
+    } | ForEach-Object {
+        Push-Location $_.FullName
+        "Updating repository: {0}" -f $_.Name | Write-Host -ForegroundColor Cyan
+        git pull
+        if ($LASTEXITCODE -ne 0) {
+            "Failed to update repository: {0}" -f $_.Name | Write-Host -ForegroundColor Red
+        }
+        Pop-Location
+    }
+}
 
 #################################################################
 # functions arround prompt customization

@@ -79,14 +79,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     [PSConsoleReadLine]::AcceptLine()
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+H" -ScriptBlock {
-    $bs = [PSBufferState]::new()
-    $line = $bs.CursorLine.Text
-    $c = ([PSConsoleReadLine]::GetHistoryItems() | Select-Object -Last 100).CommandLine | fzf.exe --query=$line
-    if ($c) {
-        $bs.RevertLine()
-        [PSConsoleReadLine]::Insert($c)
-    }
+Set-PSReadLineKeyHandler -Key "alt+e" -ScriptBlock {
+    [PSConsoleReadLine]::Insert('$env:')
 }
 
 
