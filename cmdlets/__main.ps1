@@ -20,12 +20,19 @@ function Update-Repositories {
         $p = ($_.FullName | Join-Path -ChildPath ".git")
         return (Test-Path $p -PathType Container)
     } | ForEach-Object {
+
         Push-Location $_.FullName
-        "Updating repository: {0}" -f $_.Name | Write-Host -ForegroundColor Cyan
-        git pull
-        if ($LASTEXITCODE -ne 0) {
-            "Failed to update repository: {0}" -f $_.Name | Write-Host -ForegroundColor Red
+        "Updating repository: {0}" -f $_.Name | Write-Host -ForegroundColor Yellow
+
+        $status = git status --porcelain --branch 2>$null
+        if ($status -match "\[ahead \d+\]") {
+            "Repository '{0}' has unpushed commits!" -f $_.Name | Write-Host -ForegroundColor Red -NoNewline
+            "==> skipped." | Write-Host
         }
+        else {
+            git pull
+        }
+
         Pop-Location
     }
 }
