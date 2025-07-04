@@ -1,7 +1,7 @@
 $vscode = (Get-Command "Code").Source | Split-Path -Parent | Split-Path -Parent | Join-Path -ChildPath "code.exe"
 if (Test-Path $vscode) {
     $wsShell = New-Object -ComObject WScript.Shell
-    $startMenu = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\Microsoft\Windows\Start Menu\Programs"
+    $startMenu = $env:APPDATA | Join-Path -ChildPath "Microsoft\Windows\Start Menu\Programs"
     $shortcutName = "{0}-on-vscode.lnk" -f ($PSScriptRoot | Split-Path -Leaf)
     $shortcutPath = $startMenu | Join-Path -ChildPath $shortcutName
     $shortcut = $wsShell.CreateShortcut($shortcutPath)

@@ -171,7 +171,7 @@ function New-ShortCutOnStartup {
         [parameter(Mandatory)][string]$path
     )
     if (Test-Path $path) {
-        $startup = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+        $startup = $env:APPDATA | Join-Path -ChildPath "Microsoft\Windows\Start Menu\Programs\Startup"
         New-ShortCut -src $path -shortcutPlace $startup
     }
     else {
@@ -184,7 +184,7 @@ function New-ShortCutOnStartmenu {
         [parameter(Mandatory)][string]$path
     )
     if (Test-Path $path) {
-        $startup = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\Microsoft\Windows\Start Menu"
+        $startup = $env:APPDATA | Join-Path -ChildPath "Microsoft\Windows\Start Menu"
         New-ShortCut -src $path -shortcutPlace $startup
     }
     else {

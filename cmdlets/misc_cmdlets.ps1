@@ -836,7 +836,7 @@ if ("PresentationCore" -notin ([System.AppDomain]::CurrentDomain.GetAssemblies()
 }
 function Get-LocalFont {
     $globalFonts = Get-ChildItem "C:\Windows\Fonts" -File
-    $userFonts = Get-ChildItem ($env:USERPROFILE | Join-Path -ChildPath "AppData\Local\Microsoft\Windows\Fonts") -File
+    $userFonts = Get-ChildItem ($env:LOCALAPPDATA | Join-Path -ChildPath "Microsoft\Windows\Fonts") -File
     $globalFonts + $userFonts | Where-Object {$_.Extension -in @(".ttf", ".otf", ".ttc")} | ForEach-Object {
         $path = $_.Fullname
         try {

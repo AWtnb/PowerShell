@@ -523,7 +523,7 @@ function Restart-CorvusSKK {
 
 # get skk customize functions
 function Get-CorvusSKKUserFunctionExamples {
-    $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\init.lua"
+    $p = $env:APPDATA | Join-Path -ChildPath "CorvusSKK\init.lua"
     if (Test-Path $p) {
         $pattern = "^- ``"
         Get-Content -Path $p | Select-String -Pattern $pattern | ForEach-Object {$_.Line -replace $pattern, "" -replace "``$", ""} | Write-Output
@@ -532,7 +532,7 @@ function Get-CorvusSKKUserFunctionExamples {
 
 # get skk lua functions in userdict
 function Get-CorvusSKKLuaFunctionsInUserdict {
-    $p = $env:USERPROFILE | Join-Path -ChildPath "AppData\Roaming\CorvusSKK\userdict.txt"
+    $p = $env:APPDATA | Join-Path -ChildPath "CorvusSKK\userdict.txt"
     if (Test-Path $p) {
         Get-Content -Path $p | Select-String -Pattern "/\([a-z]" | ForEach-Object {
             $line = $_.Line
