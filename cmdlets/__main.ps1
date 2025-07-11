@@ -16,11 +16,12 @@ function Switch-AutoHideTaskbar {
     $path = "HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3"
     $val = (Get-ItemProperty -Path $path).Settings
     $flagIdx = 8
-    if ($val[$flagIdx] -eq 3) {
-        $val[$flagIdx] = 2
+    # Windows11
+    if ($val[$flagIdx] -eq 123) {
+        $val[$flagIdx] = 122
     }
     else {
-        $val[$flagIdx] = 3
+        $val[$flagIdx] = 123
     }
     Set-ItemProperty -Path $path -Name "Settings" -Value $val
     Stop-Process -ProcessName "explorer" -Force
