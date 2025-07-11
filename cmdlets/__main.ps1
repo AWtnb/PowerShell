@@ -12,6 +12,20 @@ function Reset-OutputEncodingToSJIS {
     "Output encoding: reset to default (shift_jis)" | Write-Host -ForegroundColor Yellow
 }
 
+function Switch-AutoHideTaskbar {
+    $path = "HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3"
+    $val = (Get-ItemProperty -Path $path).Settings
+    $flagIdx = 8
+    if ($val[$flagIdx] -eq 3) {
+        $val[$flagIdx] = 2
+    }
+    else {
+        $val[$flagIdx] = 3
+    }
+    Set-ItemProperty -Path $path -Name "Settings" -Value $val
+    Stop-Process -ProcessName "explorer" -Force
+}
+
 function Update-Repositories {
     param (
         [parameter(Mandatory)][string]$root
