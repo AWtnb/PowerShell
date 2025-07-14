@@ -12,6 +12,105 @@ foreach ($assembly in @("System.Drawing", "System.Windows.Forms")) {
     }
 }
 
+class PhotoFile {
+    [string]$path
+    [string]$name
+    [string]$ext
+    [datetime]$filler
+
+    PhotoFile([string]$path) {
+        $this.path = $path
+        $item = Get-Item $path
+        $this.name = $item.Name
+        $this.ext = $item.Extension
+        $this.filler = Get-Date -UnixTimeSeconds 0
+    }
+
+    [int] getByteOffset() {
+        if (Test-Path $this.path -PathType Container) {
+            return -1
+        }
+        $e = $this.ext.ToLower().Substring(1)
+        if ($e -in @("jpeg", "jpg", "webp")) {
+            return 0
+        }
+        if ($e -eq "raf"){
+            if ($this.name.StartsWith("_DSF")) {
+                return 0x19E
+            }
+            return 0x17A
+        }
+        if ($e -eq "cr2") {
+            return 0x144
+        }
+        if ($this.name.StartsWith("MVI_") -and $e -eq "mp4") {
+            return 0x160
+        }
+        return -1
+    }
+
+    [datetime] fromExif() {
+        $fs = [System.IO.File]::OpenRead($this.path)
+        $img = [System.Drawing.Bitmap]::FromStream($fs, $false, $false)
+        try {
+            $b = $img.GetPropertyItem(0x9003).value
+            $bytes =  $b[0..($b.Length - 2)]
+            $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
+            return [Datetime]::ParseExact($decoded.Trim(), "yyyy:MM:dd HH:mm:ss", $null)
+        }
+        catch {
+            return $this.filler
+        }
+        finally {
+            $img.Dispose()
+            $fs.Close()
+        }
+    }
+
+    [datetime]getTimestamp() {
+        $offset = $this.getByteOffset()
+        if ($offset -lt 1) {
+            if ($offset -eq 0) {
+                return $this.fromExif()
+            }
+            return $this.filler
+        }
+        $bytes = Get-Content $this.path -AsByteStream -TotalCount ($offset + 19) | Select-Object -Last 19
+        $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
+        return [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
+    }
+
+    [PSCustomObject] parse([string]$fmt) {
+        $ts = $this.getTimestamp().ToString($fmt)
+        return [PSCustomObject]@{
+            "Name" = $this.name;
+            "Timestamp" = $ts;
+        }
+    }
+}
+
+function Rename-PhotoFile {
+    param (
+        [switch]$execute
+    )
+    $color = ($execute)? "Cyan" : "White"
+    $input | ForEach-Object {
+        $p = [PhotoFile]::new($_.FullName).parse("yyyy_MMdd_HHmmss00")
+        $newName = "{0}_{1}" -f $p.Timestamp, $p.Name
+        try {
+            $p.Name | Write-Host -NoNewline
+            " => " | Write-Host -ForegroundColor DarkGray -NoNewline
+            $newName | Write-Host -ForegroundColor $color
+            if ($execute) {
+                $_ | Rename-Item -NewName $newName -ErrorAction Stop
+            }
+        }
+        catch {
+            "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Host -ForegroundColor Magenta
+        }
+    }
+}
+
 function Get-Mp4Property {
     param (
         [parameter(ValueFromPipeline)]$inputObj
@@ -19,7 +118,7 @@ function Get-Mp4Property {
     )
     begin {
         $sh = New-Object -ComObject Shell.Application
-        $filler = (Get-Date -Format $format -Year 1111 -Month 11 -Day 11 -Hour 11 -Minute 11 -Second 11 -Millisecond 111) -replace "1", "0"
+        $filler = Get-Date -Format $format -UnixTimeSeconds 0
     }
     process {
         $fileObj = Get-Item -LiteralPath $inputObj
@@ -38,244 +137,6 @@ function Get-Mp4Property {
     end {}
 }
 
-function Get-ExifDate {
-    <#
-        .SYNOPSIS
-        JPEG 画像の EXIF 撮影日時情報を取得する
-        .EXAMPLE
-        ls | Get-ExifDate
-        Get-ExifDate -inputObj .\hogehoge.jpeg
-    #>
-    param (
-        [parameter(ValueFromPipeline)]$inputObj
-        ,[string]$format = "yyyy_MMdd_HHmmss00"
-    )
-    begin {
-
-        $filler = (Get-Date -Format $format -Year 1111 -Month 11 -Day 11 -Hour 11 -Minute 11 -Second 11 -Millisecond 111) -replace "1", "0"
-
-        # https://www.84kure.com/blog/2014/07/10/
-        [scriptblock]$getExifByteArray = {
-            param([string]$path)
-            $fs = [System.IO.File]::OpenRead($path)
-            $img = [System.Drawing.Bitmap]::FromStream($fs, $false, $false)
-            try {
-                $b = $img.GetPropertyItem(0x9003).value
-                return $b[0..($b.Length - 2)]
-            }
-            catch {
-                return $null
-            }
-            finally {
-                $img.Dispose()
-                $fs.Close()
-            }
-        }
-
-        [scriptblock]$makeObject = {
-            param([string]$name, [string]$timestamp)
-            return [PSCustomObject]@{
-                Name = $name;
-                Timestamp = $timestamp;
-            }
-        }
-    }
-    process {
-        $fileObj = Get-Item -LiteralPath $inputObj
-        if ($fileObj.Extension -notin @(".jpeg", ".jpg", ".webp")) {
-            return $makeObject.InvokeReturnAsIs($fileObj.Name, $filler)
-        }
-        $byteArray = $getExifByteArray.InvokeReturnAsIs($fileObj.FullName)
-        if (-not $byteArray) {
-            return $makeObject.InvokeReturnAsIs($fileObj.Name, $filler)
-        }
-        $decoded = [System.Text.Encoding]::ASCII.GetString($byteArray)
-        $date = [Datetime]::ParseExact($decoded.Trim(), "yyyy:MM:dd HH:mm:ss", $null)
-        try {
-            $timestamp = $date.ToString($format)
-            return $makeObject.InvokeReturnAsIs($fileObj.Name, $timestamp)
-        }
-        catch {
-            return $makeObject.InvokeReturnAsIs($fileObj.Name, $filler)
-        }
-    }
-    end {}
-}
-
-function Rename-ExifDate {
-    param (
-        [switch]$execute
-        ,[string]$format = "yyyy_MMdd_HHmmss00"
-    )
-    $color = ($execute)? "Cyan" : "White"
-    $input | Where-Object Extension -in @(".jpeg", ".jpg", ".webp") | ForEach-Object {
-        $itemName = $_.Name
-        $newName = "{0}_{1}" -f ($_ | Get-ExifDate -format $format).Timestamp, $itemName
-        try {
-            "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
-            if ($execute) {
-                $_ | Rename-Item -NewName $newName -ErrorAction Stop
-            }
-        }
-        catch {
-            "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Host -ForegroundColor Magenta
-        }
-    }
-}
-
-class TimestampParser {
-    [System.IO.FileInfo]$file
-    [string]$format
-    [string]$filler
-
-    TimestampParser([string]$path, [string]$format) {
-        $this.file = Get-Item $path
-        $this.format = $format
-        $this.filler = (Get-Date -Format $format -Year 1111 -Month 11 -Day 11 -Hour 11 -Minute 11 -Second 11 -Millisecond 111) -replace "1", "0"
-    }
-
-    [string] GetTimestamp([int]$offset) {
-        $bytes = Get-Content $this.file.FullName -AsByteStream -TotalCount ($offset + 19) | Select-Object -Last 19
-        $decoded = [System.Text.Encoding]::ASCII.GetString($bytes)
-        $date = [Datetime]::ParseExact($decoded, "yyyy:MM:dd HH:mm:ss", $null)
-        return $date.ToString($this.format)
-    }
-
-    [PSCustomObject] ToObject([string]$timestamp) {
-        return [PSCustomObject]@{
-            "Name" = $this.file.Name;
-            "Timestamp" = $timestamp;
-        }
-    }
-
-    [PSCustomObject] RAF() {
-        if ($this.file.Extension -ne ".RAF") {
-            return $this.ToObject($this.filler)
-        }
-        $offset = ($this.file.Name.StartsWith("_DSF")) ? 0x19e : 0x17a
-        $ts = $this.GetTimestamp($offset)
-        return $this.ToObject($ts)
-    }
-
-    [PSCustomObject] CR2() {
-        if ($this.file.Extension -ne ".CR2") {
-            return $this.ToObject($this.filler)
-        }
-        $ts = $this.GetTimestamp(0x144)
-        return $this.ToObject($ts)
-    }
-
-    [PSCustomObject] IXYMVI() {
-        if ($this.file.Extension -ne ".MP4" -or -not $this.file.Name.StartsWith("MVI_")) {
-            return $this.ToObject($this.filler)
-        }
-        $ts = $this.GetTimestamp(0x160)
-        return $this.ToObject($ts)
-    }
-
-    [PSCustomObject] IXYJPG() {
-        if ($this.file.Extension -ne ".JPG") {
-            return $this.ToObject($this.filler)
-        }
-        $ts = $this.GetTimestamp(0xe2)
-        return $this.ToObject($ts)
-    }
-
-}
-
-
-
-function Get-RAFTimestamp {
-    param (
-        [parameter(ValueFromPipeline)]$inputObj
-    )
-    begin {}
-    process {
-        $path = (Get-Item -LiteralPath $inputObj).FullName
-        if (Test-Path $path -PathType Leaf) {
-            $parser = [TimestampParser]::new($path, "yyyy_MMdd_HHmmss00")
-            $parser.RAF() | Write-Output
-        }
-    }
-    end {}
-}
-
-function Get-CR2Timestamp {
-    param (
-        [parameter(ValueFromPipeline)]$inputObj
-        )
-    begin {}
-    process {
-        $path = (Get-Item -LiteralPath $inputObj).FullName
-        if (Test-Path $path -PathType Leaf) {
-            $parser = [TimestampParser]::new($path, "yyyy_MMdd_HHmmss00")
-            $parser.CR2() | Write-Output
-        }
-    }
-    end {}
-}
-
-function Get-IXYMVITimestamp {
-    param (
-        [parameter(ValueFromPipeline)]$inputObj
-    )
-    begin {}
-    process {
-        $path = (Get-Item -LiteralPath $inputObj).FullName
-        if (Test-Path $path -PathType Leaf) {
-            $parser = [TimestampParser]::new($path, "yyyy_MMdd_HHmmss00")
-            $parser.IXYMVI() | Write-Output
-        }
-    }
-    end {}
-}
-
-function Rename-RAFTimestamp {
-    param (
-        [switch]$execute
-    )
-    $color = ($execute)? "Cyan" : "White"
-    $input | Where-Object Extension -eq ".RAF" | ForEach-Object {
-        $itemName = $_.Name
-        $timestamp = ($_ | Get-RAFTimestamp).Timestamp
-        if ($timestamp) {
-            $newName = "{0}_{1}" -f $timestamp, $itemName
-            try {
-                "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
-                if ($execute) {
-                    $_ | Rename-Item -NewName $newName -ErrorAction Stop
-                }
-            }
-            catch {
-                "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Error
-            }
-        }
-    }
-}
-
-function Rename-CR2Timestamp {
-    param (
-        [switch]$execute
-    )
-    $color = ($execute)? "Cyan" : "White"
-    $input | Where-Object Extension -eq ".CR2" | ForEach-Object {
-        $itemName = $_.Name
-        $timestamp = ($_ | Get-CR2Timestamp).Timestamp
-        if ($timestamp) {
-            $newName = "{0}_{1}" -f $timestamp, $itemName
-            try {
-                "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
-                if ($execute) {
-                    $_ | Rename-Item -NewName $newName -ErrorAction Stop
-                }
-            }
-            catch {
-                "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Error
-            }
-        }
-    }
-}
-
 function Rename-MiteneTimestamp {
     param (
         [switch]$execute
@@ -284,7 +145,8 @@ function Rename-MiteneTimestamp {
     $format = "yyyy-MM-ddTHHmmss+0900"
     $input | Where-Object Extension -in @(".jpeg", ".jpg", ".webp", ".mp4") | ForEach-Object {
         $itemName = $_.Name
-        $timestamp = ($_.Extension -eq ".mp4")? ($_ | Get-Mp4Property -format $format).Timestamp : ($_ | Get-ExifDate -format $format).Timestamp
+        $timestamp = ($_.Extension -eq ".mp4")? ($_ | Get-Mp4Property -format $format).Timestamp : [PhotoFile]::new($_.FullName).parse($format).Timestamp
+
         if ($timestamp) {
             $newName = "{0}-{1}" -f $timestamp, $itemName
             try {
@@ -298,71 +160,6 @@ function Rename-MiteneTimestamp {
             }
         }
     }
-}
-
-function Rename-IXYMVITimestamp {
-    param (
-        [switch]$execute
-    )
-    $color = ($execute)? "Cyan" : "White"
-    $input | Where-Object Extension -eq ".MP4" | Where-Object Name -Match "^MVI_" | ForEach-Object {
-        $itemName = $_.Name
-        $timestamp = ($_ | Get-IXYMVITimestamp).Timestamp
-        if ($timestamp) {
-            $newName = "{0}_{1}" -f $timestamp, $itemName
-            try {
-                "  '{0}' => '{1}'" -f $itemName, $newName | Write-Host -ForegroundColor $color
-                if ($execute) {
-                    $_ | Rename-Item -NewName $newName -ErrorAction Stop
-                }
-            }
-            catch {
-                "ERROR!: failed to rename '{0}'!" -f $itemName | Write-Error
-            }
-        }
-    }
-}
-
-function ixy650Rename {
-    param (
-        [switch]$execute
-    )
-    $input | ForEach-Object {
-        if ($_.Name.StartsWith("MVI_") -and $_.Extension -eq ".mp4") {
-            $_ | Rename-IXYMVITimestamp -execute:$execute
-        }
-        elseif ($_.Extension -eq ".jpg") {
-            $_ | Rename-ExifDate -execute:$execute
-        }
-     }
-}
-
-function xf10Rename {
-    param (
-        [switch]$execute
-    )
-    $input | Where-Object {$_.Name.StartsWith("_DSF") -or $_.Name.StartsWith("DSCF")} | ForEach-Object {
-        if ($_.Extension -eq ".RAF") {
-            $_ | Rename-RAFTimestamp -execute:$execute
-        }
-        elseif ($_.Extension -eq ".jpg") {
-            $_ | Rename-ExifDate -execute:$execute
-        }
-     }
-}
-
-function eosm6Rename {
-    param (
-        [switch]$execute
-    )
-    $input | Where-Object Name -Match "IMG" | ForEach-Object {
-        if ($_.Extension -eq ".cr2") {
-            $_ | Rename-CR2Timestamp -execute:$execute
-        }
-        elseif ($_.Extension -eq ".jpg") {
-            $_ | Rename-ExifDate -execute:$execute
-        }
-     }
 }
 
 function Invoke-ImageMagickWatermarkFromFile {
