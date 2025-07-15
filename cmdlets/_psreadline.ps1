@@ -83,11 +83,6 @@ Set-PSReadLineKeyHandler -Key "alt+e" -ScriptBlock {
     [PSConsoleReadLine]::Insert('$env:')
 }
 
-
-# accept suggestion
-Set-PSReadLineKeyHandler -Key "ctrl+n" -Function AcceptNextSuggestionWord
-
-
 # format string
 Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "ctrl+k,4", "ctrl+k,5", "ctrl+k,6", "ctrl+k,7", "ctrl+k,8", "ctrl+k,9" -ScriptBlock {
     param($key, $arg)
@@ -123,8 +118,8 @@ Set-PSReadLineKeyHandler -Key "alt+K" -Function SelectShellBackwardWord
 
 # https://github.com/pecigonzalo/Oh-My-Posh/blob/master/plugins/psreadline/psreadline.ps1
 class ASTer {
-    [System.Management.Automation.Language.Ast[]]$ast
-    [System.Management.Automation.Language.Token[]]$tokens
+    [Ast[]]$ast
+    [Token[]]$tokens
     $errors
     $cursor
 
@@ -136,27 +131,6 @@ class ASTer {
         $this.errors = $e
         $this.cursor = $c
     }
-
-    [Ast[]] Listup([string]$name) {
-        return $this.ast.FindAll({
-                return $args[0].GetType().Name.EndsWith($name)
-            }, $true)
-    }
-
-    [Ast] GetActiveAst([string]$name) {
-        return $this.Listup($name) | Where-Object {
-            return ($_.Extent.StartOffset -le $this.cursor) -and ($this.cursor -le $_.Extent.EndOffset)
-        } | Select-Object -Last 1
-    }
-
-    [Ast] GetPreviousAst([string]$name) {
-        return $this.Listup($name) | Where-Object { $_.Extent.EndOffset -lt $this.cursor } | Select-Object -Last 1
-    }
-
-    [Ast] GetNextAst([string]$name) {
-        return $this.Listup($name) | Where-Object { $_.Extent.StartOffset -gt $this.cursor } | Select-Object -First 1
-    }
-
 
     [int] GetActiveTokenIndex() {
         $idx = -1
@@ -216,6 +190,59 @@ class ASTer {
     }
 
 }
+
+# https://github.com/pecigonzalo/Oh-My-Posh/blob/master/plugins/psreadline/psreadline.ps1
+class CommandAST {
+    [Ast[]]$ast
+    [Token[]]$tokens
+    $errors
+    $cursor
+
+    CommandAST() {
+        $a = $t = $e = $c = $null
+        [PSConsoleReadLine]::GetBufferState([ref]$a, [ref]$t, [ref]$e, [ref]$c)
+        $this.ast = $a
+        $this.tokens = $t
+        $this.errors = $e
+        $this.cursor = $c
+    }
+
+    [Ast[]] Listup() {
+        return $this.ast.FindAll({
+            $node = $args[0]
+            return $node -is [CommandAst]
+        }, $true)
+    }
+
+    [Ast] GetActive() {
+        return $this.Listup() | Where-Object {
+            return ($_.Extent.StartOffset -le $this.cursor) -and ($this.cursor -le $_.Extent.EndOffset)
+        } | Select-Object -Last 1
+    }
+
+    [Ast] GetPrevious() {
+        return $this.Listup() | Where-Object { $_.Extent.EndOffset -lt $this.cursor } | Select-Object -Last 1
+    }
+
+    [Ast] GetNext() {
+        return $this.Listup() | Where-Object { $_.Extent.StartOffset -gt $this.cursor } | Select-Object -First 1
+    }
+}
+
+# smart-accept-next-suggestion
+Set-PSReadLineKeyHandler -Key "ctrl+n" -BriefDescription "smart-accept-next-suggestion" -ScriptBlock {
+    $a = [ASTer]::new()
+    $token = $a.GetActiveToken()
+    if ($token.Kind -notin @([TokenKind]::StringExpandable, [TokenKind]::StringLiteral)) {
+        $vervs = (Get-Verb).Verb
+        if ($token.Text -in $vervs) {
+            [PSConsoleReadLine]::Insert("-")
+            return
+        }
+    }
+    [PSConsoleReadLine]::AcceptNextSuggestionWord()
+}
+
 
 # smart-backward-word
 Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
@@ -298,16 +325,16 @@ Set-PSReadLineKeyHandler -Key "alt+n" -ScriptBlock {
     }
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,l" -ScriptBlock {
-    $a = [ASTer]::new()
-    $activeCmd = $a.GetActiveAst("CommandAst")
+Set-PSReadLineKeyHandler -Key "ctrl+k,l" -BriefDescription "insert pipe before active command" -ScriptBlock {
+    $ca = [CommandAST]::new()
+    $activeCmd = $ca.GetActive()
     if ($activeCmd) {
         [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.StartOffset)
         [PSConsoleReadLine]::Insert("|")
         [PSConsoleReadLine]::BackwardChar()
         return
     }
-    $lastCmd = $a.GetPreviousAst("CommandAst")
+    $lastCmd = $ca.GetPrevious()
     if ($lastCmd) {
         [PSConsoleReadLine]::SetCursorPosition($lastCmd.Extent.StartOffset)
     }
@@ -315,22 +342,20 @@ Set-PSReadLineKeyHandler -Key "ctrl+k,l" -ScriptBlock {
     [PSConsoleReadLine]::BackwardChar()
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -ScriptBlock {
-    $a = [ASTer]::new()
-    $activeCmd = $a.GetActiveAst("CommandAst")
+Set-PSReadLineKeyHandler -Key "ctrl+k,alt+l" -BriefDescription "insert pipe after active command" -ScriptBlock {
+    $ca = [CommandAST]::new()
+    $activeCmd = $ca.GetActive()
     if ($activeCmd) {
         [PSConsoleReadLine]::SetCursorPosition($activeCmd.Extent.EndOffset)
         [PSConsoleReadLine]::Insert("|")
         return
     }
-    $nextCmd = $a.GetNextAst("CommandAst")
+    $nextCmd = $ca.GetNext()
     if ($nextCmd) {
         [PSConsoleReadLine]::SetCursorPosition($nextCmd.Extent.EndOffset)
     }
     [PSConsoleReadLine]::Insert("|")
 }
-
-
 
 class PSCursorLine {
     [string]$Text
