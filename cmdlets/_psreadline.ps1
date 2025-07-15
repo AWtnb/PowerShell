@@ -277,7 +277,7 @@ Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
         [PSConsoleReadLine]::ShellBackwardKillWord()
         return
     }
-    if ($t.Text -in @("[", "]", "(", ")")) {
+    if ($t.Text.Length -eq 1) {
         [PSConsoleReadLine]::BackwardDeleteChar()
         return
     }
