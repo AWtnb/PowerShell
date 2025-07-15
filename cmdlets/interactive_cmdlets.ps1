@@ -122,77 +122,13 @@ function Invoke-DayPicker {
     }
     & fuzzy-daypick.exe $opt | Write-Output
 }
-function Invoke-DayPickerClipper {
-    param (
-        [string]$start = ""
-        ,[int]$y = 0
-        ,[int]$m = 0
-        ,[int]$d = 0
-        ,[int]$span = 365
-        ,[switch]$weekday
-    )
-    $days = Invoke-DayPicker -start $start -y $y -m $m -d $d -span $span -weekday:$weekday
-    if ($days -and $LASTEXITCODE -eq 0) {
-        $days | Set-Clipboard
-        "coplied:" | Write-Host -ForegroundColor Blue
-        $days | Write-Host
-        [System.Windows.Forms.SendKeys]::SendWait("%{Tab}")
-    }
-}
-Set-PSReadLineKeyHandler -Key "ctrl+alt+d" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-DayPickerClipper -weekday")
-}
-
-
-function Invoke-FuzzyLauncher {
-    param (
-        [switch]$all
-    )
-    $dataPath = ($env:USERPROFILE | Join-Path -ChildPath "Personal\launch.yaml")
-    $opt = @("--src", $dataPath, "--exclude=_obsolete,node_modules")
-    if ($all) {
-        $opt += "--all"
-    }
-    & zyl.exe $opt
-}
-
-Set-PSReadLineKeyHandler -Key "ctrl+alt+z","alt+z" -ScriptBlock {
-    param($key, $arg)
-    $flag = ($key.Modifiers -band [System.ConsoleModifiers]::Control) -as [bool]
-    Invoke-FuzzyLauncher -all:$flag | Write-Host
-    if ($LASTEXITCODE -ne 0) {
-        [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
-    }
-}
-
-function Invoke-RDriveDatabase {
-    param (
-        [string]$name
-    )
-    $dirs = Get-ChildItem "R:" -Directory
-    if ($name) {
-        $reg = [regex]$name
-        $dirs = @($dirs).Where({$reg.IsMatch($_.name)})
-    }
-    if ($dirs.count -gt 1) {
-        $filtered = $dirs.name | fzf.exe
-        if (-not $filtered) {
-            return
-        }
-        "R:" | Join-Path -ChildPath $filtered | Invoke-Item
-    }
-    else {
-        $dirs[0].fullname | Invoke-Item
-    }
-}
 
 function hinagata {
     $d = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\templates"
     if (-not (Test-Path $d)) {
         return
     }
-    $n = Get-ChildItem -Path $d -Name -File | fzf.exe
+    $n = Get-ChildItem -Path $d -Name -File | fzf.exe --layout=reverse --height=50%
     if (-not $n) {
         return
     }
@@ -236,7 +172,7 @@ function Get-EjectableDrive {
 
 function Invoke-DriveEject {
     try {
-        fzf.exe --version > $null
+        Get-Command fzf.exe -ErrorAction Stop > $null
     }
     catch {
         Write-Host "fzf.exe not found!"
@@ -252,7 +188,7 @@ function Invoke-DriveEject {
         "No ejectable drive found" | Write-Host
         return
     }
-    $d = $drives | fzf.exe
+    $d = $drives | fzf.exe --layout=reverse --height=50%
     if (-not $d) {
         return
     }
