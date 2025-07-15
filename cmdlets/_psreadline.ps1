@@ -148,6 +148,10 @@ class ASTer {
         return $this.tokens[$i]
     }
 
+    [Token] GetLastToken() {
+        return $this.tokens[$this.tokens.Count - 1]
+    }
+
     [Token] GetPreviousToken() {
         $i = $this.GetActiveTokenIndex()
         $pos = $i - 1
@@ -189,6 +193,14 @@ class ASTer {
         [PSConsoleReadLine]::Replace($t.Extent.StartOffset, ($t.Extent.EndOffset - $t.Extent.StartOffset), $newText)
     }
 
+}
+
+Set-PSReadlineKeyHandler -Key "ctrl+k,d" -BriefDescription "debug-activetokenkind" -ScriptBlock {
+    $a = [Aster]::new()
+    $t = $a.GetActiveToken()
+    Write-Host
+    Write-Host $t.Kind
+    Write-Host $t.Text
 }
 
 # https://github.com/pecigonzalo/Oh-My-Posh/blob/master/plugins/psreadline/psreadline.ps1
@@ -243,35 +255,40 @@ Set-PSReadLineKeyHandler -Key "ctrl+n" -BriefDescription "smart-accept-next-sugg
     [PSConsoleReadLine]::AcceptNextSuggestionWord()
 }
 
-
 # smart-backward-word
 Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
-    $isCommand = [scriptblock]{
-        param($s)
-        foreach ($t in @(
-            [System.Management.Automation.CommandTypes]::Alias,
-            [System.Management.Automation.CommandTypes]::Function,
-            [System.Management.Automation.CommandTypes]::Cmdlet,
-            [System.Management.Automation.CommandTypes]::ExternalScript
-        )) {
-            try {
-                Get-Command $t -CommandType  -ErrorAction Stop
-            }
-            catch {
-                return $false
-            }
-        }
-        return $true
-    }
-
-    $targets = @([TokenKind]::Parameter, [TokenKind]::EndOfInput)
     $a = [Aster]::new()
     $t = $a.GetActiveToken()
-    if ($t.Kind -in $targets -or $a.cursor -eq $t.Extent.StartOffset) {
-        if (-not $isCommand.InvokeReturnAsIs($a.GetPreviousToken().Text)) {
-            [PSConsoleReadLine]::ShellBackwardKillWord()
-            return
-        }
+    $target = @(
+        [TokenKind]::Function,
+        [TokenKind]::Command,
+        [TokenKind]::Parameter,
+        [TokenKind]::EndOfInput,
+        [TokenKind]::Variable,
+        [TokenKind]::LCurly,
+        [TokenKind]::RCurly,
+        [TokenKind]::LBracket,
+        [TokenKind]::RBracket,
+        [TokenKind]::Pipe,
+        [TokenKind]::LParen
+        [TokenKind]::RParen
+    )
+    if ($t.Kind -in $target) {
+        [PSConsoleReadLine]::ShellBackwardKillWord()
+        return
+    }
+    if ($t.Text -in @("[", "]", "(", ")")) {
+        [PSConsoleReadLine]::BackwardDeleteChar()
+        return
+    }
+    if ($a.cursor -eq $t.Extent.StartOffset) {
+        [PSConsoleReadLine]::ShellBackwardKillWord()
+        return
+    }
+    $pre = $a.GetPreviousToken()
+    if ($pre.Kind -in @([TokenKind]::Command, [TokenKind]::Function)) {
+        [PSConsoleReadLine]::ShellBackwardKillWord()
+        return
     }
     [PSConsoleReadLine]::BackwardKillWord()
 }
