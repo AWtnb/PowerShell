@@ -264,14 +264,7 @@ Set-PSReadlineKeyHandler -Key "ctrl+backspace" -ScriptBlock {
         [TokenKind]::Command,
         [TokenKind]::Parameter,
         [TokenKind]::EndOfInput,
-        [TokenKind]::Variable,
-        [TokenKind]::LCurly,
-        [TokenKind]::RCurly,
-        [TokenKind]::LBracket,
-        [TokenKind]::RBracket,
-        [TokenKind]::Pipe,
-        [TokenKind]::LParen
-        [TokenKind]::RParen
+        [TokenKind]::Variable
     )
     if ($t.Kind -in $target) {
         [PSConsoleReadLine]::ShellBackwardKillWord()
