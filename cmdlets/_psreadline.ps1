@@ -364,6 +364,7 @@ class PSCursorLine {
     [int]$Indent
     [int]$Index
     [int]$StartPos
+    [int]$EndPos
 
     PSCursorLine([string]$line, [int]$pos) {
         $lines = $line -split "`n"
@@ -376,6 +377,7 @@ class PSCursorLine {
         else {
             $this.StartPos = 0
         }
+        $this.EndPos = $this.StartPos + $this.Text.Length
         $this.BeforeCursor = $this.Text.Substring(0, $pos - $this.StartPos)
         $this.AfterCursor = $this.Text.Substring($pos - $this.StartPos)
     }
@@ -646,6 +648,7 @@ Set-PSReadLineKeyHandler -Key "alt+P" -ScriptBlock {
     }
 }
 
+Set-PSReadLineKeyHandler -Key "ctrl+home" -ScriptBlock {[PSConsoleReadLine]::SetCursorPosition(0)}
 Set-PSReadLineKeyHandler -Key "home" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $pos = $bs.CursorPos
@@ -658,6 +661,12 @@ Set-PSReadLineKeyHandler -Key "home" -ScriptBlock {
         [PSConsoleReadLine]::BeginningOfLine()
     }
 }
+
+Set-PSReadLineKeyHandler -Key "ctrl+end" -ScriptBlock {
+    $bs = [PSBufferState]::new()
+    [PSConsoleReadLine]::SetCursorPosition($bs.Commandline.Length)
+}
+Set-PSReadLineKeyHandler -Key "end" -Function EndOfLine
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,v" -ScriptBlock {
     $cb = (Get-Clipboard -Raw).Trim()
