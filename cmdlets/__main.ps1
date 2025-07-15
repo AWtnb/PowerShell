@@ -366,7 +366,8 @@ function Out-FileUtil {
     if (-not $basename) {
         $basename = Get-Date -Format yyyyMMddHHmmss
     }
-    $outPath = (Get-Location).ProviderPath | Join-Path -ChildPath ($basename + "." + $extension)
+    $outName = ($basename.EndsWith("." + $extension))? $basename : $basename + "." + $extension
+    $outPath = (Get-Location).ProviderPath | Join-Path -ChildPath $outName
     $input | Join-String -Separator "`r`n" | Out-File -FilePath $outPath -Encoding utf8NoBOM -NoClobber:$(-not $force)
 }
 Set-Alias of Out-FileUtil
