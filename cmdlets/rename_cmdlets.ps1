@@ -560,8 +560,16 @@ function Rename-LightroomFromDropbox {
         [switch]$execute
     )
     $input | Rename-ApplyScriptBlock {
-        $fmt = ($_.BaseName -replace "[ \-]","" -replace "写真" -replace "\(","-" -replace "\)")
-        $newName = $fmt.substring(0,8) + "-IMG_" + $fmt.substring(8).PadLeft(6, "0") + $_.extension
+        $item = Get-Item $_.Fullname
+        $elems = $item.BaseName -replace "写真" -split " "
+        $dateTs = $elems[0].replace("-", "")
+        $timeTs = $elems | Select-Object -Skip 1 -First 3 | ForEach-Object {
+            return ($_ -as [string]).PadLeft(2, "0")
+        } | Join-String -Separator ""
+        if ($elems.Count -gt 4) {
+            $timeTs = $timeTs + "-" + (($elems | Select-Object -Last 1) -replace "[\(\)]")
+        }
+        $newName = $dateTs + "-IMG_" + $timeTs + $item.Extension
         return $newName
     } -execute:$execute
 }
