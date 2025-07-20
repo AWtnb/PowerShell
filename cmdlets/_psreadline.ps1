@@ -776,7 +776,7 @@ Set-PSReadLineKeyHandler -Key "alt+w","alt+(" -BriefDescription "WrapLineByParen
 Set-PSReadLineKeyHandler -Key "ctrl+k,t" -ScriptBlock {
     $bs = [PSBufferState]::new()
     $line = $bs.CommandLine
-    if (-not $bs.SelectionLength -gt 0) {
+    if ($bs.SelectionLength -lt 1) {
         return
     }
     $repl = "({0} -as [])" -f $line.SubString($bs.selectionStart, $bs.selectionLength)
