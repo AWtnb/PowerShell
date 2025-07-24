@@ -571,23 +571,6 @@ function Get-CorvusSKKLuaFunctionsInUserdict {
     }
 }
 
-
-
-# wezterm
-
-function Invoke-WeztermConfig {
-    $path = $env:USERPROFILE | Join-Path -ChildPath "Sync\develop\repo\wezterm"
-    if (Test-Path $path) {
-        "code {0}" -f $path | Invoke-Expression
-    }
-    else {
-        "cannot find path: '{0}'" -f $path | Write-Error
-    }
-}
-
-
-# tar
-
 function Invoke-TarExtract {
     param(
         [string]$path
@@ -615,11 +598,6 @@ function Invoke-TarExtract {
         return $_
     }
     Start-Process -FilePath tar.exe -ArgumentList $params -NoNewWindow -Wait
-}
-Set-PSReadLineKeyHandler -Key "alt+T" -ScriptBlock {
-    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("Invoke-TarExtract -path ")
-    [Microsoft.PowerShell.PSConsoleReadLine]::MenuComplete()
 }
 
 ##############################
