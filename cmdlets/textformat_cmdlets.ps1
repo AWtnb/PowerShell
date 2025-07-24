@@ -66,7 +66,12 @@ function Format-ReplaceLine {
             }
             return $line -replace $from, $to
         }
-        [System.Console]::ForegroundColor = $(($line -ceq $replaced)? "Gray" : "Blue")
+        if ($line -ceq $replaced) {
+            [System.Console]::ForegroundColor = "DarkGray"
+        }
+        else {
+            [System.Console]::ForegroundColor = "Gray"
+        }
         Write-Output $replaced
         [System.Console]::ResetColor()
     }
