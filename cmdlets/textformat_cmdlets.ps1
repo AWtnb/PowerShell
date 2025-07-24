@@ -23,13 +23,13 @@ function Join-StringUtil {
         ,[string]$prefix = ""
     )
     if($wrapper.Length -eq 2) {
-        $pre = $wrapper[0]
-        $post = $wrapper[1]
+        $pre, $post = $wrapper
     }
     else {
         $pre = $post = $wrapper
     }
-    $input | ForEach-Object {$prefix + $_ + $suffix} | Join-String -Separator "$post$connector$pre" -OutputPrefix $pre -OutputSuffix $post | Write-Output
+    $sep = $post + $connector + $pre
+    $input | ForEach-Object {$prefix + $_ + $suffix} | Join-String -Separator $sep -OutputPrefix $pre -OutputSuffix $post | Write-Output
 }
 Set-Alias jnt Join-StringUtil
 
