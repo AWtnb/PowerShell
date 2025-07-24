@@ -31,24 +31,15 @@ function Update-Repositories {
     param (
         [parameter(Mandatory)][string]$root
     )
-    Get-ChildItem -Path $root -Directory | Where-Object {
-        $p = ($_.FullName | Join-Path -ChildPath ".git")
-        return (Test-Path $p -PathType Container)
-    } | ForEach-Object {
-
-        Push-Location $_.FullName
-        "Updating repository: {0}" -f $_.Name | Write-Host -ForegroundColor Yellow
-
-        $status = git status --porcelain --branch 2>$null
-        if ($status -match "\[ahead \d+\]") {
-            "Repository '{0}' has unpushed commits!" -f $_.Name | Write-Host -ForegroundColor Red -NoNewline
-            "==> skipped." | Write-Host
-        }
-        else {
-            git pull
-        }
-
-        Pop-Location
+    $src = $env:APPDATA | Join-Path -ChildPath "git-behind-checker\update-repos.ps1"
+    if (Test-Path $src) {
+        & $src $root
+    }
+    else{
+        "``{0}`` not found." -f ($src | Split-Path -Leaf) | Write-Host -ForegroundColor Red
+        Write-Host "Clone from " -NoNewline
+        Write-Host "https://github.com/AWtnb/git-behind-checker" -ForegroundColor Cyan -NoNewline
+        Write-Host " and run ``install.ps1`` ." -NoNewline
     }
 }
 
