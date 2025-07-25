@@ -27,14 +27,14 @@ Set-PSReadlineOption -HistoryNoDuplicates `
     return $true
 }
 
-Set-PSReadLineOption -colors @{
-    "Command"          = $Global:PSStyle.Foreground.BrightYellow;
-    "Comment"          = $Global:PSStyle.Foreground.BrightBlack;
-    "Number"           = $Global:PSStyle.Foreground.BrightCyan;
-    "String"           = $Global:PSStyle.Foreground.BrightBlue;
-    "Variable"         = $Global:PSStyle.Foreground.BrightGreen;
-    "InlinePrediction" = "`e[38;5;067m";
-}
+# Set-PSReadLineOption -colors @{
+#     "Command"          = $Global:PSStyle.Foreground.BrightYellow;
+#     "Comment"          = $Global:PSStyle.Foreground.BrightBlack;
+#     "Number"           = $Global:PSStyle.Foreground.BrightCyan;
+#     "String"           = $Global:PSStyle.Foreground.BrightBlue;
+#     "Variable"         = $Global:PSStyle.Foreground.BrightGreen;
+#     "InlinePrediction" = "`e[38;5;067m";
+# }
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
