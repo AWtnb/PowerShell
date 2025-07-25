@@ -79,6 +79,11 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     [PSConsoleReadLine]::AcceptLine()
 }
 
+Set-PSReadLineKeyHandler -Key "alt+p" -ScriptBlock {
+    [PSConsoleReadLine]::Insert('python')
+    [PSConsoleReadLine]::AcceptLine()
+}
+
 Set-PSReadLineKeyHandler -Key "alt+e" -ScriptBlock {
     [PSConsoleReadLine]::Insert('$env:')
 }
