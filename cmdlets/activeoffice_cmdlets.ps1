@@ -535,18 +535,14 @@ function Invoke-AcceptFormatRevisionOnActiveWordDocument {
 
 }
 
-function Invoke-ActiveWordDocumentWindowDuplicate {
+function Open-ActiveWordDocumentInNewWindow {
     $wd = Get-ActiveWordApp
     if (-not $wd) {
         return
     }
     $wd.NewWindow() > $null
 }
-
-function wordDuplicateForRevise {
-    Invoke-ActiveWordDocumentWindowDuplicate
-    Switch-ActiveWordDocumentRevision
-}
+Set-Alias -Name duplActiveDocument -Value Open-ActiveWordDocumentInNewWindow
 
 function Switch-ActiveWordDocumentRevision {
     $wd = Get-ActiveWordApp
