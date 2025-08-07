@@ -473,8 +473,28 @@ function Invoke-RemoveUnDisplayableCommentOnActiveWord {
     $doc.Comments | ForEach-Object {
         if (-not $_.Scope.Text) {
             "Removed comment with no target text:`n{0}" -f $_.Range.Text | Write-Host
-            $_.Delete()
+            $_.DeleteRecursively()
         }
+    }
+}
+
+function Remove-DoneCommentsOnActiveWordDocument {
+    $doc = Get-ActiveWordDocument
+    if (-not $doc) { return }
+    $count = 0
+    $doc.Comments | ForEach-Object {
+        if ($_.Done) {
+            $_.DeleteRecursively()
+            $count += 1
+        }
+    }
+    if ($count -gt 0) {
+        $s = "Removed {0} comment" -f $count
+        if ($count -gt 1) {
+            $s += "s"
+        }
+        $s += "."
+        $s | Write-Host -ForegroundColor Cyan
     }
 }
 
