@@ -538,26 +538,27 @@ Set-PSReadLineKeyHandler -Key "Shift+Enter" -ScriptBlock {
     $bs.NewLine()
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+enter" -Function AcceptLine
-Set-PSReadLineKeyHandler -Key "enter" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "enter","ctrl+enter" -ScriptBlock {
+    param($key, $arg)
     $bs = [PSBufferState]::new()
     if ($bs.isMultiline) {
-        $cursorLine = $bs.CursorLine
-        if ($cursorLine.AfterCursor.Length -ne 0 -or $cursorLine.Index -lt $bs.lastLineIndex) {
+        if ($key.Modifiers -eq [System.ConsoleModifiers]::Control -or $bs.CursorLine.Index -eq $bs.lastLineIndex) {
+            $single = ($bs.Commandline -split "`n" | ForEach-Object {
+                    $l = $_.Trim()
+                    if ($l.StartsWith("#")) {
+                        return ""
+                    }
+                    if ($l.EndsWith("{")) {
+                        return $l
+                    }
+                    return $l + ";"
+                }) -join "" -replace ";}", "}" -replace ";$", "" -replace ";+", ";"
+            [PSConsoleReadLine]::AddToHistory($single)
+        }
+        else {
             $bs.NewLine()
             return
         }
-        $single = ($bs.Commandline -split "`n" | ForEach-Object {
-                $l = $_.Trim()
-                if ($l.StartsWith("#")) {
-                    return ""
-                }
-                if ($l.EndsWith("{")) {
-                    return $l
-                }
-                return $l + ";"
-            }) -join "" -replace ";}", "}" -replace ";$", "" -replace ";+", ";"
-        [PSConsoleReadLine]::AddToHistory($single)
     }
     [PSConsoleReadLine]::AcceptLine()
     if ((Get-PSReadLineOption).PredictionViewStyle -eq [PredictionViewStyle]::ListView) {
