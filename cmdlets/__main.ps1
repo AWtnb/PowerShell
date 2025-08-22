@@ -372,14 +372,12 @@ function d {
 }
 
 function sum {
-    $a = @()
-    if ($args.Count) {
-        $args | ForEach-Object {$a += $_}
-    } else {
-        $input | ForEach-Object {$a += $_}
-    }
     $n = 0
-    $a | ForEach-Object {$n += $_}
+    if ($args.Count -gt 0) {
+        $args | ForEach-Object {$n += $_}
+    } else {
+        $input | ForEach-Object {$n += $_}
+    }
     return $n
 }
 
