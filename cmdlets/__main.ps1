@@ -363,14 +363,6 @@ function Out-FileUtil {
 }
 Set-Alias of Out-FileUtil
 
-function dsk {
-    "{0}\desktop" -f $env:USERPROFILE | Set-Location
-}
-
-function d {
-    Start-Process ("{0}\desktop" -f $env:USERPROFILE)
-}
-
 function sum {
     $n = 0
     if ($args.Count -gt 0) {
@@ -381,25 +373,8 @@ function sum {
     return $n
 }
 
-function yen {
-    $reg = [regex]::new("(\d)(?=(\d{3})+$)")
-    $a = @()
-    if ($args.Count) {
-        $args | ForEach-Object {$a += $_}
-    } else {
-        $input | ForEach-Object {$a += $_}
-    }
-    return $a | ForEach-Object {
-        return $reg.Replace($_, '$1,')
-    }
-}
-
 function ii. {
     Invoke-Item .
-}
-
-function noblank () {
-    $input | Foreach-Object {$_ -replace "\s"} | Write-Output
 }
 
 function sieve ([switch]$net) {
