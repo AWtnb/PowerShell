@@ -27,6 +27,10 @@ Set-PSReadlineOption -HistoryNoDuplicates `
     return $true
 }
 
+Set-PSReadLineOption -colors @{
+    "Operator"          = $Global:PSStyle.Foreground.White;
+}
+
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
 Set-PSReadLineKeyHandler -Key "ctrl+p","ctrl+shift+spacebar" -Function SwitchPredictionView
