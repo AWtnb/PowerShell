@@ -223,6 +223,40 @@ function Invoke-DenoPdfApplyTrimbox {
 
 Set-Alias PdfApplyTrimboxDeno Invoke-DenoPdfApplyTrimbox
 
+function Invoke-DenoPdfTrimMargin {
+    param (
+        [parameter(ValueFromPipeline)]$inputObj
+        ,[int[]]$marginPercentages
+    )
+    begin {
+        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-trim-margin.exe"
+        $files = @()
+    }
+    process {
+        $file = Get-Item -LiteralPath $inputObj
+        if ($file.Extension -ne ".pdf") {
+            return
+        }
+        $files += $file
+    }
+    end {
+        if (-not (Test-Path $denotool)) {
+            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
+            $repo = "https://github.com/AWtnb/deno-pdf-trim-margin"
+            "=> Clone and build from {0}" -f $repo | Write-Host
+            return
+        }
+        $marginParam = '--margin={0}' -f ($marginPercentages -join ",")
+        $files | ForEach-Object {
+            $params = @('--path={0}' -f $_.FullName)
+            $params += $marginParam
+            & $denotool $params
+        }
+    }
+}
+
+Set-Alias PdfTrimMarginDeno Invoke-DenoPdfTrimMargin
+
 function Invoke-DenoPdfUnzipPages {
     param (
         [parameter(ValueFromPipeline)]$inputObj
