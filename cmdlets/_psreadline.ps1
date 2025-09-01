@@ -27,9 +27,9 @@ Set-PSReadlineOption -HistoryNoDuplicates `
     return $true
 }
 
-Set-PSReadLineOption -colors @{
-    "Operator"          = $Global:PSStyle.Foreground.White;
-}
+# Set-PSReadLineOption -colors @{
+#     "Operator"          = $Global:PSStyle.Foreground.White;
+# }
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
