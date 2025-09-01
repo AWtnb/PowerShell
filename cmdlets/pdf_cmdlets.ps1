@@ -226,7 +226,7 @@ Set-Alias PdfApplyTrimboxDeno Invoke-DenoPdfApplyTrimbox
 function Invoke-DenoPdfTrimMargin {
     param (
         [parameter(ValueFromPipeline)]$inputObj
-        ,[int[]]$marginPercentages
+        ,[double[]]$marginPercentages
     )
     begin {
         $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-trim-margin.exe"
