@@ -142,23 +142,20 @@ function ghRemote {
     param (
         [switch]$clone
     )
-    $names = gh.exe repo list --json name --jq ".[] | .name" --limit 200
-    if ($names.Count -lt 1) { return }
-    $selected = @($names | fzf.exe --multi --layout=reverse --height=50%)
-    if ($LASTEXITCODE -ne 0 -or $selected.Count -lt 1) { return }
-    $selected | ForEach-Object {
+    gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --multi --layout=reverse --height=50% | ForEach-Object {
+        $repoName = $_
         if ($clone) {
-            $url = "https://github.com/AWtnb/{0}.git" -f $_
+            $url = "https://github.com/AWtnb/{0}.git" -f $repoName
             git clone $url
             if ($LASTEXITCODE -eq 0) {
                 $cmd = Get-Command code -ErrorAction SilentlyContinue
                 if ($cmd) {
-                    Start-Process code -ArgumentList $selected -NoNewWindow
+                    Start-Process code -ArgumentList ($PWD.Path | Join-Path -ChildPath $repoName) -NoNewWindow
                 }
             }
         }
         else {
-            $url = "https://github.com/AWtnb/" + $_
+            $url = "https://github.com/AWtnb/" + $repoName
             Start-Process $url
         }
     }
