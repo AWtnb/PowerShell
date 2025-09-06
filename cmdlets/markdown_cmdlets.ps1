@@ -49,4 +49,4 @@ function Invoke-MarkdownDocumentServer {
     ddserv.exe $params
 
 }
-
+Set-Alias -Name dds -Value Invoke-MarkdownDocumentServer
