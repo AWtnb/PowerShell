@@ -6,12 +6,12 @@ cmdlets for treating markdown
                 encoding: utf8bom
 ============================== #>
 
-function Invoke-Markdown2Html {
+function Invoke-MarkdownDocumentServer {
     param (
         [parameter(Mandatory)]
         [string]$path
         ,[switch]$plain
-        ,[switch]$invoke
+        ,[switch]$export
     )
 
     $path = $path.Trim()
@@ -23,39 +23,30 @@ function Invoke-Markdown2Html {
     }
 
     try {
-        Get-Command m2h.exe -ErrorAction Stop > $null
+        Get-Command ddserv.exe -ErrorAction Stop > $null
     }
     catch {
         "Exe not found" | Write-Host -ForegroundColor Magenta
-        $repo = "https://github.com/AWtnb/m2h"
+        $repo = "https://github.com/AWtnb/ddserv"
         "=> Clone and build from {0}" -f $repo | Write-Host
         return
     }
 
     $md = Get-Item -LiteralPath $path
-    $suf = Get-Date -Format "_yyyyMMdd"
     $params = @(
-        ("--src={0}" -f $md.FullName),
-        ("--suffix={0}" -f $suf)
+        ("--src={0}" -f $md.FullName)
     )
     if ($plain) {
         $params += "--plain"
     }
-
-    m2h.exe $params
-
-    if ($invoke) {
-        $outPath = $md.Directory.FullName | Join-Path -ChildPath ($md.BaseName + $suf + ".html")
-        Invoke-Item $outPath
+    if ($export) {
+        $params += "--export"
+    }
+    else {
+        Start-Process "http://localhost:8080"
     }
 
-}
-Set-Alias m2hgo Invoke-Markdown2Html
+    ddserv.exe $params
 
-Set-PSReadLineKeyHandler -Key "ctrl+M" -BriefDescription "render-as-markdown" -LongDescription "Render-as-markdown" -ScriptBlock {
-    $cbFile = [Windows.Forms.Clipboard]::GetFileDropList() | Get-Item
-    $path = ($cbFile)? $cbFile.FullName : (Get-Clipboard | Select-Object -First 1).Replace('"', "")
-    m2hgo $path -invoke
-    [Microsoft.PowerShell.PSConsoleReadLine]::AddToHistory("m2hgo $path -invoke")
 }
 
