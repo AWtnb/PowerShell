@@ -10,7 +10,7 @@ interactive filter
 
 
 function Get-DefinitionOfCommand {
-    $cmdletName = @(Get-Command -CommandType Function).Where({-not $_.Source}).Where({$_.Name -notmatch ":"}).Name | fzf.exe
+    $cmdletName = @(Get-Command -CommandType Function).Where({-not $_.Source}).Where({$_.Name -notmatch ":"}).Name | fzf.exe --no-color
     if ($cmdletName) {
         (Get-Command -Name $cmdletName).Definition | bat.exe --% --language=powershell
     }
@@ -83,7 +83,7 @@ class PSAvailable {
 
 
 Set-PSReadLineKeyHandler -Key "alt+f,spacebar" -BriefDescription "fuzzyfind-command" -LongDescription "search-cmdlets-with-fuzzyfinder" -ScriptBlock {
-    $command = [PSAvailable]::getCommands() | fzf.exe
+    $command = [PSAvailable]::getCommands() | fzf.exe --no-color
     if ($command) {
         [Microsoft.PowerShell.PSConsoleReadLine]::Insert("$command ")
     }
@@ -97,7 +97,7 @@ Set-PSReadLineKeyHandler -Key "alt+f,e" -BriefDescription "fuzzyEdit-customCmdle
     $c = [PSAvailable]::new()
     $c.SetData()
     $src = $c.sources
-    $filtered = $src.Name | fzf.exe
+    $filtered = $src.Name | fzf.exe --no-color
     if ($filtered) {
         $selected = $src | Where-Object name -eq $filtered | Select-Object -First 1
         $wd = $c.cmdletsDir | Split-Path -Parent
@@ -128,7 +128,7 @@ function hinagata {
     if (-not (Test-Path $d)) {
         return
     }
-    $n = Get-ChildItem -Path $d -Name -File | fzf.exe --layout=reverse --height=50%
+    $n = Get-ChildItem -Path $d -Name -File | fzf.exe --layout=reverse --height=50% --no-color
     if (-not $n) {
         return
     }
@@ -142,7 +142,7 @@ function ghRemote {
     param (
         [switch]$clone
     )
-    gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --multi --layout=reverse --height=50% | ForEach-Object {
+    gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% | ForEach-Object {
         $repoName = $_
         if ($clone) {
             $url = "https://github.com/AWtnb/{0}.git" -f $repoName
@@ -185,7 +185,7 @@ function Invoke-DriveEject {
         "No ejectable drive found" | Write-Host
         return
     }
-    $d = $drives | fzf.exe --layout=reverse --height=50%
+    $d = $drives | fzf.exe --no-color --layout=reverse --height=50%
     if (-not $d) {
         return
     }
