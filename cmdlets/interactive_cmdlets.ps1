@@ -139,10 +139,16 @@ function hinagata {
 }
 
 function ghRemote {
-    param (
-        [switch]$clone
-    )
-    gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% | ForEach-Object {
+    $cloneKey = "ctrl-j"
+    try {
+        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% --expect=$cloneKey | Set-Variable -Name result
+    }
+    catch {
+        return
+    }
+    $clone = ($result | Select-Object -First 1) -eq $cloneKey
+    $selected = $result | Select-Object -Skip 1
+    $selected | ForEach-Object {
         $repoName = $_
         if ($clone) {
             $url = "https://github.com/AWtnb/{0}.git" -f $repoName
