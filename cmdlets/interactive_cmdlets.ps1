@@ -139,15 +139,17 @@ function hinagata {
 }
 
 function ghRemote {
-    $cloneKey = "ctrl-j"
     try {
-        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% --expect=$cloneKey | Set-Variable -Name result
+        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
     }
     catch {
         return
     }
-    $clone = ($result | Select-Object -First 1) -eq $cloneKey
-    $selected = $result | Select-Object -Skip 1
+    if ($selected.Count -lt 1) {
+        return
+    }
+    $selected | Write-Host
+    $clone = (Read-Host -Prompt "Clone? (y/N)") -eq "y"
     $selected | ForEach-Object {
         $repoName = $_
         if ($clone) {
