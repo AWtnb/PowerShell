@@ -42,7 +42,10 @@ Set-PSReadLineKeyHandler -Key "ctrl+f" -Function CharacterSearch
 Set-PSReadLineKeyHandler -Key "ctrl+F" -Function CharacterSearchBackward
 
 # accept suggestion
-Set-PSReadLineKeyHandler -Key "ctrl+N" -Function AcceptSuggestion
+Set-PSReadLineKeyHandler -Key "ctrl+N" -ScriptBlock{
+    [PSConsoleReadLine]::AcceptSuggestion()
+    [PSConsoleReadLine]::AcceptLine()
+}
 
 # completion
 Set-PSReadLineKeyHandler -Key "alt+i" -ScriptBlock {
