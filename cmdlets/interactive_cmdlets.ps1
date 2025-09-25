@@ -139,8 +139,9 @@ function hinagata {
 }
 
 function ghRemote {
+    $query = $args[0]
     try {
-        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
+        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --query=$query --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
     }
     catch {
         return
@@ -169,6 +170,12 @@ function ghRemote {
         }
     }
 }
+
+Set-PSReadLineOption -AddToHistoryHandler {
+    param($command)
+    return -not ($command -match "ghremote .+")
+}
+
 
 function Get-EjectableDrive {
     [OutputType([System.IO.DriveInfo])]
