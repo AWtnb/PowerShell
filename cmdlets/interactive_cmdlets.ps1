@@ -164,6 +164,7 @@ function ghRemote {
         }
         else {
             $url = "https://github.com/AWtnb/" + $repoName
+            "Open: {0}" -f $url | Write-Host
             Start-Process $url
         }
     }
