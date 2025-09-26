@@ -171,12 +171,6 @@ function ghRemote {
     }
 }
 
-Set-PSReadLineOption -AddToHistoryHandler {
-    param($command)
-    return -not ($command -match "ghremote .+")
-}
-
-
 function Get-EjectableDrive {
     [OutputType([System.IO.DriveInfo])]
     param()
