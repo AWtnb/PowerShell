@@ -424,3 +424,11 @@ function Invoke-ImageMagickWatermarkSignature {
         Remove-Item -Path $tmpDirPath -Recurse
     }
 }
+
+function Invoke-ImageMagickChromeExtensionIconResize {
+    param($inputObj)
+    $path = (Get-Item $inputObj).FullName
+    @(16, 48, 128) | ForEach-Object {
+        "magick convert '$path' -resize {0}x{0} icon{0}.png" -f $_ | Invoke-Expression
+    }
+}
