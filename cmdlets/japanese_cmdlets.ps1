@@ -6,10 +6,6 @@ cmdlets for processing japanese
             encoding: utf8bom
 ============================== #>
 
-function googleDict {
-    $env:USERPROFILE | Join-Path -ChildPath "Sync\develop\app_setting\IME_google\convertion_dict\main.txt" | Get-Item | Get-Content | bat.exe -p
-}
-
 function aw {
     "あかさたなはまやらわ".GetEnumerator() | Write-Output
 }
