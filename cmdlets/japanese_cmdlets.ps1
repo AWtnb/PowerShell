@@ -253,57 +253,11 @@ Update-TypeData -MemberName "ToNum" -TypeName System.String -Force -MemberType S
     return $s
 }
 
-####################
-# Class: Unicode
-####################
-
-class Unicode {
-
-    static [string] ToLetter ([string]$strData) {
-        return [string](
-            [char]::ConvertFromUtf32(
-                [Convert]::ToInt32($strData, 16)
-            )
-        )
-    }
-
-    static [string] FromLetter ([string]$strData) {
-        return [string](
-            [Convert]::ToInt32($strData -as [char]).ToString("x")
-        )
-    }
-
+Update-TypeData -MemberName "ToCodepoint" -TypeName System.String -Force -MemberType ScriptMethod -Value {
+    return $this.GetEnumerator().ForEach({ [Convert]::ToInt32($_ -as [char]).ToString("x") })
 }
-
-Update-TypeData -MemberName "ToUnicode" -TypeName System.String -Force -MemberType ScriptMethod -Value {
-    return $this.GetEnumerator() | ForEach-Object { [Unicode]::FromLetter($_) }
-}
-Update-TypeData -MemberName "FromUnicode" -TypeName System.String -Force -MemberType ScriptMethod -Value {
-    return [Unicode]::ToLetter($this)
-}
-
-function Convert-UnicodeToLetter {
-    param (
-        [parameter(ValueFromPipeline)]$code
-    )
-    begin {}
-    process {
-        [Unicode]::ToLetter($code) | Write-Output
-    }
-    end {}
-}
-
-function Convert-LetterToUnicode {
-    param (
-        [parameter(ValueFromPipeline)]$s
-    )
-    begin {}
-    process {
-        $s.GetEnumerator() | ForEach-Object {
-            [Unicode]::FromLetter($_) | Write-Output
-        }
-    }
-    end {}
+Update-TypeData -MemberName "FromCodepoint" -TypeName System.Int32 -Force -MemberType ScriptMethod -Value {
+    return [char]::ConvertFromUtf32($this)
 }
 
 function Get-LinesDelta {
