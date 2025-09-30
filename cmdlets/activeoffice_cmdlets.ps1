@@ -1266,7 +1266,7 @@ function Get-EmbeddedDataOnActivePowerPointSlide {
     1..$activeSlide.Shapes.Count | ForEach-Object {
         $chart = $activeSlide.Shapes($_).Chart
         if (-not $chart) {return}
-        1..$chart.SeriesCollection().Count |ForEach-Object {
+        1..$chart.SeriesCollection().Count | ForEach-Object {
             $label = $chart.SeriesCollection($_).Name
             $xVals = $chart.SeriesCollection($_).XValues
             $vals = $chart.SeriesCollection($_).Values
@@ -1372,6 +1372,31 @@ function Invoke-ReplaceOnActiveWordDocument {
     ) > $null
 }
 Set-Alias -Name wordReplace -Value Invoke-ReplaceOnActiveWordDocument
+
+function Invoke-ReplaceNbspOnActiveWordDocument {
+    param(
+        [string]$newStr = " "
+    )
+    $wd = Get-ActiveWordApp
+    if (-not $wd) { return }
+    $range = $wd.Selection
+    $range.Find.ClearFormatting()
+    $range.Find.Replacement.ClearFormatting()
+    $range.Find.MatchFuzzy = $false
+    $range.Find.Execute(
+        ((160 -as [char]) -as [string]),
+        $false, #MatchCase
+        $false, #MatchWholeWord
+        $false, #MatchWildcards
+        $false, #MatchSoundsLike
+        $false, #MatchAllWordForms
+        $true,  #Forward
+        1, #wdFIndContinue
+        $false, #Format
+        $newStr, # ReplaceWith
+        2 #wdReplaceAll
+    ) > $null
+}
 
 function Join-WordsByDotOnActiveWordDocument {
     param(
