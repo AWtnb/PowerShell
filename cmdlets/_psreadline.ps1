@@ -27,9 +27,7 @@ Set-PSReadlineOption -HistoryNoDuplicates `
     return $true
 }
 
-# Set-PSReadLineOption -colors @{
-#     "Operator"          = $Global:PSStyle.Foreground.White;
-# }
+Set-PSReadLineKeyHandler -Key "ctrl+u" -Function BackwardDeleteLine
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
 
