@@ -394,22 +394,8 @@ function ml ([string]$pattern, [switch]$case, [switch]$negative){
     return @($input).Where({$reg.IsMatch($_)})
 }
 
-function ato ([string]$s) {
-    return $($input | ForEach-Object {[string]$_ + $s})
-}
-
-function made ([string]$s) {
-    return $($input | ForEach-Object {
-        $t = $_ -as [string]
-        return $t.Substring(0, $t.IndexOf($s))
-    })
-}
-
-function kara ([string]$s) {
-    return $($input | ForEach-Object {
-        $t = $_ -as [string]
-        return $t.Substring($t.IndexOf($s)+1)
-    })
+function ato ([string]$s, [int]$break = 0) {
+    return $($input | ForEach-Object {($_ -as [string]) + $s + ("`n" * $break)})
 }
 
 function saki ([string]$s) {
