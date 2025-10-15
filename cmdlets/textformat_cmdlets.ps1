@@ -117,7 +117,7 @@ function ConvertTo-SequenceByValue {
     }
 }
 
-function ConvertTo-IncrementalSequence {
+function ConvertTo-IdentificationNumber {
     param (
         [int]$start = 1
     )
@@ -126,7 +126,7 @@ function ConvertTo-IncrementalSequence {
         $start += 1
     }
 }
-Set-Alias toSeq ConvertTo-IncrementalSequence
+Set-Alias toId ConvertTo-IdentificationNumber
 
 function Format-InsertIndex {
     param (
