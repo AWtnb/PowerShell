@@ -27,6 +27,8 @@ Set-PSReadlineOption -HistoryNoDuplicates `
     return $true
 }
 
+Set-PSReadLineKeyHandler -Key "ctrl+h" -Function BackwardDeleteChar
+
 Set-PSReadLineKeyHandler -Key "ctrl+u" -Function BackwardDeleteLine
 
 Set-PSReadLineKeyHandler -Key "ctrl+l" -Function ClearScreen
