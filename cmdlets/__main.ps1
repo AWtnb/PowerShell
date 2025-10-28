@@ -385,15 +385,6 @@ function pad ([int]$width = 3, [string]$char = "0") {
     $input | ForEach-Object {($_ -as [string]).PadLeft($width, $char)} | Write-Output
 }
 
-function ml ([string]$pattern, [switch]$case, [switch]$negative){
-    # ml: match line
-    $reg = ($case)? [regex]::New($pattern) : [regex]::New($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
-    if ($negative) {
-        return @($input).Where({-not $reg.IsMatch($_)})
-    }
-    return @($input).Where({$reg.IsMatch($_)})
-}
-
 function ato ([string]$s, [int]$break = 0) {
     return $($input | ForEach-Object {($_ -as [string]) + $s + ("`n" * $break)})
 }
@@ -770,3 +761,16 @@ function Write-StringHighLight {
 Set-Alias hilight Write-StringHighLight
 
 
+function ml ([string]$pattern, [switch]$case, [switch]$negative, [switch]$color){
+    # ml: match line
+    $reg = ($case)? [regex]::New($pattern) : [regex]::New($pattern, [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if ($negative) {
+        return @($input).Where({-not $reg.IsMatch($_)})
+    }
+    $lines = @($input).Where({$reg.IsMatch($_)})
+    if ($color) {
+        $hi = [PsHighlight]::new($pattern, "White", $case)
+        return $lines.ForEach({$hi.Markup($_)})
+    }
+    return $lines
+}
