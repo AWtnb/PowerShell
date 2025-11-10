@@ -1007,29 +1007,6 @@ function Get-VBAGistZen2han {
     Invoke-RestMethod -Uri "https://gist.githubusercontent.com/AWtnb/421c63e404c77021534082d129b92aba/raw" | Write-Output
 }
 
-function Invoke-Anchoco {
-    try {
-        Get-Command anchoco.exe -ErrorAction Stop > $null
-    }
-    catch {
-        "Exe not found" | Write-Host -ForegroundColor Magenta
-        $repo = "https://github.com/AWtnb/anchoco"
-        "=> Clone and build from {0}" -f $repo | Write-Host
-        return
-    }
-    $result = & anchoco.exe ('--src={0}' -f ($env:USERPROFILE | Join-Path -ChildPath "Personal\tools\prompts.yaml"))
-    if ($LASTEXITCODE -ne 0) {
-        return
-    }
-    $result | Set-Clipboard
-    Start-Process "https://claude.ai/"
-}
-
-Set-PSReadLineKeyHandler -Key "alt+0" -BriefDescription "anchoco" -LongDescription "anchoco" -ScriptBlock {
-    Invoke-Anchoco
-    [Microsoft.PowerShell.PSConsoleReadLine]::InvokePrompt()
-}
-
 function Invoke-MeryBackup {
     $src = $env:APPDATA | Join-Path -ChildPath "Mery\Mery.ini"
     if (-not (Test-Path $src)) {
