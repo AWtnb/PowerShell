@@ -1003,10 +1003,6 @@ function Get-ClipboardFontInfo {
 }
 Set-Alias gcbf Get-ClipboardFontInfo
 
-function Get-VBAGistZen2han {
-    Invoke-RestMethod -Uri "https://gist.githubusercontent.com/AWtnb/421c63e404c77021534082d129b92aba/raw" | Write-Output
-}
-
 function Invoke-MeryBackup {
     $src = $env:APPDATA | Join-Path -ChildPath "Mery\Mery.ini"
     if (-not (Test-Path $src)) {
