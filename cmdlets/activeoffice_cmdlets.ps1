@@ -1082,7 +1082,16 @@ function Invoke-GoDiffOnActiveWordDocumnt {
         "==> accepted all revisions on active document!" | Write-Host
     }
 
-    $curLines = $curDoc.Paragraphs | ForEach-Object {$_.Range.Text} | Remove-WordControlChars
+    [scriptblock]$skipInlineShapeParagraph = {
+        return $input | ForEach-Object {
+            if (($_.Range.Text) -eq "/`r" -and ($_.Range.InlineShapes.Count -eq 1)) {
+                return ""
+            }
+            return $_.Range.Text
+        }
+    }
+
+    $curLines = $curDoc.Paragraphs | & $skipInlineShapeParagraph | Remove-WordControlChars
     if ($curLines.Count -lt 1) {
         return
     }
@@ -1104,7 +1113,7 @@ function Invoke-GoDiffOnActiveWordDocumnt {
         $orgDoc.AcceptAllRevisions()
         "==> accepted all revisions on original document! (not saved)" | Write-Host
     }
-    $orgLines = $orgDoc.Paragraphs | ForEach-Object {$_.Range.Text} | Remove-WordControlChars
+    $orgLines = $orgDoc.Paragraphs | & $skipInlineShapeParagraph | Remove-WordControlChars
     $orgDoc.Close($false)
     $fromName = $orgPath | Split-Path -Leaf
     $toName = $curPath | Split-Path -Leaf
