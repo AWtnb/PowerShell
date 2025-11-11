@@ -1021,7 +1021,7 @@ function Set-ActiveWordDocumentMarkerEraser {
 
 
 
-class DocDiff {
+class MSWordComparison {
 
     static [datetime] GetLastSaveTime([string]$path) {
         $file = Get-Item -LiteralPath $path
@@ -1136,18 +1136,18 @@ function Invoke-GoDiffOnActiveWordDocumnt {
     }
 }
 
-function Invoke-DiffFromActiveWordDocumnt {
+function Invoke-CompareFromActiveWordDocumnt {
     <#
         .SYNOPSIS
         現在開いている文書から比較する
     #>
     param (
-        [parameter(Mandatory)][string]$diffTo
+        [parameter(Mandatory)][string]$newDocPath
     )
     $wd = Get-ActiveOffice -app "Word.Application"
     if (-not $wd) { return }
     $origin = $wd.ActiveDocument
-    $revPath = (Resolve-Path $diffTo).Path
+    $revPath = (Resolve-Path $newDocPath).Path
     $revised = $null
     try {
         $revised = $wd.Documents($revPath)
@@ -1161,22 +1161,22 @@ function Invoke-DiffFromActiveWordDocumnt {
     $wd.CompareDocuments(
         $origin,
         $revised,
-        [DocDiff]::destination,
-        [DocDiff]::granularity,
-        [DocDiff]::compareFormatting,
-        [DocDiff]::compareCaseChanges,
-        [DocDiff]::compareWhitespace,
-        [DocDiff]::compareTables,
-        [DocDiff]::compareHeaders,
-        [DocDiff]::compareFootnotes,
-        [DocDiff]::compareTextboxes,
-        [DocDiff]::compareFields,
-        [DocDiff]::compareComments,
-        [DocDiff]::compareMoves,
-        [DocDiff]::RevisedAuthor,
-        [DocDiff]::IgnoreAllComparisonWarnings
+        [MSWordComparison]::destination,
+        [MSWordComparison]::granularity,
+        [MSWordComparison]::compareFormatting,
+        [MSWordComparison]::compareCaseChanges,
+        [MSWordComparison]::compareWhitespace,
+        [MSWordComparison]::compareTables,
+        [MSWordComparison]::compareHeaders,
+        [MSWordComparison]::compareFootnotes,
+        [MSWordComparison]::compareTextboxes,
+        [MSWordComparison]::compareFields,
+        [MSWordComparison]::compareComments,
+        [MSWordComparison]::compareMoves,
+        [MSWordComparison]::RevisedAuthor,
+        [MSWordComparison]::IgnoreAllComparisonWarnings
     ) > $null
-    $wd.ActiveWindow.ShowSourceDocuments = [DocDiff]::wdShowSourceDocumentsBoth
+    $wd.ActiveWindow.ShowSourceDocuments = [MSWordComparison]::wdShowSourceDocumentsBoth
 }
 
 function Invoke-MergeToActiveWordDocumnt {
@@ -1204,19 +1204,19 @@ function Invoke-MergeToActiveWordDocumnt {
     $wd.MergeDocuments(
         $origin,
         $revised,
-        [DocDiff]::destination,
-        [DocDiff]::granularity,
-        [DocDiff]::compareFormatting,
-        [DocDiff]::compareCaseChanges,
-        [DocDiff]::compareWhitespace,
-        [DocDiff]::compareTables,
-        [DocDiff]::compareHeaders,
-        [DocDiff]::compareFootnotes,
-        [DocDiff]::compareTextboxes,
-        [DocDiff]::compareFields,
-        [DocDiff]::compareComments
+        [MSWordComparison]::destination,
+        [MSWordComparison]::granularity,
+        [MSWordComparison]::compareFormatting,
+        [MSWordComparison]::compareCaseChanges,
+        [MSWordComparison]::compareWhitespace,
+        [MSWordComparison]::compareTables,
+        [MSWordComparison]::compareHeaders,
+        [MSWordComparison]::compareFootnotes,
+        [MSWordComparison]::compareTextboxes,
+        [MSWordComparison]::compareFields,
+        [MSWordComparison]::compareComments
     ) > $null
-    $wd.ActiveWindow.ShowSourceDocuments = [DocDiff]::wdShowSourceDocumentsBoth
+    $wd.ActiveWindow.ShowSourceDocuments = [MSWordComparison]::wdShowSourceDocumentsBoth
 }
 
 
