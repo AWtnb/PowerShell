@@ -428,7 +428,13 @@ function Invoke-ImageMagickWatermarkSignature {
 function Invoke-ImageMagickChromeExtensionIconResize {
     param($inputObj)
     $path = (Get-Item $inputObj).FullName
-    @(16, 48, 128) | ForEach-Object {
+    @(
+        128,
+        16,
+        32,
+        48,
+        96
+    ) | ForEach-Object {
         "magick convert '$path' -resize {0}x{0} icon{0}.png" -f $_ | Invoke-Expression
     }
 }
