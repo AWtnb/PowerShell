@@ -156,7 +156,7 @@ function ghRemote {
         if ($clone) {
             $url = "https://github.com/AWtnb/{0}.git" -f $repoName
             git clone $url
-            if ($LASTEXITCODE -eq 0) {
+            if ($selected.Count -eq 1 -and $LASTEXITCODE -eq 0) {
                 $cmd = Get-Command code -ErrorAction SilentlyContinue
                 if ($cmd) {
                     Start-Process code -ArgumentList ($PWD.Path | Join-Path -ChildPath $repoName) -NoNewWindow
