@@ -312,7 +312,7 @@ function Restart-Keyhac {
         $procs | Stop-Process -Force
         Start-Process -FilePath $path
     } else {
-        Start-Process -FilePath $($env:USERPROFILE | Join-Path -ChildPath "Sync\portable_apps\keyhac\keyhac.exe") -PassThru
+        Start-Process -FilePath $($env:USERPROFILE | Join-Path -ChildPath "Personal\portable_apps\keyhac\keyhac.exe") -PassThru
     }
 }
 
