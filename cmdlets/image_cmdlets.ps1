@@ -371,7 +371,7 @@ function Get-ImageSize {
 ################################
 
 function moul {
-    & ("C:\Users\{0}\Sync\portable_app\moul\moul.exe" -f $Env:USERNAME) $args
+    & ($env:USERDOMAIN_ROAMINGPROFILE | Join-Path -ChildPath "Personal\portable_apps\moul\moul.exe") $args
 }
 
 function Invoke-ImageMagickWatermarkSignature {
