@@ -1002,19 +1002,3 @@ function Get-ClipboardFontInfo {
     $rtb | Clear-Variable -ErrorAction SilentlyContinue
 }
 Set-Alias gcbf Get-ClipboardFontInfo
-
-function Invoke-MeryBackup {
-    $src = $env:APPDATA | Join-Path -ChildPath "Mery\Mery.ini"
-    if (-not (Test-Path $src)) {
-        "'{0}' not exists." -f $src | Write-Host -ForegroundColor Magenta
-        return
-    }
-    $dest = $env:USERPROFILE | Join-Path -ChildPath "Sync\develop\app_setting\Mery\Mery.ini"
-    if (Test-Path $dest) {
-        if ((Get-Item $dest).LastWriteTime -gt (Get-Item $src).LastWriteTime) {
-            "'{0}' is newer than`n'{1}'" -f $dest, $src | Write-Host -ForegroundColor Magenta
-            return
-        }
-    }
-    Get-Item $src | Copy-Item -Destination $dest
-}
