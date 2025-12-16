@@ -171,6 +171,14 @@ function ghRemote {
     }
 }
 
+Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghremote" -LongDescription "ghremote" -ScriptBlock {
+    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> ghRemote #")
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
+
+
+
 function Get-EjectableDrive {
     [OutputType([System.IO.DriveInfo])]
     param()
