@@ -351,11 +351,12 @@ function Get-UniqueOrderdArray {
     }
     process {
         if ($inputLine -cnotin $stack) {
-            Write-Output $inputLine
             $stack.Add($inputLine) > $null
         }
     }
-    end {}
+    end {
+        return $stack
+    }
 }
 Set-Alias uq Get-UniqueOrderdArray
 
