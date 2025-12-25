@@ -139,9 +139,8 @@ function hinagata {
 }
 
 function ghRemote {
-    $query = $args[0]
     try {
-        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --query=$query --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
+        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
     }
     catch {
         return
@@ -174,6 +173,11 @@ function ghRemote {
 Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghremote" -LongDescription "ghremote" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
     [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> ghRemote #")
+    [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
+}
+Set-PSReadLineKeyHandler -Key "alt+g" -BriefDescription "gist" -LongDescription "gist" -ScriptBlock {
+    [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> gh gist view --web #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
