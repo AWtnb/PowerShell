@@ -47,13 +47,13 @@ function ConvertTo-Base64 {
         if ($fileObj) {
             $bytes = $fileObj | Get-Content -AsByteStream
             [PSCustomObject]@{
-                "Name" = $fileObj.Name;
+                "Name"   = $fileObj.Name;
                 "Encode" = [System.Convert]::ToBase64String($bytes);
             } | Write-Output
         }
         else {
             [PSCustomObject]@{
-                "Name" = $inputObj;
+                "Name"   = $inputObj;
                 "Encode" = ($inputObj -as [string]).ToBase64();
                 "Markup" = "<img src=`"data:image/png;base64,$()`""
             } | Write-Output
@@ -240,8 +240,8 @@ function ConvertFrom-CsvUtil {
     )
     $content = New-Object System.Collections.ArrayList
     $input.ForEach({
-        $content.Add($_) > $null
-    })
+            $content.Add($_) > $null
+        })
     if ($header -and $verbatim) {
         Write-Error "Only one of '-header' or '-verbatim' should be specified."
         return
@@ -322,8 +322,8 @@ function Group-ObjectUtil {
         $name = $_.Name
         $grouped = $_.Group | Select-Object -ExpandProperty $groupedProperty | Join-String -Separator $jointBy
         return [PSCustomObject]@{
-            "Name" = $name;
-            "Count" = $count;
+            "Name"    = $name;
+            "Count"   = $count;
             "Grouped" = $grouped;
         }
     }
@@ -383,7 +383,7 @@ function Find-SameFile {
                 }
             }
             return [PSCustomObject]@{
-                "Path" = $($target.FullName | Resolve-Path -Relative);
+                "Path"  = $($target.FullName | Resolve-Path -Relative);
                 "Count" = $found.Count;
                 "Found" = $found;
             }
@@ -405,12 +405,12 @@ function Group-SameFile {
             $clones = @($paths | Select-Object -Skip 1 | Get-Item)
             return [PSCustomObject]@{
                 "Shortest" = $shortest;
-                "Clones" = $clones;
+                "Clones"   = $clones;
             }
         }
         return [PSCustomObject]@{
             "Shortest" = $_.Group.Path;
-            "Clones" = @();
+            "Clones"   = @();
         }
     } | Sort-Object {$_.Shortest} | Write-Output
 }
@@ -455,7 +455,7 @@ function Invoke-DiffStringArray {
     $hashTable.GetEnumerator() | ForEach-Object {
         $record = [PSCustomObject]@{
             delta = $_.Value;
-            line = $_.Key;
+            line  = $_.Key;
         }
         $objArray.Add($record) > $null
     }
@@ -477,6 +477,7 @@ function Invoke-DiffAsHtml {
         [parameter(Mandatory)][string]$from
         ,[parameter(Mandatory)][string]$to
         ,[string]$outName = "out"
+        ,[switch]$compress
     )
 
     try {
@@ -498,6 +499,9 @@ function Invoke-DiffAsHtml {
         ('--revised={0}' -f $toPath),
         ('--out={0}' -f $outPath)
     )
+    if ($compress) {
+        $params += "--compress"
+    }
     & go-ppdiff.exe $params
 }
 
@@ -668,7 +672,7 @@ function len ([switch]$net){
     }
     [PSCustomObject]@{
         Length = $s.Length;
-        Input = $s;
+        Input  = $s;
     } | Write-Output
 }
 
@@ -704,9 +708,9 @@ function Get-Mp3Property {
             $nameSpace = $sh.NameSpace($fileObj.Directory.FullName)
             $props = $nameSpace.ParseName($fileObj.Name)
             return [PSCustomObject]@{
-                "Name" = $fileObj.Name;
+                "Name"     = $fileObj.Name;
                 "FullName" = $fileObj.FullName;
-                "Title" = $nameSpace.GetDetailsOf($props, 21)
+                "Title"    = $nameSpace.GetDetailsOf($props, 21)
                 "PlayTime" = $nameSpace.GetDetailsOf($props, 27)
             }
         }
@@ -723,13 +727,13 @@ function Test-Url {
     process {
         try {
             return [PSCustomObject]@{
-                "IsValid" = $true;
+                "IsValid"  = $true;
                 "Response" = $(Invoke-WebRequest $inputLine);
             }
         }
         catch {
             return [PSCustomObject]@{
-                "IsValid" = $false;
+                "IsValid"  = $false;
                 "Response" = $null;
             }
         }
@@ -824,8 +828,8 @@ function Get-FileProperties {
     $shellFile = $shellFolder.parseName($name)
     0..$max | ForEach-Object {
         [PSCustomObject]@{
-            "Id" = $_;
-            "Name" = $shellFolder.getDetailsOf($null, $_);
+            "Id"    = $_;
+            "Name"  = $shellFolder.getDetailsOf($null, $_);
             "Value" = $shellFolder.getDetailsOf($shellFile, $_);
         } | Write-Output
     }
@@ -843,9 +847,9 @@ function Get-LocalFont {
         try {
             $font = New-Object -TypeName Windows.Media.GlyphTypeface -ArgumentList $path
             return [PSCustomObject]@{
-                "Name" = $font.Win32FamilyNames["en-us"];
+                "Name"      = $font.Win32FamilyNames["en-us"];
                 "LocalName" = $font.Win32FamilyNames["ja-jp"];
-                "Path" = $path;
+                "Path"      = $path;
             }
         }
         catch {
@@ -872,12 +876,12 @@ Class ClipboardPath {
     ClipboardPath() {
         $cb = Get-Clipboard -Raw
         if ($cb.Length) {
-                $stack = @()
-                ($cb -replace '" "', "`n") -split "`r?`n" | ForEach-Object {
-            if ($_.StartsWith('"') -or $_.EndsWith('"')) {
-                $stack += ($_ -replace '"')
-            }
-            else {
+            $stack = @()
+            ($cb -replace '" "', "`n") -split "`r?`n" | ForEach-Object {
+                if ($_.StartsWith('"') -or $_.EndsWith('"')) {
+                    $stack += ($_ -replace '"')
+                }
+                else {
                     $_ -split " " | ForEach-Object { $stack += $_ }
                 }
             }
@@ -933,9 +937,9 @@ function Find-MissingValuesInSerialNumber {
         $m = $reg.Matches($s)
         if ($m.Count -and ($matchGroupIdx -lt $m.Count)) {
             $arr.Add([PSCustomObject]@{
-                "line" = $s;
-                "number" = $m[$matchGroupIdx].Value -as [int];
-            }) > $null
+                    "line"   = $s;
+                    "number" = $m[$matchGroupIdx].Value -as [int];
+                }) > $null
         }
     }
     end {
@@ -945,8 +949,8 @@ function Find-MissingValuesInSerialNumber {
             $cur = $arr[$i]
             if ($prev.number + 1 -eq $cur.number) { continue }
             $obj = [PSCustomObject]@{
-                "From" = $prev.line;
-                "To" = $cur.line;
+                "From"    = $prev.line;
+                "To"      = $cur.line;
                 "Missing" = $(New-Object System.Collections.ArrayList);
             }
             for ($n = $prev.number + 1; $n -lt $cur.number; $n++) {
@@ -991,11 +995,11 @@ function Get-ClipboardFontInfo {
         }
         else {
             [PSCustomObject]@{
-            "Text" = $t;
-            "Codepoint" = $u;
-            "OriginalFontName" = $font.OriginalFontName;
-            "Size" = $font.SizeInPoints;
-            "Style" = $font.Style;
+                "Text"             = $t;
+                "Codepoint"        = $u;
+                "OriginalFontName" = $font.OriginalFontName;
+                "Size"             = $font.SizeInPoints;
+                "Style"            = $font.Style;
             } | Write-Output
         }
         $font | Clear-Variable -ErrorAction SilentlyContinue
