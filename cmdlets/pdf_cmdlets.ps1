@@ -82,7 +82,7 @@ function denoSearchPdf {
         "Watermarking..." | Write-Host
         $count = 1
         Get-ChildItem "*.pdf" | ForEach-Object {
-            $count += [int](Invoke-DenoPdfWatermark -inputObj $_ -start $count -nombre)
+            $count += [int](Invoke-DenoPdfWatermark -inputObj $_ -text $_.Name -startNombre $count)
         }
     }
     catch {
@@ -393,8 +393,7 @@ function Invoke-DenoPdfWatermark {
     param (
         [parameter(ValueFromPipeline)]$inputObj
         ,[string]$text = ""
-        ,[int]$start = 1
-        ,[switch]$nombre
+        ,[string]$startNombre = ""
     )
     begin {
         $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-watermark.exe"
@@ -414,10 +413,7 @@ function Invoke-DenoPdfWatermark {
             "=> Clone and build from {0}" -f $repo | Write-Host
             return
         }
-        $params = @("--text=$text", "--start=$start")
-        if ($nombre) {
-            $params += "--nombre"
-        }
+        $params = @("--text=$text", "--startNombre=$startNombre")
         $files | ForEach-Object {
             $params += ('--path={0}' -f $_.FullName)
             & $denotool $params
