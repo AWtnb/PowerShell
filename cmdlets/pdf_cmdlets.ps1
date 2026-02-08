@@ -28,23 +28,29 @@ function Invoke-GoPdfConc {
 }
 Set-Alias -Name pdfConcGo -Value Invoke-GoPdfConc
 
+function Get-Pdfjig {
+    [OutputType([string])]
+    $path = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\repo\pdfjig"
+    if (-not (Test-Path $path -PathType Container)) {
+        "Not found: {0}" -f $path | Write-Host -ForegroundColor Magenta
+        "=> Clone https://github.com/AWtnb/pdfjig" | Write-Host
+        return ""
+    }
+    return $path | Join-Path -ChildPath "main.ts"
+}
+
 function Invoke-DenoPdfConc {
     param (
         [string]$outName = "conc"
     )
-
     $pdfs = @($input | Get-Item | Where-Object Extension -eq ".pdf")
     if ($pdfs.Count -le 1) {
         return
     }
-    $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-conc.exe"
-    if (-not (Test-Path $denotool)) {
-        "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-        $repo = "https://github.com/AWtnb/deno-pdf-conc"
-        "=> Clone and build from {0}" -f $repo | Write-Host
-        return
+    $jig = Get-Pdfjig
+    if ($jig -eq "") {
+        $pdfs.FullName | deno run --allow-import --allow-read --allow-write $jig conc -o $outName
     }
-    $pdfs.FullName | & $denotool "--outname=$outname"
 }
 Set-Alias -Name pdfConcDeno -Value Invoke-DenoPdfConc
 
@@ -64,21 +70,21 @@ function denoSearchPdf {
     }
 
     try {
-        "Unspreading..." | Write-Host
-        Get-ChildItem "*_crop.pdf" | Invoke-DenoPdfUnspread
+        "Splitting..." | Write-Host
+        Get-ChildItem "*_trimbox.pdf" | Invoke-DenoPdfSplit
     }
     catch {
-        Write-Host "Error: failed to unspread files."
+        Write-Host "Error: failed to split pages of files."
         return
     }
 
     $outDir = "out"
     New-Item -Path $outDir -ItemType Directory -Force > $null
-    Get-ChildItem "*_crop_unspread.pdf" | Copy-Item -Destination $outDir
+    Get-ChildItem "*_trimbox_split.pdf" | Copy-Item -Destination $outDir
 
     try {
         Push-Location -Path $outDir
-        Get-ChildItem | Rename-Item -NewName {($_.BaseName -replace "_crop_unspread$", "") + ".pdf"}
+        Get-ChildItem | Rename-Item -NewName {($_.BaseName -replace "_trimbox_split$", "") + ".pdf"}
         "Watermarking..." | Write-Host
         $count = 1
         Get-ChildItem "*.pdf" | ForEach-Object {
@@ -105,7 +111,7 @@ function denoSearchPdf {
 
     "Cleaning..." | Write-Host
     Get-ChildItem -Directory -Filter $outDir | Remove-Item -Recurse
-    Get-ChildItem "*_crop*.pdf" | Remove-Item
+    Get-ChildItem "*_trimbox*.pdf" | Remove-Item
 
     "Finished!" | Write-Host -ForegroundColor Yellow
 }
@@ -129,31 +135,29 @@ function Invoke-DenoPdfSpread {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-spread"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
+        
         $params = @()
         if ($vertical) {
-            $params += "--vertical"
+            $params += "-v"
         }
         if ($opposite) {
-            $params += "--opposite"
+            $params += "-o"
         }
         if ($singleTopPage) {
-            $params += "--singleTopPage"
+            $params += "-s"
         }
         $files | ForEach-Object {
-            $params += ('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig spread $params $_.FullName
         }
     }
 }
 Set-Alias -Name pdfSpreadDeno -Value Invoke-DenoPdfSpread
 
-function Invoke-DenoPdfUnspread {
+function Invoke-DenoPdfSplit {
     param (
         [parameter(ValueFromPipeline)]
         $inputObj
@@ -161,8 +165,14 @@ function Invoke-DenoPdfUnspread {
         ,[switch]$opposite
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-unspread.exe"
         $files = @()
+        $params = @()
+        if ($vertical) {
+            $params += "-v"
+        }
+        if ($opposite) {
+            $params += "-o"
+        }
     }
     process {
         $file = Get-Item -LiteralPath $inputObj
@@ -172,25 +182,16 @@ function Invoke-DenoPdfUnspread {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-unspread"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
         $files | ForEach-Object {
-            $params = @('--path={0}' -f $_.FullName)
-            if ($vertical) {
-                $params += "--vertical"
-            }
-            if ($opposite) {
-                $params += "--opposite"
-            }
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig split $params $_.FullName
         }
     }
 }
-Set-Alias PdfUnspreadDeno Invoke-DenoPdfUnspread
+Set-Alias PdfSplitDeno Invoke-DenoPdfSplit
 
 function Invoke-DenoPdfApplyTrimbox {
     param (
