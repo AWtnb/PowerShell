@@ -44,77 +44,14 @@ function Invoke-DenoPdfConc {
         [string]$outName = "conc"
     )
     $pdfs = @($input | Get-Item | Where-Object Extension -eq ".pdf")
-    if ($pdfs.Count -le 1) {
-        return
-    }
     $jig = Get-Pdfjig
     if ($jig -eq "") {
-        $pdfs.FullName | deno run --allow-import --allow-read --allow-write $jig conc -o=$outName
+        return
     }
+    $pdfs.FullName | deno run --allow-import --allow-read --allow-write $jig conc "-o=$outName"
 }
 Set-Alias -Name pdfConcDeno -Value Invoke-DenoPdfConc
 
-function denoSearchPdf {
-    param (
-        [string]$outName = "search"
-    )
-    $files = $input | Where-Object {$_.Extension -eq ".pdf"}
-
-    try {
-        "Cropping..." | Write-Host
-        $files | Invoke-DenoPdfApplyTrimbox
-    }
-    catch {
-        Write-Host "Error: failed to crop files."
-        return
-    }
-
-    try {
-        "Splitting..." | Write-Host
-        Get-ChildItem "*_trimbox.pdf" | Invoke-DenoPdfSplit
-    }
-    catch {
-        Write-Host "Error: failed to split pages of files."
-        return
-    }
-
-    $outDir = "out"
-    New-Item -Path $outDir -ItemType Directory -Force > $null
-    Get-ChildItem "*_trimbox_split.pdf" | Copy-Item -Destination $outDir
-
-    try {
-        Push-Location -Path $outDir
-        Get-ChildItem | Rename-Item -NewName {($_.BaseName -replace "_trimbox_split$", "") + ".pdf"}
-        "Watermarking..." | Write-Host
-        $count = 1
-        Get-ChildItem "*.pdf" | ForEach-Object {
-            $count += [int](Invoke-DenoPdfWatermark -inputObj $_ -text $_.Name -startNombre $count)
-        }
-    }
-    catch {
-        Write-Host "Error: failed to watermark files."
-        return
-    }
-    finally { Pop-Location }
-
-    try {
-        Push-Location -Path $outDir
-        "Concatenating..." | Write-Host
-        Get-ChildItem "*_watermarked.pdf" | Invoke-DenoPdfConc -outName $outName
-        Get-Item "$outName.pdf" | Copy-Item -Destination ..
-    }
-    catch {
-        Write-Host "Error: failed to concatenate files."
-        return
-    }
-    finally { Pop-Location }
-
-    "Cleaning..." | Write-Host
-    Get-ChildItem -Directory -Filter $outDir | Remove-Item -Recurse
-    Get-ChildItem "*_trimbox*.pdf" | Remove-Item
-
-    "Finished!" | Write-Host -ForegroundColor Yellow
-}
 
 function Invoke-DenoPdfSpread {
     param (
@@ -419,3 +356,73 @@ function Invoke-DenoPdfRotate {
     }
 }
 Set-Alias -Name pdfRotateDeno -Value Invoke-DenoPdfRotate
+
+
+function denoSearchPdf {
+    param (
+        [string]$outName = "search"
+    )
+    $files = $input | Where-Object {$_.Extension -eq ".pdf"}
+
+    try {
+        "Cropping..." | Write-Host
+        $files | Invoke-DenoPdfApplyTrimbox
+    }
+    catch {
+        Write-Host "Error: failed to crop files."
+        return
+    }
+
+    try {
+        "Splitting..." | Write-Host
+        Get-ChildItem "*_trimbox.pdf" | Invoke-DenoPdfSplit
+    }
+    catch {
+        Write-Host "Error: failed to split pages of files."
+        return
+    }
+
+    $fonts = @(Get-ChildItem *.ttf)
+    if ($fonts.Length -eq 0) {
+        Write-Host "Error: *.ttf file not found."
+        return 
+    }
+
+    $outDir = "out"
+    New-Item -Path $outDir -ItemType Directory -Force > $null
+    Get-ChildItem "*_trimbox_split.pdf" | Copy-Item -Destination $outDir
+    $fonts | Select-Object -First 1 | Copy-Item -Destination $outDir
+
+    try {
+        Push-Location -Path $outDir
+        Get-ChildItem  *.pdf | Rename-Item -NewName {($_.BaseName -replace "_trimbox_split$", "") + ".pdf"} -Force
+        "Watermarking..." | Write-Host
+        $count = 1
+        Get-ChildItem "*.pdf" | ForEach-Object {
+            $count += [int](Invoke-DenoPdfWatermark -inputObj $_ -text $_.Name -startNombre $count)
+        }
+    }
+    catch {
+        Write-Host "Error: failed to watermark files."
+        return
+    }
+    finally { Pop-Location }
+
+    try {
+        Push-Location -Path $outDir
+        "Concatenating..." | Write-Host
+        Get-ChildItem "*_watermarked.pdf" | Invoke-DenoPdfConc -outName $outName
+        Get-Item "$outName.pdf" | Copy-Item -Destination ..
+    }
+    catch {
+        Write-Host "Error: failed to concatenate files."
+        return
+    }
+    finally { Pop-Location }
+
+    "Cleaning..." | Write-Host
+    Get-ChildItem -Directory -Filter $outDir | Remove-Item -Recurse
+    Get-ChildItem "*_trimbox*.pdf" | Remove-Item
+
+    "Finished!" | Write-Host -ForegroundColor Yellow
+}
