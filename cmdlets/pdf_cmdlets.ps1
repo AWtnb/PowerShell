@@ -49,7 +49,7 @@ function Invoke-DenoPdfConc {
     }
     $jig = Get-Pdfjig
     if ($jig -eq "") {
-        $pdfs.FullName | deno run --allow-import --allow-read --allow-write $jig conc -o $outName
+        $pdfs.FullName | deno run --allow-import --allow-read --allow-write $jig conc -o=$outName
     }
 }
 Set-Alias -Name pdfConcDeno -Value Invoke-DenoPdfConc
@@ -124,7 +124,6 @@ function Invoke-DenoPdfSpread {
         ,[switch]$singleTopPage
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-spread.exe"
         $files = @()
     }
     process {
@@ -198,7 +197,6 @@ function Invoke-DenoPdfApplyTrimbox {
         [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-apply-trimbox.exe"
         $files = @()
     }
     process {
@@ -209,15 +207,12 @@ function Invoke-DenoPdfApplyTrimbox {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-apply-trimbox"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
         $files | ForEach-Object {
-            $params = @('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig apply-trimbox $_.FullName
         }
     }
 }
@@ -230,8 +225,8 @@ function Invoke-DenoPdfTrimMargin {
         ,[double[]]$marginPercentages
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-trim-margin.exe"
         $files = @()
+        $marginParam = $marginPercentages -join ","
     }
     process {
         $file = Get-Item -LiteralPath $inputObj
@@ -241,17 +236,12 @@ function Invoke-DenoPdfTrimMargin {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-trim-margin"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
-        $marginParam = '--margin={0}' -f ($marginPercentages -join ",")
         $files | ForEach-Object {
-            $params = @('--path={0}' -f $_.FullName)
-            $params += $marginParam
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig trim-margin "-m=$marginParam" $_.FullName
         }
     }
 }
@@ -263,7 +253,6 @@ function Invoke-DenoPdfUnzipPages {
         [parameter(ValueFromPipeline)]$inputObj
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-unzip.exe"
         $files = @()
     }
     process {
@@ -274,15 +263,12 @@ function Invoke-DenoPdfUnzipPages {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-unzip"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
         $files | ForEach-Object {
-            $params = @('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig unzip $_.FullName
         }
     }
 }
@@ -292,11 +278,9 @@ Set-Alias PdfUnzipPagesDeno Invoke-DenoPdfUnzipPages
 function Invoke-DenoPdfExtract {
     param (
         [parameter(ValueFromPipeline)]$inputObj
-        ,[int]$from = 1
-        ,[int]$to = -1
+        ,[string]$range = "1-"
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-extract.exe"
         $files = @()
     }
     process {
@@ -307,16 +291,12 @@ function Invoke-DenoPdfExtract {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-extract"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
-        $params = @("--frompage=$from", "--topage=$to")
         $files | ForEach-Object {
-            $params += ('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig extract "-r=$range" $_.FullName
         }
     }
 }
@@ -326,11 +306,12 @@ function Invoke-DenoPdfInsert {
     param (
         [parameter(ValueFromPipeline)]$inputObj
         ,[parameter(Mandatory)][string]$insertPdf
-        ,[int]$from = 1
+        ,[int]$insertStartNombre = 1
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-insert.exe"
         $files = @()
+        $insertPath = (Get-Item -Path $insertPdf).FullName
+        $params = @("-f=$insertPath", "-s=$insertStartNombre")
     }
     process {
         $file = Get-Item -LiteralPath $inputObj
@@ -340,17 +321,12 @@ function Invoke-DenoPdfInsert {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-insert"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
-        $insertPath = (Get-Item -Path $insertPdf).FullName
-        $params = @("--insert=$insertPath", "--frompage=$from")
         $files | ForEach-Object {
-            $params += ('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig insert $params $_.FullName
         }
     }
 }
@@ -360,11 +336,12 @@ function Invoke-DenoPdfSwap {
     param (
         [parameter(ValueFromPipeline)]$inputObj
         ,[parameter(Mandatory)][string]$embedPdf
-        ,[int]$from = 1
+        ,[int]$swapStartNombre = 1
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-swap.exe"
         $files = @()
+        $embedPath = (Get-Item $embedPdf).FullName
+        $params = @("-f=$embedPath", "-s=$swapStartNombre")
     }
     process {
         $file = Get-Item -LiteralPath $inputObj
@@ -374,17 +351,12 @@ function Invoke-DenoPdfSwap {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-swap"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
-        $embedPath = (Get-Item -Path $embedPdf).FullName
-        $params = @("--embed=$embedPath", "--frompage=$from")
         $files | ForEach-Object {
-            $params += ('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig swap $params $_.FullName
         }
     }
 }
@@ -394,11 +366,11 @@ function Invoke-DenoPdfWatermark {
     param (
         [parameter(ValueFromPipeline)]$inputObj
         ,[string]$text = ""
-        ,[string]$startNombre = ""
+        ,[string]$startNombre = "1"
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-watermark.exe"
         $files = @()
+        $params = @("-t=$text", "-s=$startNombre")
     }
     process {
         $file = Get-Item -LiteralPath $inputObj
@@ -408,16 +380,12 @@ function Invoke-DenoPdfWatermark {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-watermark"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
-        $params = @("--text=$text", "--startNombre=$startNombre")
         $files | ForEach-Object {
-            $params += ('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig watermark $params $_.FullName
         }
     }
 }
@@ -427,11 +395,11 @@ function Invoke-DenoPdfRotate {
     param (
         [parameter(ValueFromPipeline)]$inputObj
         ,[ValidateSet(90, 180, 270)][int]$degree = 90
-        ,[int[]]$pages = @()
+        ,[string]$range = "1-"
     )
     begin {
-        $denotool = $env:USERPROFILE | Join-Path -ChildPath "Personal\tools\bin\deno-pdf-rotate.exe"
         $files = @()
+        $params = @("-d=$degree", "-r=$range")
     }
     process {
         $file = Get-Item -LiteralPath $inputObj
@@ -441,17 +409,12 @@ function Invoke-DenoPdfRotate {
         $files += $file
     }
     end {
-        if (-not (Test-Path $denotool)) {
-            "Not found: {0}" -f $denotool | Write-Host -ForegroundColor Magenta
-            $repo = "https://github.com/AWtnb/deno-pdf-rotate"
-            "=> Clone and build from {0}" -f $repo | Write-Host
+        $jig = Get-Pdfjig
+        if ($jig -eq "") {
             return
         }
-        $p = $pages -join ","
-        $params = @("--degree=$degree", "--pages=$p")
         $files | ForEach-Object {
-            $params += ('--path={0}' -f $_.FullName)
-            & $denotool $params
+            deno run --allow-import --allow-read --allow-write $jig rotate $params $_.FullName
         }
     }
 }
