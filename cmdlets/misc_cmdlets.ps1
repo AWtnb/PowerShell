@@ -798,9 +798,9 @@ function Invoke-Monolith {
             "SKIP: '{0}' already exists!" -f $outPath | Write-Host -ForegroundColor Magenta
             return
         }
-        New-Item -ItemType Directory -Path ($outPath | Split-Path -Parent)  -ErrorAction SilentlyContinue > $null
+        New-Item -ItemType Directory -Path ($outPath | Split-Path -Parent) -ErrorAction SilentlyContinue > $null
         "archiving as '{0}'..." -f $outPath | Write-Host
-        "monolith {0} --no-video --silent --output '{1}'" -f $inputLine, $outPath | Invoke-Expression
+        monolith --no-video --quiet $inputLine | Out-File -FilePath $outPath -Encoding utf8NoBOM
         Start-Sleep -Seconds 1
     }
     end {
