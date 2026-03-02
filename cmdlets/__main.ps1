@@ -31,14 +31,14 @@ function Update-Repositories {
     param (
         [parameter(Mandatory)][string]$root
     )
-    $src = $env:APPDATA | Join-Path -ChildPath "git-behind-checker\update-repos.ps1"
+    $src = $env:APPDATA | Join-Path -ChildPath "gitrailer\pull.ps1"
     if (Test-Path $src) {
         & $src $root
     }
     else{
         "``{0}`` not found." -f ($src | Split-Path -Leaf) | Write-Host -ForegroundColor Red
         Write-Host "Clone from " -NoNewline
-        Write-Host "https://github.com/AWtnb/git-behind-checker" -ForegroundColor Cyan -NoNewline
+        Write-Host "https://github.com/AWtnb/gitrailer" -ForegroundColor Cyan -NoNewline
         Write-Host " and run ``install.ps1`` ." -NoNewline
     }
 }
@@ -66,8 +66,8 @@ function Get-HostProcess {
 }
 
 # thanks: https://stuncloud.wordpress.com/2014/11/19/powershell_turnoff_ime_automatically/
-if(-not ('Pwsh.IME' -as [type]))
-{Add-Type -Namespace Pwsh -Name IME -MemberDefinition @'
+if(-not ('Pwsh.IME' -as [type])) {
+    Add-Type -Namespace Pwsh -Name IME -MemberDefinition @'
 
 [DllImport("user32.dll")]
 private static extern int SendMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
@@ -84,7 +84,8 @@ public static void SetState(IntPtr hwnd, bool state) {
     SendMessage(imeHwnd, 0x0283, 0x0006, state?1:0);
 }
 
-'@ }
+'@ 
+}
 
 function Reset-ConsoleIME {
     [OutputType([System.Boolean])]
@@ -107,8 +108,8 @@ function Reset-ConsoleIME {
 # window
 ##############################
 
-if(-not ('Pwsh.Window' -as [type]))
-{Add-Type -Namespace Pwsh -Name Window -MemberDefinition @'
+if(-not ('Pwsh.Window' -as [type])) {
+    Add-Type -Namespace Pwsh -Name Window -MemberDefinition @'
 
 [DllImport("user32.dll")]
 private static extern bool SendMessage(IntPtr hWnd, uint Msg, int wParam, string lParam);
@@ -122,7 +123,8 @@ public static void Minimize(IntPtr hwnd) {
     SendMessage(hwnd, 0x0112, 0xF020, 0);
 }
 
-'@ }
+'@ 
+}
 
 function Set-ConsoleWindowTitle {
     param (
@@ -166,29 +168,29 @@ class PseudoVoicing {
     }
     [void] FixVoicing() {
         $this.formatted = [regex]::new(".[\u309b\u3099]").Replace($this.formatted, {
-            param($m)
-            $c = $m.Value.Substring(0,1)
-            if ($this.voicables.IndexOf($c) -lt 0) {
-                return $m
-            }
-            if ($c -eq "う") {
-                return "`u{3094}"
-            }
-            if ($c -eq "ウ") {
-                return "`u{30f4}"
-            }
-            return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 1))
-        })
+                param($m)
+                $c = $m.Value.Substring(0,1)
+                if ($this.voicables.IndexOf($c) -lt 0) {
+                    return $m
+                }
+                if ($c -eq "う") {
+                    return "`u{3094}"
+                }
+                if ($c -eq "ウ") {
+                    return "`u{30f4}"
+                }
+                return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 1))
+            })
     }
     [void] FixHalfVoicing() {
         $this.formatted = [regex]::new(".[\u309a\u309c]").Replace($this.formatted, {
-            param($m)
-            $c = $m.Value.Substring(0,1)
-            if ($this.voicables.IndexOf($c) -lt 0) {
-                return $m
-            }
-            return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 2))
-        })
+                param($m)
+                $c = $m.Value.Substring(0,1)
+                if ($this.voicables.IndexOf($c) -lt 0) {
+                    return $m
+                }
+                return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 2))
+            })
     }
 }
 
@@ -282,11 +284,11 @@ Class Prompter {
         $connector = ($parent.Length -lt 1 -or $parent.EndsWith("\"))? "" : "\"
         $prefix = $this.subMarkerStart + "#" + $parent + $connector + $this.stopDeco
         return $($prefix `
-            + $this.accentBg `
-            + $this.markedFg `
-            + $leaf `
-            + $this.stopDeco`
-            + $this.GetRepoInfo())
+                + $this.accentBg `
+                + $this.markedFg `
+                + $leaf `
+                + $this.stopDeco`
+                + $this.GetRepoInfo())
     }
 
     [string] GetPrompt() {
@@ -311,7 +313,8 @@ function Restart-Keyhac {
         $path = ($procs | Select-Object -First 1).Path
         $procs | Stop-Process -Force
         Start-Process -FilePath $path
-    } else {
+    }
+    else {
         Start-Process -FilePath $($env:USERPROFILE | Join-Path -ChildPath "Personal\portable_apps\keyhac\keyhac.exe") -PassThru
     }
 }
@@ -367,7 +370,8 @@ function sum {
     $n = 0
     if ($args.Count -gt 0) {
         $args | ForEach-Object {$n += $_}
-    } else {
+    }
+    else {
         $input | ForEach-Object {$n += $_}
     }
     return $n
@@ -538,7 +542,8 @@ function Invoke-TarExtract {
             "'{0}' already exists and has some contents!" -f $outname | Write-Host -ForegroundColor Magenta
             return
         }
-    } else {
+    }
+    else {
         New-Item -Path $outname -ItemType Directory
     }
     $params = @("-x", "-v", "-C","$outname", "-f", $target.FullName) | ForEach-Object {
@@ -573,8 +578,8 @@ Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -Membe
     $hasyBytes = $sha.ComputeHash($bs)
     $sha.Dispose()
     return $(-join ($hasyBytes | ForEach-Object {
-        $_.ToString("x2")
-    }))
+                $_.ToString("x2")
+            }))
 }
 
 Update-TypeData -TypeName "System.String" -Force -MemberType ScriptMethod -MemberName "WithoutSpaces" -Value {
@@ -678,9 +683,9 @@ function  Convert-IntToCJK {
     $re = [regex]::new("\d")
     return $input | ForEach-Object {
         return $re.Replace($_, {
-            param($m)
-            return ($m.Value -as [int]).toCJK()
-        })
+                param($m)
+                return ($m.Value -as [int]).toCJK()
+            })
     }
 }
 
