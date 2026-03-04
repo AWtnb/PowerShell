@@ -140,7 +140,7 @@ function hinagata {
 
 function ghRemote {
     try {
-        gh.exe repo list --json name --jq ".[] | .name" --limit 200 | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
+        gh.exe repo list --json name --jq ".[] | .name" | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
     }
     catch {
         return
@@ -154,6 +154,8 @@ function ghRemote {
         $repoName = $_
         if ($clone) {
             $url = "https://github.com/AWtnb/{0}.git" -f $repoName
+            "Cloning... {0}" -f $url | Write-Host
+
             git clone $url
             if ($selected.Count -eq 1 -and $LASTEXITCODE -eq 0) {
                 $cmd = Get-Command code -ErrorAction SilentlyContinue
