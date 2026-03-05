@@ -140,7 +140,7 @@ function hinagata {
 
 function ghRemote {
     try {
-        gh.exe repo list --json name --jq ".[] | .name" | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
+        gh.exe repo list --limit 200 --json name --jq ".[] | .name" | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
     }
     catch {
         return
