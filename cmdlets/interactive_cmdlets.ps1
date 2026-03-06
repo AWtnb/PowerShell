@@ -158,9 +158,12 @@ function ghRemote {
 
             git clone $url
             if ($selected.Count -eq 1 -and $LASTEXITCODE -eq 0) {
-                $cmd = Get-Command code -ErrorAction SilentlyContinue
-                if ($cmd) {
-                    Start-Process code -ArgumentList ($PWD.Path | Join-Path -ChildPath $repoName) -NoNewWindow
+                $edit = (Read-Host -Prompt "Open VSCode? (y/N)") -eq "y"
+                if ($edit) {
+                    $cmd = Get-Command code -ErrorAction SilentlyContinue
+                    if ($cmd) {
+                        Start-Process code -ArgumentList ($PWD.Path | Join-Path -ChildPath $repoName) -NoNewWindow
+                    }
                 }
             }
         }
