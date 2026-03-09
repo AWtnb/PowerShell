@@ -36,11 +36,11 @@ Set-Alias jnt Join-StringUtil
 function Format-String {
     param (
         [string]$format = "{0}"
-        )
-        $input | ForEach-Object {
-            $format -f $_ | Write-Output
-        }
+    )
+    $input | ForEach-Object {
+        $format -f $_ | Write-Output
     }
+}
 Set-Alias fmt Format-String
 
 
@@ -121,7 +121,7 @@ function ConvertTo-IdentificationNumber {
     param (
         [int]$start = 1
     )
-    $input |ForEach-Object {
+    $input | ForEach-Object {
         $start | Write-Output
         $start += 1
     }
@@ -234,9 +234,9 @@ function Convert-Tsv2MarkdownTable {
         [ValidateSet("left", "center", "right")][string]$align = "left"
     )
     $indicator = @{
-        "left" = ":---";
+        "left"   = ":---";
         "center" = ":---:";
-        "right" = "---:";
+        "right"  = "---:";
     }[$align]
     $tsv = $input | ConvertFrom-Csv -Delimiter "`t"
     $ths = ($tsv | Select-Object -First 1).PsObject.Properties.Name
@@ -266,14 +266,14 @@ function Format-StripPostalCodeFromAddress {
             $address = $groups[3]
             return [PSCustomObject]@{
                 "Postalcode" = $postalcode;
-                "Adddress" = $address;
-                "TSV" = $postalcode + "`t" + $address;
+                "Adddress"   = $address;
+                "TSV"        = $postalcode + "`t" + $address;
             }
         }
         return [PSCustomObject]@{
             "Postalcode" = "";
-            "Adddress" = $_;
-            "TSV" = $_;
+            "Adddress"   = $_;
+            "TSV"        = $_;
         }
     }
 }
@@ -289,8 +289,8 @@ function ConvertTo-IdNumber {
     )
     $inputArray = New-Object System.Collections.ArrayList
     $input.ForEach({
-        $inputArray.Add($_) > $null
-    })
+            $inputArray.Add($_) > $null
+        })
     [int]$index = $start
     Write-Output $index
     for ($i = 1; $i -lt $inputArray.Count; $i++) {
@@ -348,22 +348,22 @@ class RtfUtil {
     RtfUtil() {}
 
     static $table = [ordered]@{
-        "Black" = @(0, 0, 0);
-        "Blue" = @(0, 0, 255);
-        "Cyan" = @(0, 255, 255);
-        "Green" = @(0, 255, 0);
-        "Magenta" = @(255, 0, 255);
-        "Red" = @(255, 0, 0);
-        "Yellow" = @(255, 255, 0);
-        "White" = @(255, 255, 255);
-        "DarkBlue" = @(0, 0, 128);
-        "DarkCyan" = @(0, 128, 128);
-        "DarkGreen" = @(0, 128, 0);
+        "Black"       = @(0, 0, 0);
+        "Blue"        = @(0, 0, 255);
+        "Cyan"        = @(0, 255, 255);
+        "Green"       = @(0, 255, 0);
+        "Magenta"     = @(255, 0, 255);
+        "Red"         = @(255, 0, 0);
+        "Yellow"      = @(255, 255, 0);
+        "White"       = @(255, 255, 255);
+        "DarkBlue"    = @(0, 0, 128);
+        "DarkCyan"    = @(0, 128, 128);
+        "DarkGreen"   = @(0, 128, 0);
         "DarkMagenta" = @(128, 0, 128);
-        "DarkRed" = @(128, 0, 0);
-        "DarkYellow" = @(128, 128, 0);
-        "DarkGray" = @(128, 128, 128);
-        "LightGray" = @(192, 192, 192);
+        "DarkRed"     = @(128, 0, 0);
+        "DarkYellow"  = @(128, 128, 0);
+        "DarkGray"    = @(128, 128, 128);
+        "LightGray"   = @(192, 192, 192);
     }
 
     static [string] getColortbl() {
