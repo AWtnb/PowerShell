@@ -51,29 +51,16 @@ function Format-ReplaceLine {
         ,[switch]$case
         ,[switch]$simple
     )
-    $lines = New-Object System.Collections.ArrayList
-    @($input).ForEach({$lines.Add($_) > $null})
-
-    $lines | ForEach-Object {
+    $opt = ($case)? [System.StringComparison]::Ordinal : [System.StringComparison]::OrdinalIgnoreCase
+    $input | ForEach-Object {
         $line = $_
-        $replaced = & {
-            if ($simple) {
-                $opt = ($case)? [System.StringComparison]::Ordinal : [System.StringComparison]::OrdinalIgnoreCase
-                return ($line -as [string]).Replace($from, $to, $opt)
-            }
-            if ($case) {
-                return $line -creplace $from, $to
-            }
-            return $line -replace $from, $to
+        if ($simple) {
+            return ($line -as [string]).Replace($from, $to, $opt)
         }
-        if ($line -ceq $replaced) {
-            [System.Console]::ForegroundColor = "DarkGray"
+        if ($case) {
+            return $line -creplace $from, $to
         }
-        else {
-            [System.Console]::ForegroundColor = "Gray"
-        }
-        Write-Output $replaced
-        [System.Console]::ResetColor()
+        return $line -replace $from, $to
     }
 }
 Set-Alias rl Format-ReplaceLine
