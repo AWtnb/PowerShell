@@ -182,7 +182,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghremote" -LongDes
 }
 Set-PSReadLineKeyHandler -Key "alt+g" -BriefDescription "gist" -LongDescription "gist" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> gh gist view --web #")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> start ('https://gist.github.com/AWtnb/' + (gh gist list --limit 100 |fzf|%{(`$_ -split `"\s+`")[0]})) #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
