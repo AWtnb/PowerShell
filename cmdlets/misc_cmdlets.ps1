@@ -331,9 +331,10 @@ function Group-ObjectUtil {
 
 function Get-DuplicateItem {
     param(
-        [switch]$all
+        [switch]$ignoreCase
+        ,[switch]$all
     )
-    $input | Group-Object | Where-Object {
+    $input | Group-Object -CaseSensitive:(-not $ignoreCase) | Where-Object {
         if ($all) {
             return $_
         }
