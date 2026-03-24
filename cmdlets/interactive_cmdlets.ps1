@@ -180,9 +180,24 @@ Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghremote" -LongDes
     [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> ghRemote #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
+
+function gistFzf() {
+    $selected = gh gist list --limit 100 | ForEach-Object {
+        $ss = ($_ -split "`t")
+        return @($ss[1], $ss[0]) -join "`t"
+    } | fzf
+    if ($selected) {
+        "https://gist.github.com/AWtnb/{0}" -f ($selected -split "`t")[1] | Tee-Object -Variable url
+        $edit = (Read-Host -Prompt "Edit? (y/N)") -eq "y"
+        if ($edit) {
+            $url = $url + "/edit"
+        }
+        Start-Process $url
+    }
+}
 Set-PSReadLineKeyHandler -Key "alt+g" -BriefDescription "gist" -LongDescription "gist" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> start ('https://gist.github.com/AWtnb/' + (gh gist list --limit 100 |%{`$ss=(`$_ -split '`t');`$ss[1] + ' ' + `$ss[0]|echo} |fzf|%{(`$_ -split ' ')[1]})) #")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> gistFzf #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
