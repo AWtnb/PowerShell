@@ -138,7 +138,43 @@ function hinagata {
     Start-Process ("https://awtnb.github.io/hinagata/?template={0}" -f $param)
 }
 
+function ghqRemove {
+    $notFound = @(
+        "ghq.exe",
+        "gh.exe",
+        "fzf.exe"
+    ) | Where-Object {
+        $exe = Get-Command $_ -ErrorAction SilentlyContinue
+        return -not $exe
+    }
+    if ($notFound.Length -gt 0) {
+        $notFound | ForEach-Object {"'{0}' not found." -f $_} | Write-Host
+        return
+    }
+
+    ghq list | fzf.exe --no-color --multi --height=50% | Set-Variable -Name selected
+    if ($selected.Count -lt 1) {
+        return
+    }
+    $selected -split "`n" | ForEach-Object { ghq rm $_ }
+}
+
+
 function ghRemote {
+    $notFound = @(
+        "ghq.exe",
+        "gh.exe",
+        "fzf.exe",
+        "code.cmd"
+    ) | Where-Object {
+        $exe = Get-Command $_ -ErrorAction SilentlyContinue
+        return -not $exe
+    }
+    if ($notFound.Count -gt 0) {
+        $notFound | ForEach-Object {"'{0}' not found." -f $_} | Write-Host
+        return
+    }
+
     try {
         gh.exe repo list --limit 200 --json name --jq ".[] | .name" | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
     }
@@ -156,14 +192,12 @@ function ghRemote {
             $url = "https://github.com/AWtnb/{0}.git" -f $repoName
             "Cloning... {0}" -f $url | Write-Host
 
-            git clone $url
+            $result = ghq get --silent $url
+
             if ($selected.Count -eq 1 -and $LASTEXITCODE -eq 0) {
                 $edit = (Read-Host -Prompt "Open VSCode? (y/N)") -eq "y"
                 if ($edit) {
-                    $cmd = Get-Command code -ErrorAction SilentlyContinue
-                    if ($cmd) {
-                        Start-Process code -ArgumentList ($PWD.Path | Join-Path -ChildPath $repoName) -NoNewWindow
-                    }
+                    Start-Process code -NoNewWindow -ArgumentList $result
                 }
             }
         }
