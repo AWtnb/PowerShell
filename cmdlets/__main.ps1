@@ -153,157 +153,6 @@ function Restart-GoogleIme {
     "Restarted google ime process!" | Write-Host -ForegroundColor Yellow
 }
 
-##############################
-# Pseudo-voicing mark fixer
-##############################
-
-class PseudoVoicing {
-    [string]$origin
-    [string]$formatted
-    [string]$voicables
-    PseudoVoicing([string]$s) {
-        $this.origin = $s
-        $this.formatted = $this.origin
-        $this.voicables = "かきくけこさしすせそたちつてとはひふへほカキクケコサシスセソタチツテトハヒフヘホ"
-    }
-    [void] FixVoicing() {
-        $this.formatted = [regex]::new(".[\u309b\u3099]").Replace($this.formatted, {
-                param($m)
-                $c = $m.Value.Substring(0,1)
-                if ($this.voicables.IndexOf($c) -lt 0) {
-                    return $m
-                }
-                if ($c -eq "う") {
-                    return "`u{3094}"
-                }
-                if ($c -eq "ウ") {
-                    return "`u{30f4}"
-                }
-                return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 1))
-            })
-    }
-    [void] FixHalfVoicing() {
-        $this.formatted = [regex]::new(".[\u309a\u309c]").Replace($this.formatted, {
-                param($m)
-                $c = $m.Value.Substring(0,1)
-                if ($this.voicables.IndexOf($c) -lt 0) {
-                    return $m
-                }
-                return [string]([Convert]::ToChar([Convert]::ToInt32([char]$c) + 2))
-            })
-    }
-}
-
-function Rename-MacOSFile {
-    param (
-        [parameter(ValueFromPipeline = $true)]$inputObj
-    )
-    begin {
-        $files = @()
-    }
-    process {
-        $fileObj = Get-Item -LiteralPath $inputObj
-        if ($fileObj.BaseName -match "\u309a|\u309b|\u309c|\u3099") {
-            $files += $fileObj
-        }
-    }
-    end {
-        $fileObj  | ForEach-Object {
-            "Pseudo voicing-mark on '{0}'!" -f $_.Name | Write-Host -ForegroundColor Magenta
-            $ask = Read-Host "Fix? (y/n)"
-            if ($ask -ne "y") {
-                return
-            }
-            $n = [PseudoVoicing]::new($_.Name)
-            $n.FixHalfVoicing()
-            $n.FixVoicing()
-            $_ | Rename-Item -NewName $n.formatted
-            "==> Fixed!" | Write-Host
-        }
-    }
-}
-
-
-#################################################################
-# prompt
-#################################################################
-
-Class Prompter {
-
-    [string]$accentBg
-    [string]$markedFg
-    [string]$warningFg
-    [string]$subMarkerStart
-    [string]$underlineStart
-    [string]$stopDeco
-
-    Prompter() {
-        $color = $this.isAdmin()? "Red" : "White"
-        $this.accentBg = $Global:PSStyle.Background.PSObject.Properties[$color].Value
-        $this.markedFg = $Global:PSStyle.Foreground.Black
-        $this.warningFg = $Global:PSStyle.Foreground.BrightRed
-        $this.subMarkerStart = $Global:PSStyle.Background.BrightBlack + $this.markedFg
-        $this.underlineStart = $Global:PSStyle.Underline + $Global:PSStyle.Foreground.BrightBlack
-        $this.stopDeco = $Global:PSStyle.Reset
-    }
-
-    [bool] isAdmin() {
-        return ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    }
-
-    [string] GetRepoInfo() {
-        $trial = 100
-        $p = (Get-Location).ProviderPath
-        while ($p) {
-            $trial += -1
-            if ($trial -lt 0) {
-                return ""
-            }
-            if ($p | Join-Path -ChildPath ".git" | Test-Path -PathType Container) {
-                return $this.warningFg + "[.git]" + $this.stopDeco
-            }
-            $p = $p | Split-Path -Parent
-        }
-        return ""
-    }
-
-    [string] GetWd() {
-        $prof = $env:USERPROFILE
-        $wd = $pwd.ProviderPath
-        $parent = $wd | Split-Path -Parent
-        $leaf = $wd | Split-Path -Leaf
-        if ($wd.StartsWith($prof)) {
-            if ($wd.Length -eq $prof.length) {
-                $parent = ""
-                $leaf = "~"
-            }
-            else {
-                $parent = $parent.Replace($prof, "~")
-            }
-        }
-        $connector = ($parent.Length -lt 1 -or $parent.EndsWith("\"))? "" : "\"
-        $prefix = $this.subMarkerStart + "#" + $parent + $connector + $this.stopDeco
-        return $($prefix `
-                + $this.accentBg `
-                + $this.markedFg `
-                + $leaf `
-                + $this.stopDeco`
-                + $this.GetRepoInfo())
-    }
-
-    [string] GetPrompt() {
-        $prompt = "# "
-        if (($pwd.Path | Split-Path -Leaf) -ne "Desktop") {
-            return $this.warningFg + $prompt + $this.stopDeco
-        }
-        return $prompt
-    }
-
-    [void] Display() {
-        $this.GetWd() | Write-Host
-    }
-
-}
 
 
 # restart keyhac
@@ -326,16 +175,22 @@ function Set-KeyhacPriorityHigh {
     }
 }
 
+#################################################################
+# prompt
+#################################################################
+
 
 function prompt {
-    $p = [Prompter]::New()
-    $p.Display()
-
     if (-not (Reset-ConsoleIME)) {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
     }
-
-    return $p.GetPrompt()
+    $p = $pwd.ProviderPath
+    $d = $p | Split-Path -Parent
+    if ($d -and -not $d.EndsWith("\")) {$d += "\"}
+    $d | Write-Host -BackgroundColor DarkGray -ForegroundColor White -NoNewline
+    $p | Split-Path -Leaf | Write-Host -BackgroundColor Blue -ForegroundColor Black -NoNewline
+    Write-Host " `u{1F4C2}"
+    return "#:"
 }
 
 #################################################################
