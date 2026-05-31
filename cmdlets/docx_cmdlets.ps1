@@ -6,9 +6,7 @@ cmdlets for treating word without openning file
                 encoding: utf8bom
 ============================== #>
 
-if ("System.IO.Compression.Filesystem" -notin ([System.AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object{$_.GetName().Name})) {
-    Add-Type -AssemblyName System.IO.Compression.Filesystem
-}
+Add-Type -AssemblyName System.IO.Compression.Filesystem
 
 class Docx2 {
 
@@ -127,8 +125,8 @@ function Get-DocxContent {
         $fullPath = $fileObj.FullName
         $docx = [Docx2]::new($fullPath)
         return [PSCustomObject]@{
-            "Name" = $fileObj.Name;
-            "Status" = $docx.Status;
+            "Name"       = $fileObj.Name;
+            "Status"     = $docx.Status;
             "Paragraphs" = $docx.GetParagraphs();
         }
     }
@@ -164,8 +162,8 @@ function Get-DocxMarkeredString {
         $fullPath = $fileObj.FullName
         $docx = [Docx2]::new($fullPath)
         return [PSCustomObject]@{
-            "Name" = $fileObj.Name;
-            "Status" = $docx.Status;
+            "Name"      = $fileObj.Name;
+            "Status"    = $docx.Status;
             "Decorated" = $docx.FilterRange("<w:highlight w:val=`"$($color)`"/>").ForEach({ [Docx2]::GetNodeText($_) });
         }
     }
@@ -185,8 +183,8 @@ function Get-DocxBoldString {
         $fullPath = $fileObj.FullName
         $docx = [Docx2]::new($fullPath)
         return [PSCustomObject]@{
-            "Name" = $fileObj.Name;
-            "Status" = $docx.Status;
+            "Name"      = $fileObj.Name;
+            "Status"    = $docx.Status;
             "Decorated" = $docx.FilterRange("<w:b/>").ForEach({ [Docx2]::GetNodeText($_) });
         }
     }
@@ -217,7 +215,7 @@ function Invoke-DocxGrep {
         if ($docx.Status -eq "OK") {
             $found = $docx.GetParagraphs() | Select-String -Pattern $pattern -AllMatches -CaseSensitive:$case | ForEach-Object {
                 return [PSCustomObject]@{
-                    "Line" = $_.Line;
+                    "Line"    = $_.Line;
                     "Matches" = $_.Matches.Value;
                 }
             }
@@ -226,11 +224,11 @@ function Invoke-DocxGrep {
             $found = @()
         }
         $result.Add([PSCustomObject]@{
-            "Name" = $fileObj.Name;
-            "Path" = $fileObj.FullName;
-            "Status" = $docx.Status;
-            "Found" = $found;
-        }) > $null
+                "Name"   = $fileObj.Name;
+                "Path"   = $fileObj.FullName;
+                "Status" = $docx.Status;
+                "Found"  = $found;
+            }) > $null
     }
     end {
         if ($asObject) {
@@ -283,7 +281,7 @@ function Get-DocxMatchPattern {
                 [PSCustomObject]@{
                     "Match" = $_.Name;
                     "Count" = $_.Count;
-                    "File" = $fileObj;
+                    "File"  = $fileObj;
                 }
             ) > $null
         }
@@ -313,15 +311,15 @@ function Get-DocxComment {
         $comments = @()
         if($docx.Status -eq "OK") {
             $comments = $docx.GetCommentNodes().ForEach({
-                return [PSCustomObject]@{
-                    "Author" = [regex]::Match($_, "(?<=w:author=).+?(?= w.date)").value;
-                    "Text" = $_ -replace "<[^>]+?>";
-                }
-            })
+                    return [PSCustomObject]@{
+                        "Author" = [regex]::Match($_, "(?<=w:author=).+?(?= w.date)").value;
+                        "Text"   = $_ -replace "<[^>]+?>";
+                    }
+                })
         }
         return [PSCustomObject]@{
-            "Name" = $fileObj.Name;
-            "Status" = $docx.Status;
+            "Name"     = $fileObj.Name;
+            "Status"   = $docx.Status;
             "Comments" = $comments;
         }
     }
@@ -355,12 +353,12 @@ function Invoke-DocxCommentGrep {
             if ($m.Count) {
                 $author = [regex]::Match($_, "(?<=w:author=).+?(?= w.date)").value;
                 $result.Add([PSCustomObject]@{
-                    "Name" = $fileObj.Name;
-                    "Path" = $fileObj.FullName;
-                    "Line" = $text;
-                    "Author" = $author;
-                    "MatcheValues" = $m.Value;
-                }) > $null
+                        "Name"         = $fileObj.Name;
+                        "Path"         = $fileObj.FullName;
+                        "Line"         = $text;
+                        "Author"       = $author;
+                        "MatcheValues" = $m.Value;
+                    }) > $null
             }
         }
     }

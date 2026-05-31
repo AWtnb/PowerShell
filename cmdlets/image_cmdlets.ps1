@@ -6,11 +6,8 @@ cmdlets for treating image
                 encoding: utf8bom
 ============================== #>
 
-foreach ($assembly in @("System.Drawing", "System.Windows.Forms")) {
-    if ($assembly -notin ([System.AppDomain]::CurrentDomain.GetAssemblies() | ForEach-Object{ $_.GetName().Name })) {
-        Add-Type -AssemblyName $assembly
-    }
-}
+Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
 
 class PhotoFile {
     [string]$path
