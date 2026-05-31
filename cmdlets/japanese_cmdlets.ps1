@@ -6,10 +6,6 @@ cmdlets for processing japanese
             encoding: utf8bom
 ============================== #>
 
-function aw {
-    "あかさたなはまやらわ".GetEnumerator() | Write-Output
-}
-
 
 ####################
 # Class: FormatJP
@@ -255,45 +251,6 @@ Update-TypeData -MemberName "ToCodepoint" -TypeName System.String -Force -Member
 Update-TypeData -MemberName "FromCodepoint" -TypeName System.Int32 -Force -MemberType ScriptMethod -Value {
     return [char]::ConvertFromUtf32($this)
 }
-
-function Get-LinesDelta {
-    param(
-        [int]$charsPerLine = 35,
-        [int]$padding = 0,
-        [string]$from
-    )
-    $after = $input | Join-String -Separator ""
-    $afterGrids = [math]::Ceiling( [System.Text.Encoding]::GetEncoding("Shift_Jis").GetByteCount($after) / 2 )
-    $beforeGrids = [math]::Ceiling( [System.Text.Encoding]::GetEncoding("Shift_Jis").GetByteCount($from) / 2 )
-    $gridsDelta = [math]::Abs($beforeGrids - $afterGrids)
-    $diff = "{0} -> {1}" -f $beforeGrids, $afterGrids
-    if ($beforeGrids -lt $afterGrids) {
-        if ($padding -lt $gridsDelta) {
-            $linesDelta = [math]::Ceiling(($gridsDelta - $padding) / $charsPerLine) + 1
-            return [PSCustomObject]@{
-                "Grids" = "+{0} ({1})" -f $gridsDelta, $diff;
-                "Lines" = "+{0}" -f $linesDelta;
-            }
-        }
-        return [PSCustomObject]@{
-            "Grids" = "+{0} ({1})" -f $gridsDelta, $diff;
-            "Lines" = "+-0";
-        }
-    }
-    $trailing = $charsPerLine - $padding
-    if ($trailing -lt $gridsDelta) {
-        $linesDelta = [math]::Floor(($gridsDelta - $trailing) / $charsPerLine) + 1
-        return [PSCustomObject]@{
-            "Grids" = "-{0} ({1})" -f $gridsDelta, $diff;
-            "Lines" = "-{0}" -f $linesDelta;
-        }
-    }
-    return [PSCustomObject]@{
-        "Grids" = "-{0} ({1})" -f $gridsDelta, $diff;
-        "Lines" = "+-0";
-    }
-}
-Set-Alias linesDelta Get-LinesDelta
 
 class KanjiTable {
     [hashtable]$table

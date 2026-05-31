@@ -83,7 +83,7 @@ class PhotoFile {
     [PSCustomObject] parse([string]$fmt) {
         $ts = $this.getTimestamp().ToString($fmt)
         return [PSCustomObject]@{
-            "Name" = $this.name;
+            "Name"      = $this.name;
             "Timestamp" = $ts;
         }
     }
@@ -128,8 +128,8 @@ function Get-Mp4Property {
             $d = $nameSpace.GetDetailsOf($props, 208) -replace "[\u200e\u200f]", ""
             $ts = ($d.length -lt 1)? $filler : [Datetime]::ParseExact($d, "yyyy/MM/dd H:mm", $null).ToString($format)
             return [PSCustomObject]@{
-                "Name" = $fileObj.Name;
-                "FullName" = $fileObj.FullName;
+                "Name"      = $fileObj.Name;
+                "FullName"  = $fileObj.FullName;
                 "Timestamp" = $ts
             }
         }
@@ -355,8 +355,8 @@ function Get-ImageSize {
         $fs = [System.IO.File]::OpenRead($fileObj.FullName)
         $img = [System.Drawing.Bitmap]::FromStream($fs, $false, $false)
         $info = [PSCustomObject]@{
-            "Name" = $fileObj.Name;
-            "Width" = $img.Width;
+            "Name"   = $fileObj.Name;
+            "Width"  = $img.Width;
             "Height" = $img.Height;
         }
         $img.Dispose()
@@ -366,13 +366,6 @@ function Get-ImageSize {
     end {}
 }
 
-################################
-# publish photo album with moul
-################################
-
-function moul {
-    & ($env:USERDOMAIN_ROAMINGPROFILE | Join-Path -ChildPath "Personal\portable_apps\moul\moul.exe") $args
-}
 
 function Invoke-ImageMagickWatermarkSignature {
     param (
