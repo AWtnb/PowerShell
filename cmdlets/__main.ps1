@@ -12,21 +12,6 @@ function Reset-OutputEncodingToSJIS {
     "Output encoding: reset to default (shift_jis)" | Write-Host -ForegroundColor Yellow
 }
 
-function Switch-AutoHideTaskbar {
-    $path = "HKCU:SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3"
-    $val = (Get-ItemProperty -Path $path).Settings
-    $flagIdx = 8
-    # Windows11
-    if ($val[$flagIdx] -eq 123) {
-        $val[$flagIdx] = 122
-    }
-    else {
-        $val[$flagIdx] = 123
-    }
-    Set-ItemProperty -Path $path -Name "Settings" -Value $val
-    Stop-Process -ProcessName "explorer" -Force
-}
-
 function Update-Repositories {
     param (
         [parameter(Mandatory)][string]$root
@@ -309,24 +294,6 @@ function cdc {
     }
 }
 
-function j ($i) {
-    $h = [ordered]@{
-        "令和" = 2018;
-        "平成" = 1988;
-        "昭和" = 1925;
-    }
-    $now = (Get-Date).Year
-    $h.GetEnumerator() | ForEach-Object {
-        $y = $_.Value + $i
-        $ansi = ($y -gt $now)? $Global:PSStyle.Foreground.BrightBlack : $Global:PSStyle.Foreground.BrightWhite
-        [PSCustomObject]@{
-            "和暦" = $ansi + $_.Key + $Global:PSStyle.Reset;
-            "西暦" = $ansi + $y + $Global:PSStyle.Reset;
-        } | Write-Output
-    }
-}
-
-
 function Stop-PsStyleRendering {
     $global:PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::PlainText
 }
@@ -545,14 +512,6 @@ function  Convert-IntToCJK {
 }
 
 ##############################
-# github repo
-##############################
-
-function repo {
-    ("code {0}" -f $PROFILE | Split-Path -Parent) | Invoke-Expression
-}
-
-##############################
 # temp dir
 ##############################
 
@@ -634,3 +593,50 @@ function ml ([string]$pattern, [switch]$case, [switch]$negative, [switch]$color)
     }
     return $lines
 }
+
+
+function Select-StringHilight {
+    <#
+        .EXAMPLE
+        ls -exclude *md | slh ほげ -encoding default
+        ls | cat | slh ほげ
+    #>
+    [OutputType([System.Void])]
+    param (
+        [string]$pattern
+        ,[switch]$case
+        ,[int[]]$context = 0
+        ,[ValidateSet("default", "oem")][string]$encoding = "default"
+    )
+
+    [scriptblock]$decorate = {
+        param([string[]]$context, [int]$lineIndex, [bool]$post)
+        if (-not $context) {
+            return
+        }
+        $l = ($post)? $lineIndex : $lineIndex - $context.Count - 1
+        $context | ForEach-Object {
+            $l += 1
+            "{0:d4}:{1}" -f $l, $_ | Write-Host -ForegroundColor DarkGray
+        }
+    }
+
+    $grep = $input | Select-String -Encoding $encoding -Pattern $pattern -CaseSensitive:$case -AllMatches -Context $context
+    foreach ($g in $grep) {
+        $decorate.Invoke($g.Context.PreContext, $g.LineNumber, $false)
+
+        ($g.Filename -eq "InputStream")?
+        "{0:d4}:" -f $g.LineNumber :
+        "{0}:{1:d4}:" -f $g.Filename, $g.LineNumber | Write-Host -NoNewline -ForegroundColor DarkBlue
+
+        $g.Line | hilight -pattern $pattern -case:$case -color "Yellow"
+
+        $decorate.Invoke($g.Context.PostContext, $g.LineNumber, $true)
+
+    }
+    $total = $grep.Matches.Count
+    if ($total) {
+        Write-Host ("========== {0} ==========" -f $total) -ForegroundColor Cyan
+    }
+}
+Set-Alias slh Select-StringHilight
