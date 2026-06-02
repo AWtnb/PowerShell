@@ -173,7 +173,9 @@ function prompt {
     $d = $p | Split-Path -Parent
     if ($d -and -not $d.EndsWith("\")) {$d += "\"}
     $d | Write-Host -BackgroundColor DarkGray -ForegroundColor White -NoNewline
-    $p | Split-Path -Leaf | Write-Host -BackgroundColor Blue -ForegroundColor Black -NoNewline
+    $l = $p | Split-Path -Leaf
+    $bg = $l -eq "desktop"? "Blue": "Magenta"
+    $l | Write-Host -BackgroundColor $bg -ForegroundColor Black -NoNewline
     Write-Host " `u{1F4C2}"
     return "#:"
 }
