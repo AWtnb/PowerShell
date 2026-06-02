@@ -165,10 +165,44 @@ function Set-KeyhacPriorityHigh {
 #################################################################
 
 
+$env:GHQ_PULL_LOG_PATH = $env:USERPROFILE | Join-Path -ChildPath ".ghq_pull_log"
+
+function Update-Ghq {
+    ghq list | ghq get --update --parallel
+    if (-not (Test-Path $env:GHQ_PULL_LOG_PATH)) {
+        New-Item -Path $env:GHQ_PULL_LOG_PATH -ItemType File > $null
+    }
+    (Get-Date).Ticks | Out-File -FilePath $env:GHQ_PULL_LOG_PATH -Encoding utf8
+}
+
+function Test-GhqStatus {
+    param(
+        [int]$interval
+    )
+
+    if (-not (Test-Path $env:GHQ_PULL_LOG_PATH)) {
+        New-Item -Path $env:GHQ_PULL_LOG_PATH -ItemType File > $null
+        "{0} を作成しました。 ``Update-Ghq`` を実行してください。" -f ($env:GHQ_PULL_LOG_PATH | Split-Path -Leaf) | Write-Host -BackgroundColor White -ForegroundColor Red -NoNewline
+        Write-Host
+        return 
+    }
+    $lastPull = Get-Content -Path $env:GHQ_PULL_LOG_PATH
+    $now = (Get-Date).Ticks
+    $delta = $now - $lastPull
+    $span = [TimeSpan]$delta
+    if ($span.TotalHours -gt $interval) {
+        "最後に ``Update-Ghq`` を実行してから{0}時間以上経過しています。そろそろ更新してはどうでしょうか？" -f $interval | Write-Host -BackgroundColor White -ForegroundColor DarkBlue -NoNewline
+        Write-Host
+    }
+}
+
 function prompt {
     if (-not (Reset-ConsoleIME)) {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
     }
+
+    Test-GhqStatus -interval 6
+
     $p = $pwd.ProviderPath
     $d = $p | Split-Path -Parent
     if ($d -and -not $d.EndsWith("\")) {$d += "\"}
