@@ -168,7 +168,7 @@ function Set-KeyhacPriorityHigh {
 $env:GHQ_PULL_LOG_PATH = $env:USERPROFILE | Join-Path -ChildPath ".ghq_pull_log"
 
 function Update-Ghq {
-    ghq list | ghq get --update --parallel --silent
+    ghq list | fzf --multi --bind 'ctrl-a:toggle-all' --layout=reverse --height=50% | ghq get --update --parallel
     if (-not (Test-Path $env:GHQ_PULL_LOG_PATH)) {
         New-Item -Path $env:GHQ_PULL_LOG_PATH -ItemType File > $null
     }
