@@ -168,7 +168,16 @@ function Set-KeyhacPriorityHigh {
 $env:GHQ_PULL_LOG_PATH = $env:USERPROFILE | Join-Path -ChildPath ".ghq_pull_log"
 
 function Update-Ghq {
-    ghq list | fzf --multi --bind 'ctrl-a:toggle-all' --layout=reverse --height=50% | ghq get --update --parallel
+    param([switch]$min)
+    if ($min) {
+        $ghqRoot = ghq root
+        ghq list | Where-Object {
+            return $ghqRoot | Join-Path -ChildPath $_ -AdditionalChildPath "install.ps1" | Test-Path -PathType Leaf
+        } | ghq get --update --parallel
+    }
+    else{
+        ghq list | fzf --multi --bind 'ctrl-a:toggle-all' --layout=reverse --height=50% | ghq get --update --parallel
+    }
     if (-not (Test-Path $env:GHQ_PULL_LOG_PATH)) {
         New-Item -Path $env:GHQ_PULL_LOG_PATH -ItemType File > $null
     }
