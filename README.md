@@ -4,6 +4,10 @@
 
 Run [`install.ps1`](./install.ps1) .
 
+```bash
+pwsh --noprofile .\install.ps1
+```
+
 
 ### Additional tools
 
