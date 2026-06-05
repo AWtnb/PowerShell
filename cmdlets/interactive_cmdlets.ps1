@@ -160,7 +160,7 @@ function ghqRemove {
 }
 
 
-function ghRemote {
+function ghqClone {
     $notFound = @(
         "ghq.exe",
         "gh.exe",
@@ -192,7 +192,7 @@ function ghRemote {
             $url = "https://github.com/AWtnb/{0}.git" -f $repoName
             "Cloning... {0}" -f $url | Write-Host
 
-            $result = ghq get --silent $url
+            $result = ghq get $url --silent
 
             if ($selected.Count -eq 1 -and $LASTEXITCODE -eq 0) {
                 $edit = (Read-Host -Prompt "Open VSCode? (y/N)") -eq "y"
@@ -209,9 +209,9 @@ function ghRemote {
     }
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghremote" -LongDescription "ghremote" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghqClone" -LongDescription "ghqClone" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> ghRemote #")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> ghqClone #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
