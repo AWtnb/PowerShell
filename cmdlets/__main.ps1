@@ -195,17 +195,22 @@ function Update-Ghq {
     if ($rels.Count -lt 1) {
         return
     }
-    
+
+    $maxWidth = ($rels | Sort-Object { $_.Length } | Select-Object -Last 1).Length
+
     $behinds = @()
     $rels | ForEach-Object {
-        "Checking '{0}'..." -f $_ | Write-Host
+        ("Checking {0}" -f $_.PadRight($maxWidth+3, ".")) | Write-Host -NoNewline
         Push-Location -Path ($Global:GHQ_ROOT | Join-Path -ChildPath $_)
         git fetch --quiet 2>$null
         $status = git status --porcelain --branch 2>$null
         $branch = $status | Select-String -Pattern "^##"
         if ($branch -match "\[.*behind\s+\d+.*\]") {
-            "==> Update available" | Write-Host -ForegroundColor Yellow
+            "[update available]" | Write-Host -ForegroundColor Yellow
             $behinds += $_
+        }
+        else {
+            "[up-to-date]" | Write-Host
         }
         Pop-Location
     }
