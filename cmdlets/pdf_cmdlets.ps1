@@ -28,16 +28,6 @@ function Invoke-GoPdfConc {
 }
 Set-Alias -Name pdfConcGo -Value Invoke-GoPdfConc
 
-Invoke-Command -ScriptBlock {
-    if (-not (Get-Command ghq -ErrorAction SilentlyContinue)) {
-        "command 'ghq' not found!" | Write-Host -ForegroundColor Red
-        return
-    }
-    if (-not $Global:GHQ_ROOT -or -not (Test-Path $Global:GHQ_ROOT)) {
-        $Global:GHQ_ROOT = ghq root
-    }
-}
-
 function Get-Pdfjig {
     [OutputType([string])]
     $path = $Global:GHQ_ROOT | Join-Path -ChildPath (ghq list "pdfjig")

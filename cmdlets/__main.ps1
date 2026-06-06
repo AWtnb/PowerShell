@@ -161,27 +161,63 @@ function Set-KeyhacPriorityHigh {
 }
 
 #################################################################
-# prompt
+# ghq
 #################################################################
 
-
-$env:GHQ_PULL_LOG_PATH = $env:USERPROFILE | Join-Path -ChildPath ".ghq_pull_log"
+Invoke-Command -ScriptBlock {
+    if (-not (Get-Command ghq -ErrorAction SilentlyContinue)) {
+        "command 'ghq' not found!" | Write-Host -ForegroundColor Red
+        return
+    }
+    if (-not $Global:GHQ_ROOT -or -not (Test-Path $Global:GHQ_ROOT)) {
+        $Global:GHQ_ROOT = ghq root
+    }
+    if (-not $Global:GHQ_PULL_LOG -or -not (Test-Path $Global:GHQ_PULL_LOG)) {
+        $Global:GHQ_PULL_LOG = $env:USERPROFILE | Join-Path -ChildPath ".ghq_pull_log"
+    }
+}
 
 function Update-Ghq {
     param([switch]$min)
+    $rels = @()
     if ($min) {
-        $ghqRoot = ghq root
         ghq list | Where-Object {
-            return $ghqRoot | Join-Path -ChildPath $_ -AdditionalChildPath "install.ps1" | Test-Path -PathType Leaf
-        } | ghq get --update --parallel
+            return $Global:GHQ_ROOT | Join-Path -ChildPath $_ -AdditionalChildPath "install.ps1" | Test-Path -PathType Leaf
+        } | ForEach-Object {
+            $rels += $_
+        }
     }
     else{
-        ghq list | fzf --multi --bind 'ctrl-a:toggle-all' --layout=reverse --height=50% | ghq get --update --parallel
+        ghq list | fzf --multi --bind 'ctrl-a:toggle-all' --layout=reverse --height=50% | ForEach-Object {
+            $rels += $_
+        }
     }
-    if (-not (Test-Path $env:GHQ_PULL_LOG_PATH)) {
-        New-Item -Path $env:GHQ_PULL_LOG_PATH -ItemType File > $null
+    if ($rels.Count -lt 1) {
+        return
     }
-    (Get-Date).Ticks | Out-File -FilePath $env:GHQ_PULL_LOG_PATH -Encoding utf8
+    
+    $behinds = @()
+    $rels | ForEach-Object {
+        "Checking '{0}'..." -f $_ | Write-Host
+        Push-Location -Path ($Global:GHQ_ROOT | Join-Path -ChildPath $_)
+        git fetch --quiet 2>$null
+        $status = git status --porcelain --branch 2>$null
+        $branch = $status | Select-String -Pattern "^##"
+        if ($branch -match "\[.*behind\s+\d+.*\]") {
+            "==> behind" | Write-Host -ForegroundColor Yellow
+            $behinds += $_
+        }
+        Pop-Location
+    }
+    if ($behinds.Count -lt 1) {
+        return
+    }
+
+    $behinds | ghq get --update --parallel
+    if (-not (Test-Path $Global:GHQ_PULL_LOG)) {
+        New-Item -Path $Global:GHQ_PULL_LOG -ItemType File > $null
+    }
+    (Get-Date).Ticks | Out-File -FilePath $Global:GHQ_PULL_LOG -Encoding utf8
 }
 
 function Test-GhqStatus {
@@ -189,13 +225,13 @@ function Test-GhqStatus {
         [int]$interval
     )
 
-    if (-not (Test-Path $env:GHQ_PULL_LOG_PATH)) {
-        New-Item -Path $env:GHQ_PULL_LOG_PATH -ItemType File > $null
-        "{0} を作成しました。 ``Update-Ghq`` を実行してください。" -f ($env:GHQ_PULL_LOG_PATH | Split-Path -Leaf) | Write-Host -BackgroundColor White -ForegroundColor Red -NoNewline
+    if (-not (Test-Path $Global:GHQ_PULL_LOG)) {
+        New-Item -Path $Global:GHQ_PULL_LOG -ItemType File > $null
+        "{0} を作成しました。 ``Update-Ghq`` を実行してください。" -f ($Global:GHQ_PULL_LOG | Split-Path -Leaf) | Write-Host -BackgroundColor White -ForegroundColor Red -NoNewline
         Write-Host
         return 
     }
-    $lastPull = Get-Content -Path $env:GHQ_PULL_LOG_PATH
+    $lastPull = Get-Content -Path $Global:GHQ_PULL_LOG
     $now = (Get-Date).Ticks
     $delta = $now - $lastPull
     $span = [TimeSpan]$delta
@@ -204,6 +240,10 @@ function Test-GhqStatus {
         Write-Host
     }
 }
+
+#################################################################
+# prompt
+#################################################################
 
 function prompt {
     if (-not (Reset-ConsoleIME)) {
