@@ -204,7 +204,7 @@ function Update-Ghq {
         $status = git status --porcelain --branch 2>$null
         $branch = $status | Select-String -Pattern "^##"
         if ($branch -match "\[.*behind\s+\d+.*\]") {
-            "==> behind" | Write-Host -ForegroundColor Yellow
+            "==> Update available" | Write-Host -ForegroundColor Yellow
             $behinds += $_
         }
         Pop-Location
