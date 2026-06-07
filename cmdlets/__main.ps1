@@ -214,11 +214,10 @@ function Update-Ghq {
         }
         Pop-Location
     }
-    if ($behinds.Count -lt 1) {
-        return
+    if ($behinds.Count -gt 0) {
+        $behinds | ghq get --update --parallel
     }
 
-    $behinds | ghq get --update --parallel
     if (-not (Test-Path $Global:GHQ_PULL_LOG)) {
         New-Item -Path $Global:GHQ_PULL_LOG -ItemType File > $null
     }
