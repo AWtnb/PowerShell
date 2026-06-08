@@ -160,12 +160,10 @@ function ghqRemove {
 }
 
 
-function ghqClone {
+function ghOpen {
     $notFound = @(
-        "ghq.exe",
         "gh.exe",
-        "fzf.exe",
-        "code.cmd"
+        "fzf.exe"
     ) | Where-Object {
         $exe = Get-Command $_ -ErrorAction SilentlyContinue
         return -not $exe
@@ -176,7 +174,7 @@ function ghqClone {
     }
 
     try {
-        gh.exe repo list --limit 200 --json name --jq ".[] | .name" | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
+        gh.exe repo list --limit 200 | ForEach-Object { ($_ -split "`t")[0]} | fzf.exe --no-color --multi --layout=reverse --height=50% | Set-Variable -Name selected
     }
     catch {
         return
@@ -184,34 +182,16 @@ function ghqClone {
     if ($selected.Count -lt 1) {
         return
     }
-    $selected | Write-Host
-    $clone = (Read-Host -Prompt "Clone? (y/N)") -eq "y"
     $selected | ForEach-Object {
-        $repoName = $_
-        if ($clone) {
-            $url = "https://github.com/AWtnb/{0}.git" -f $repoName
-            "Cloning... {0}" -f $url | Write-Host
-
-            $result = ghq get $url --silent
-
-            if ($selected.Count -eq 1 -and $LASTEXITCODE -eq 0) {
-                $edit = (Read-Host -Prompt "Open VSCode? (y/N)") -eq "y"
-                if ($edit) {
-                    Start-Process code -NoNewWindow -ArgumentList $result
-                }
-            }
-        }
-        else {
-            $url = "https://github.com/AWtnb/" + $repoName
-            "Open: {0}" -f $url | Write-Host
-            Start-Process $url
-        }
+        $url = "https://github.com/{0}" -f $_
+        "Open: {0}" -f $url | Write-Host
+        Start-Process $url
     }
 }
 
-Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghqClone" -LongDescription "ghqClone" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+alt+g" -BriefDescription "ghOpen" -LongDescription "ghOpen" -ScriptBlock {
     [Microsoft.PowerShell.PSConsoleReadLine]::BeginningOfLine()
-    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> ghqClone #")
+    [Microsoft.PowerShell.PSConsoleReadLine]::Insert("<#SKIPHISTORY#> ghOpen #")
     [Microsoft.PowerShell.PSConsoleReadLine]::AcceptLine()
 }
 
