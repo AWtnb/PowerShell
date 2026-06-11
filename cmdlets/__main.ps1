@@ -198,9 +198,12 @@ function Update-Ghq {
 
     $maxWidth = ($rels | Sort-Object { $_.Length } | Select-Object -Last 1).Length
 
+    $counter = 0
+    $padding = ($rels.Count -gt 9)? 2 : 1
     $behinds = @()
     $rels | ForEach-Object {
-        ("Checking {0}" -f $_.PadRight($maxWidth+3, ".")) | Write-Host -NoNewline
+        $counter += 1
+        ("Checking({0}/{1}) {2}" -f ($counter -as [string]).PadLeft($padding), ($rels.Count -as [string]).PadLeft($padding), $_.PadRight($maxWidth+3, ".")) | Write-Host -NoNewline
         Push-Location -Path ($Global:GHQ_ROOT | Join-Path -ChildPath $_)
         git fetch --quiet 2>$null
         $status = git status --porcelain --branch 2>$null
