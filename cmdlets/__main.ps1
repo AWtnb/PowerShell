@@ -257,7 +257,7 @@ function prompt {
         "failed to reset ime..." | Write-Host -ForegroundColor Magenta
     }
 
-    Test-GhqStatus -interval 6
+    Test-GhqStatus -interval 12
 
     $p = $pwd.ProviderPath
     $d = $p | Split-Path -Parent
