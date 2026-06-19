@@ -222,9 +222,9 @@ class CommandAST {
 
     [Ast[]] Listup() {
         return $this.ast.FindAll({
-            $node = $args[0]
-            return $node -is [CommandAst]
-        }, $true)
+                $node = $args[0]
+                return $node -is [CommandAst]
+            }, $true)
     }
 
     [Ast] GetActive() {
@@ -571,11 +571,8 @@ Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -ScriptBlock {
 
 # load clipboard
 Set-PSReadLineKeyHandler -Key "ctrl+V" -ScriptBlock {
-    $command = '<#SKIPHISTORY#> (gcb) -split "`n"|%{$_.Replace("`r","")}|sv CLIPPING'
-    [PSConsoleReadLine]::RevertLine()
-    [PSConsoleReadLine]::Insert($command)
-    [PSConsoleReadLine]::AddToHistory('$CLIPPING ')
-    [PSConsoleReadLine]::AcceptLine()
+    (Get-Clipboard).Split("`n").ForEach({$_.Replace("`r", "")}) | Set-Variable -Name "CLIPPING" -Scope Global
+    [PSConsoleReadLine]::AddToHistory('$CLIPPING')
 }
 
 # open from clipboard path
