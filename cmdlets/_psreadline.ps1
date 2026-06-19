@@ -572,17 +572,9 @@ Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -ScriptBlock {
 # load clipboard
 Set-PSReadLineKeyHandler -Key "ctrl+V" -ScriptBlock {
     (Get-Clipboard).Split("`n").ForEach({$_.Replace("`r", "")}) | Set-Variable -Name "CLIPPING" -Scope Global
-    [PSConsoleReadLine]::AddToHistory('$CLIPPING')
-}
-
-# open from clipboard path
-function ccat ([string]$encoding = "utf8") {
-    $clip = (Get-Clipboard | Select-Object -First 1) -replace '"'
-    if (Test-Path $clip -PathType Leaf) {
-        Get-Content $clip -Encoding $encoding
-    }
-    else {
-        "invalid-path!" | Write-Host -ForegroundColor Magenta
+    $ps = [PSBufferState]::new()
+    if ($ps.CommandLine.Trim() -eq "") {
+        [PSConsoleReadLine]::Insert('$CLIPPING')
     }
 }
 
