@@ -59,6 +59,11 @@ Set-PSReadLineKeyHandler -Key "alt+-" -ScriptBlock {
     [PSConsoleReadLine]::Insert("*")
 }
 
+# ghq vscode
+Set-PSReadLineKeyHandler -Key "ctrl+G" -ScriptBlock {
+    (ghq list | fzf) | Where-Object {$_} | ForEach-Object {ghq root | Join-Path -ChildPath $_} | ForEach-Object {code $_}
+}
+
 # custom-cd
 Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     param($key, $arg)
