@@ -80,6 +80,14 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
     [PSConsoleReadLine]::AcceptLine()
 }
 
+Set-PSReadLineKeyHandler -Key "ctrl+g,q" -ScriptBlock {
+    ghq list -p | fzf | Set-Variable -Name dest
+    if ($dest) {
+        [PSConsoleReadLine]::Insert("cd $dest")
+        [PSConsoleReadLine]::AcceptLine()
+    }
+}
+
 Set-PSReadLineKeyHandler -Key "alt+p" -ScriptBlock {
     [PSConsoleReadLine]::Insert('python')
     [PSConsoleReadLine]::AcceptLine()
