@@ -227,25 +227,20 @@ function Update-Ghq {
     (Get-Date).Ticks | Out-File -FilePath $Global:GHQ_PULL_LOG -Encoding utf8
 }
 
-function Test-GhqStatus {
+function Test-GhqRecentlyUpdated {
     param(
         [int]$interval
     )
 
     if (-not (Test-Path $Global:GHQ_PULL_LOG)) {
         New-Item -Path $Global:GHQ_PULL_LOG -ItemType File > $null
-        "{0} を作成しました。 ``Update-Ghq`` を実行してください。" -f ($Global:GHQ_PULL_LOG | Split-Path -Leaf) | Write-Host -BackgroundColor White -ForegroundColor Red -NoNewline
-        Write-Host
-        return 
+        return $false
     }
     $lastPull = Get-Content -Path $Global:GHQ_PULL_LOG
     $now = (Get-Date).Ticks
     $delta = $now - $lastPull
     $span = [TimeSpan]$delta
-    if ($span.TotalHours -gt $interval) {
-        "最後に ``Update-Ghq`` を実行してから{0}時間以上経過しています。そろそろ更新してはどうでしょうか？" -f $interval | Write-Host -BackgroundColor White -ForegroundColor DarkBlue -NoNewline
-        Write-Host
-    }
+    return $span.TotalHours -lt $interval
 }
 
 #################################################################
@@ -253,11 +248,7 @@ function Test-GhqStatus {
 #################################################################
 
 function prompt {
-    if (-not (Reset-ConsoleIME)) {
-        "failed to reset ime..." | Write-Host -ForegroundColor Magenta
-    }
-
-    Test-GhqStatus -interval 12
+    Reset-ConsoleIME > $null
 
     $p = $pwd.ProviderPath
     $d = $p | Split-Path -Parent
@@ -266,7 +257,15 @@ function prompt {
     $l = $p | Split-Path -Leaf
     $bg = $l -eq "desktop"? "Blue": "Magenta"
     $l | Write-Host -BackgroundColor $bg -ForegroundColor Black -NoNewline
-    Write-Host " `u{1F4C2}"
+    
+    $interval = 12
+    if (Test-GhqRecentlyUpdated -interval $interval) {
+        Write-Host
+    }
+    else {
+        " [{0} hours since last ``update-ghq``]" -f $interval | Write-Host -ForegroundColor Yellow
+    }
+
     return "#:"
 }
 
