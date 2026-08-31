@@ -263,7 +263,7 @@ function prompt {
         Write-Host
     }
     else {
-        " [{0} hours since last ``update-ghq``]" -f $interval | Write-Host -ForegroundColor Green
+        " [{0}+ hours since last ``update-ghq``]" -f $interval | Write-Host -ForegroundColor Green
     }
 
     return "#:"
