@@ -337,16 +337,7 @@ Set-PSReadLineKeyHandler -Key "alt+l" -ScriptBlock {
 }
 
 Set-PSReadLineKeyHandler -Key "alt+n" -ScriptBlock {
-    $a = [ASTer]::new()
-    if ($a.IsAfterPipe()) {
-        return
-    }
-    $t = $a.GetActiveToken()
-    if ($t.Kind -eq [TokenKind]::EndOfInput -or $a.IsEndOfToken() -or $a.IsBeforePipe()) {
-        $s = ($a.IsEndOfToken())? " -" : "-"
-        [PSConsoleReadLine]::Insert($s)
-        [PSConsoleReadLine]::MenuComplete()
-    }
+    [PSConsoleReadLine]::Insert("nu --experimental-options=native-clip")
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+k,l" -BriefDescription "insert pipe before active command" -ScriptBlock {
