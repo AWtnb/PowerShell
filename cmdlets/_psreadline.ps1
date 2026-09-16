@@ -574,7 +574,7 @@ Set-PSReadLineKeyHandler -Key "alt+r", "ctrl+r" -ScriptBlock {
 }
 
 # load clipboard
-Set-PSReadLineKeyHandler -Key "ctrl+V" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+V", "alt+p" -ScriptBlock {
     (Get-Clipboard).Split("`n").ForEach({$_.Replace("`r", "")}) | Set-Variable -Name "CLIPPING" -Scope Global
     $ps = [PSBufferState]::new()
     if ($ps.CommandLine.Trim() -eq "") {
