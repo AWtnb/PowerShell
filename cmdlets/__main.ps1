@@ -12,21 +12,6 @@ function Reset-OutputEncodingToSJIS {
     "Output encoding: reset to default (shift_jis)" | Write-Host -ForegroundColor Yellow
 }
 
-function Update-Repositories {
-    param (
-        [parameter(Mandatory)][string]$root
-    )
-    $src = $env:APPDATA | Join-Path -ChildPath "gitrailer\pull.ps1"
-    if (Test-Path $src) {
-        & $src $root
-    }
-    else{
-        "``{0}`` not found." -f ($src | Split-Path -Leaf) | Write-Host -ForegroundColor Red
-        Write-Host "Clone from " -NoNewline
-        Write-Host "https://github.com/AWtnb/gitrailer" -ForegroundColor Cyan -NoNewline
-        Write-Host " and run ``install.ps1`` ." -NoNewline
-    }
-}
 
 #################################################################
 # functions arround prompt customization
@@ -129,119 +114,6 @@ function Hide-ConsoleWindow {
     }
 }
 
-function Restart-GoogleIme {
-    Get-Process | Where-Object ProcessName -In @("GoogleIMEJaConverter", "GoogleIMEJaRenderer") | ForEach-Object {
-        $path = $_.Path
-        Stop-Process $_
-        Start-Process $path
-    }
-    "Restarted google ime process!" | Write-Host -ForegroundColor Yellow
-}
-
-
-
-# restart keyhac
-function Restart-Keyhac {
-    $procs = Get-Process -Name "keyhac" -ErrorAction SilentlyContinue
-    if ($procs) {
-        $path = ($procs | Select-Object -First 1).Path
-        $procs | Stop-Process -Force
-        Start-Process -FilePath $path
-    }
-    else {
-        Start-Process -FilePath $($env:USERPROFILE | Join-Path -ChildPath "Personal\portable_apps\keyhac\keyhac.exe") -PassThru
-    }
-}
-
-
-function Set-KeyhacPriorityHigh {
-    Get-Process -Name "keyhac" -ErrorAction SilentlyContinue | Where-Object {$_.PriorityClass -ne "High"} | ForEach-Object {
-        $_.PriorityClass = "High"
-    }
-}
-
-#################################################################
-# ghq
-#################################################################
-
-Invoke-Command -ScriptBlock {
-    if (-not (Get-Command ghq -ErrorAction SilentlyContinue)) {
-        "command 'ghq' not found!" | Write-Host -ForegroundColor Red
-        return
-    }
-    if (-not $Global:GHQ_ROOT -or -not (Test-Path $Global:GHQ_ROOT)) {
-        $Global:GHQ_ROOT = ghq root
-    }
-    if (-not $Global:GHQ_PULL_LOG -or -not (Test-Path $Global:GHQ_PULL_LOG)) {
-        $Global:GHQ_PULL_LOG = $env:USERPROFILE | Join-Path -ChildPath ".ghq_pull_log"
-    }
-}
-
-function Update-Ghq {
-    param([switch]$min)
-    $rels = @()
-    if ($min) {
-        ghq list | Where-Object {
-            return $Global:GHQ_ROOT | Join-Path -ChildPath $_ -AdditionalChildPath "install.ps1" | Test-Path -PathType Leaf
-        } | ForEach-Object {
-            $rels += $_
-        }
-    }
-    else{
-        ghq list | fzf --multi --bind 'ctrl-a:toggle-all' --layout=reverse --height=50% | ForEach-Object {
-            $rels += $_
-        }
-    }
-    if ($rels.Count -lt 1) {
-        return
-    }
-
-    $maxWidth = ($rels | Sort-Object { $_.Length } | Select-Object -Last 1).Length
-
-    $counter = 0
-    $padding = ($rels.Count -gt 9)? 2 : 1
-    $behinds = @()
-    $rels | ForEach-Object {
-        $counter += 1
-        ("Checking({0}/{1}) {2}" -f ($counter -as [string]).PadLeft($padding), ($rels.Count -as [string]).PadLeft($padding), $_.PadRight($maxWidth+3, ".")) | Write-Host -NoNewline
-        Push-Location -Path ($Global:GHQ_ROOT | Join-Path -ChildPath $_)
-        git fetch --quiet 2>$null
-        $status = git status --porcelain --branch 2>$null
-        $branch = $status | Select-String -Pattern "^##"
-        if ($branch -match "\[.*behind\s+\d+.*\]") {
-            "[update available]" | Write-Host -ForegroundColor Yellow
-            $behinds += $_
-        }
-        else {
-            "[up-to-date]" | Write-Host
-        }
-        Pop-Location
-    }
-    if ($behinds.Count -gt 0) {
-        $behinds | ghq get --update --parallel
-    }
-
-    if (-not (Test-Path $Global:GHQ_PULL_LOG)) {
-        New-Item -Path $Global:GHQ_PULL_LOG -ItemType File > $null
-    }
-    (Get-Date).Ticks | Out-File -FilePath $Global:GHQ_PULL_LOG -Encoding utf8
-}
-
-function Test-GhqRecentlyUpdated {
-    param(
-        [int]$interval
-    )
-
-    if (-not (Test-Path $Global:GHQ_PULL_LOG)) {
-        New-Item -Path $Global:GHQ_PULL_LOG -ItemType File > $null
-        return $false
-    }
-    $lastPull = Get-Content -Path $Global:GHQ_PULL_LOG
-    $now = (Get-Date).Ticks
-    $delta = $now - $lastPull
-    $span = [TimeSpan]$delta
-    return $span.TotalHours -lt $interval
-}
 
 #################################################################
 # prompt
@@ -257,14 +129,6 @@ function prompt {
     $l = $p | Split-Path -Leaf
     $bg = $l -eq "desktop"? "Blue": "Magenta"
     $l | Write-Host -BackgroundColor $bg -ForegroundColor Black -NoNewline
-    
-    $interval = 12
-    if (Test-GhqRecentlyUpdated -interval $interval) {
-        Write-Host
-    }
-    else {
-        " [{0}+ hours since last ``update-ghq``]" -f $interval | Write-Host -ForegroundColor Green
-    }
 
     return "#:"
 }
@@ -390,32 +254,6 @@ function Stop-PsStyleRendering {
 }
 function Start-PsStyleRendering {
     $global:PSStyle.OutputRendering = [System.Management.Automation.OutputRendering]::Ansi
-}
-
-# restart corvusskk server
-function Restart-CorvusSKKServer {
-    $proc = Get-Process | Where-Object {$_.Name -eq "crvskkserv"}
-    if ($proc) {
-        $p = $proc.Path
-        $proc | Stop-Process -Force
-        Start-Process $p
-    }
-}
-
-# restart corvusskk
-function Restart-CorvusSKK {
-    param(
-        [switch]$withServer
-    )
-    $proc = Get-Process | Where-Object {$_.Name -eq "imcrvmgr"}
-    if ($proc) {
-        $p = $proc.Path
-        $proc | Stop-Process -Force
-        Start-Process $p
-    }
-    if ($withServer) {
-        Restart-CorvusSKKServer
-    }
 }
 
 # get skk customize functions
