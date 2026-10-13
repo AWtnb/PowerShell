@@ -128,7 +128,8 @@ function prompt {
     $d | Write-Host -BackgroundColor DarkGray -ForegroundColor White -NoNewline
     $l = $p | Split-Path -Leaf
     $bg = $l -eq "desktop"? "Blue": "Magenta"
-    $l | Write-Host -BackgroundColor $bg -ForegroundColor Black
+    $l | Write-Host -BackgroundColor $bg -ForegroundColor Black -NoNewline
+    Write-Host
 
     return "#:"
 }
