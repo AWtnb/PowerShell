@@ -64,23 +64,7 @@ Set-PSReadLineKeyHandler -Key "ctrl+G" -ScriptBlock {
     (ghq list | fzf) | Where-Object {$_} | ForEach-Object {ghq root | Join-Path -ChildPath $_} | ForEach-Object {code $_}
 }
 
-# custom-cd
-Set-PSReadLineKeyHandler -Key "ctrl+g,d","ctrl+g,s","ctrl+g,c" -ScriptBlock {
-    param($key, $arg)
-    $dir = switch ($key.KeyChar) {
-        <#case#> "d" { "{0}\desktop" -f $env:USERPROFILE ; break }
-        <#case#> "s" { "X:\scan" ; break }
-        <#case#> "c" { (Get-Clipboard | Select-Object -First 1).Replace('"', "") ; break }
-    }
-    if (-not (Test-Path $dir -PathType Container)) {
-        $dir = $dir | Split-Path -Parent
-    }
-    $p = "<#SKIPHISTORY#>cd '{0}'" -f $dir
-    [PSConsoleReadLine]::Insert($p)
-    [PSConsoleReadLine]::AcceptLine()
-}
-
-Set-PSReadLineKeyHandler -Key "ctrl+g,q" -ScriptBlock {
+Set-PSReadLineKeyHandler -Key "ctrl+g" -ScriptBlock {
     ghq list -p | fzf | Set-Variable -Name dest
     if ($dest) {
         [PSConsoleReadLine]::Insert("cd $dest")
@@ -88,20 +72,8 @@ Set-PSReadLineKeyHandler -Key "ctrl+g,q" -ScriptBlock {
     }
 }
 
-Set-PSReadLineKeyHandler -Key "alt+p" -ScriptBlock {
-    [PSConsoleReadLine]::Insert('python')
-    [PSConsoleReadLine]::AcceptLine()
-}
-
 Set-PSReadLineKeyHandler -Key "alt+e" -ScriptBlock {
     [PSConsoleReadLine]::Insert('$env:')
-}
-
-# format string
-Set-PSReadLineKeyHandler -Key "ctrl+k,0", "ctrl+k,1", "ctrl+k,2", "ctrl+k,3", "ctrl+k,4", "ctrl+k,5", "ctrl+k,6", "ctrl+k,7", "ctrl+k,8", "ctrl+k,9" -ScriptBlock {
-    param($key, $arg)
-    $str = '{' + $key.KeyChar + '}'
-    [PSConsoleReadLine]::Insert($str)
 }
 
 Set-PSReadLineKeyHandler -Key "ctrl+alt+enter" -ScriptBlock {
