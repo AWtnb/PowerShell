@@ -30,7 +30,7 @@ Set-Alias -Name pdfConcGo -Value Invoke-GoPdfConc
 
 function Get-Pdfjig {
     [OutputType([string])]
-    $path = $Global:GHQ_ROOT | Join-Path -ChildPath (ghq list "pdfjig")
+    $path = ghq list "pdfjig" -p
     if (-not (Test-Path $path -PathType Container)) {
         "Not found: {0}" -f $path | Write-Host -ForegroundColor Magenta
         "=> Clone https://github.com/AWtnb/pdfjig" | Write-Host
